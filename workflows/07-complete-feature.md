@@ -170,34 +170,31 @@
 
 ---
 
-### 8: Add Completion Note
+### 8: Update Feature Status in Header
 
-**Requirement**: Document completion in DESIGN.md
+**Requirement**: Update status in DESIGN.md header
 
-**Location**: Append to `architecture/features/feature-{slug}/DESIGN.md`
+**Location**: `architecture/features/feature-{slug}/DESIGN.md` - header section (lines 1-5)
 
-**Required Information**:
-- **Completion Date**: When feature was completed
-- **Change Count**: Number of OpenSpec changes implemented
-- **Status**: ✅ IMPLEMENTED
-
-**Format**:
+**Status Update**:
 ```markdown
----
+# {Feature Name} - Feature Design
 
-## Implementation Complete
-
-**Date**: YYYY-MM-DD  
-**All Changes**: N changes implemented and archived  
-**Status**: ✅ IMPLEMENTED
+**Status**: ✅ IMPLEMENTED  
+**Module**: {module-name}
 ```
 
-**Expected Outcome**: Completion record added to design document
+**What to Change**:
+- Status line: Update from `🔄 IN_PROGRESS` to `✅ IMPLEMENTED`
+
+**Expected Outcome**: Feature header reflects IMPLEMENTED status
 
 **Validation Criteria**:
-- Note appended to end of file
-- All required fields present
-- Formatting consistent with document
+- Status line updated in header (top of file)
+- No additional completion sections added elsewhere
+- Header formatting preserved
+
+**Note**: Section F (Implementation Plan) should list completed changes, but main status is in header only
 
 ---
 
