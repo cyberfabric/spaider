@@ -276,6 +276,32 @@ Overall Design validation is complete when:
 
 ---
 
+## Recommendations (Optional)
+
+### Make Type and API References Clickable
+
+**Recommendation**: Use Markdown links for domain types and API specifications
+
+**Benefits**:
+- Easier navigation during design review
+- Quick access to type definitions and API specs
+- Better IDE integration (click-through in VSCode, IntelliJ, etc.)
+
+**How to implement**:
+- Domain types: `[TypeName](../path/to/schema.json)` or `[gts.namespace.type.v1](../path/to/file)`
+- API specs: `[spec/API/contracts.yaml](../spec/API/contracts.yaml)`
+- Validation types in command outputs: `[ValidationResult](../gts/validation-result.schema.json)`
+
+**Example**:
+```markdown
+- **ValidationResult** ([`gts.vendor.package.validation.validation_result.v1`](../gts/validation-result.schema.json)): Result of validation operation
+- Refer to [`spec/API/SPEC.md`](../spec/API/SPEC.md) for complete API format
+```
+
+**Note**: This is a readability improvement, not a validation requirement. Plain text references are also valid.
+
+---
+
 ## Common Challenges
 
 ### Challenge: Incomplete Sections
