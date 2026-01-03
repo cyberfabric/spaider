@@ -1,7 +1,7 @@
 # Initialize Features from Overall Design
 
 **Phase**: 2 - Feature Planning  
-**Purpose**: Analyze Overall Design and generate feature list with dependencies
+**Purpose**: Analyze Overall Design and generate feature list with dependencies through interactive review
 
 ---
 
@@ -11,9 +11,13 @@
 - `architecture/DESIGN.md` complete with all sections
 - `architecture/features/` directory exists
 
-## Input Parameters
+---
 
-- **module-name**: Name of the module (lowercase)
+## Overview
+
+This workflow analyzes the Overall Design, proposes a feature breakdown based on capabilities, and generates the features manifest after user review and confirmation.
+
+**Key Principle**: Analyze, propose, review, confirm before creating.
 
 ---
 
@@ -24,49 +28,140 @@
 **Requirement**: Extract and understand core capabilities from Overall Design
 
 **Input Source**:
-- Section A (Vision & Capabilities) of `architecture/DESIGN.md`
-- Specifically the "Core Capabilities" subsection
+- Section A (Business Context → Core Capabilities) of `architecture/DESIGN.md`
+- Section B (Requirements & Principles) for business rules
+- Project name from document title
 
-**Required Understanding**:
-- What main functional areas system provides
-- How capabilities relate to each other
-- Which capabilities are foundational vs. dependent
+**Analysis Actions**:
+1. Read `architecture/DESIGN.md`
+2. Extract all capabilities from Section A
+3. Identify business rules from Section B
+4. Understand capability relationships
+5. Determine foundational vs. dependent capabilities
 
-**Expected Outcome**: Clear list of system capabilities ready for feature mapping
+**Display Analysis**:
+```
+Capability Analysis:
+───────────────────
+Project: {PROJECT_NAME}
+
+Capabilities found:
+1. {Capability 1}
+2. {Capability 2}
+3. {Capability 3}
+...
+
+Key business rules:
+- {Rule 1}
+- {Rule 2}
+...
+```
+
+**Expected Outcome**: Clear understanding of system capabilities
 
 **Validation Criteria**:
-- All capabilities from Section A identified
+- All capabilities from Section A extracted
+- Business rules identified
 - Capability relationships understood
-- Capability scope clear
 
 ---
 
-### 2. Map Capabilities to Features
+### 2. Propose Feature Breakdown
 
-**Requirement**: Break down capabilities into implementable features
+**Requirement**: Analyze capabilities and propose feature breakdown
 
 **Planning Guidelines**:
 - **First feature**: Always `feature-init` (infrastructure, no dependencies)
-- **Capability mapping**: Create 1-3 features per major capability
+- **Capability mapping**: Create 1-3 features per major capability  
 - **Feature scope**: Each feature focused and independently testable
 - **Dependencies**: Define clear dependency relationships
+- **Priority**: CRITICAL for init and core features, HIGH/MEDIUM/LOW for others
 
 **Feature Naming**:
 - Format: `feature-{descriptive-name}`
-- Lowercase with hyphens
+- Lowercase with hyphens  
 - Descriptive of functionality
 
-**Expected Outcome**: Complete feature breakdown with dependencies
+**Auto-Generate Proposal**:
+```
+Proposed Feature Breakdown:
+──────────────────────────
+
+### 1. feature-init (CRITICAL)
+**Purpose**: Initialize project structure
+**Scope**:
+- Create compilable skeleton
+- Set up framework integration
+- Establish layer structure
+**Depends On**: None
+**Status**: NOT_STARTED
+
+{For each capability, propose 1-3 features}
+### {N}. feature-{derived-from-capability} ({PRIORITY})
+**Purpose**: {Derived from capability description}
+**Scope**:
+- {Scope item 1 based on capability}
+- {Scope item 2}
+- {Scope item 3}
+**Depends On**: {feature-init or other features}
+**Status**: NOT_STARTED
+
+──────────────────────────
+Total Features: {COUNT}
+Estimated Implementation Order: {init} → {feature2} → {feature3}...
+```
+
+**Expected Outcome**: Feature breakdown proposal generated
 
 **Validation Criteria**:
 - All capabilities covered by features
-- Feature scopes clearly defined
-- Dependencies identified
-- init is first feature
+- feature-init is first
+- Dependencies form valid DAG
+- Each feature has clear scope
 
 ---
 
-### 3. Create Features Manifest Document
+### 3. Review and Confirm Feature Breakdown
+
+**Requirement**: User reviews and confirms or adjusts proposed features
+
+**Interactive Review**:
+```
+Review the proposed feature breakdown above.
+
+Options:
+  1. Approve and proceed with generation
+  2. Suggest modifications (describe changes)
+  3. Cancel
+
+Your choice: ___
+```
+
+**If option 2 (Suggest modifications)**:
+```
+Describe the modifications you'd like:
+- Add feature: ___
+- Remove feature: ___  
+- Modify feature {name}: ___
+- Change dependencies: ___
+- Change priorities: ___
+```
+
+**After modifications**:
+- Apply user changes to proposal
+- Show updated breakdown
+- Ask for confirmation again
+
+**Expected Outcome**: User-approved feature breakdown
+
+**Validation Criteria**:
+- User explicitly approved
+- feature-init remains first
+- Dependencies still form valid DAG
+
+---
+
+### 4. Create Features Manifest Document
 
 **Requirement**: Document all planned features in structured manifest
 
@@ -108,7 +203,7 @@
 
 ---
 
-### 4. Initialize Init Design Document
+### 5. Initialize Init Design Document
 
 **Requirement**: Create design document for init feature
 
@@ -239,7 +334,7 @@ EOF
 
 ---
 
-### 5. Create Placeholder Design Documents
+### 6. Create Placeholder Design Documents
 
 **Requirement**: Initialize design documents for all other features
 
@@ -323,7 +418,45 @@ done
 
 ---
 
-### 6. Validate Features Manifest Structure
+### 7. Show Summary
+
+**Requirement**: Display what was created
+
+**Display Summary**:
+```
+Feature Initialization Complete!
+────────────────────────────────
+Project: {PROJECT_NAME}
+
+Created:
+✓ architecture/features/FEATURES.md
+  - {COUNT} features defined
+  - Dependencies mapped
+  - Implementation order established
+
+✓ architecture/features/feature-init/DESIGN.md
+  - Init feature design created
+
+✓ Placeholder designs for {COUNT-1} features:
+  {List other feature slugs}
+
+Implementation Order:
+1. feature-init (CRITICAL)
+2. {feature 2}
+3. {feature 3}
+...
+
+Next Steps:
+1. Start with feature-init: Run workflow 05-init-feature feature-init
+2. Complete init design and validate
+3. Follow implementation order from FEATURES.md
+```
+
+**Expected Outcome**: Summary displayed
+
+---
+
+### 8. Validate Features Manifest Structure
 
 **Action**: Run validation on FEATURES.md
 
@@ -349,13 +482,18 @@ echo "✓ Features manifest created"
 
 Feature initialization is complete when:
 
-- [ ] FEATURES.md created with all features listed
-- [ ] init is first feature
-- [ ] All features have: status, priority, dependencies, blocks, purpose, scope
-- [ ] Blocks field consistent with Depends On (reverse dependencies)
-- [ ] feature-init/DESIGN.md created
+- [ ] Capabilities analyzed from Overall Design
+- [ ] Feature breakdown proposed automatically
+- [ ] User reviewed and approved feature breakdown
+- [ ] FEATURES.md created with all approved features:
+  - [ ] feature-init is first feature (CRITICAL priority)
+  - [ ] All features have: status, priority, dependencies, blocks, purpose, scope
+  - [ ] Blocks field consistent with Depends On (reverse dependencies)
+  - [ ] Dependencies form valid DAG (no cycles)
+- [ ] feature-init/DESIGN.md created with content
 - [ ] Placeholder designs created for other features
-- [ ] Feature dependency graph valid (no cycles)
+- [ ] Summary displayed showing what was created
+- [ ] Next steps communicated to user
 
 ---
 

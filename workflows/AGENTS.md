@@ -4,9 +4,44 @@ Instructions for AI assistants on when and which FDD workflow to use.
 
 ---
 
+## ⚠️ FIRST STEP: Check for FDD Adapter
+
+**BEFORE selecting any workflow, verify adapter exists**:
+
+1. Look for `{adapter-directory}/AGENTS.md` that extends `../FDD/AGENTS.md`
+2. Common locations:
+   - `spec/{project-name}-adapter/AGENTS.md`
+   - `guidelines/{project-name}-adapter/AGENTS.md`
+   - `docs/{project-name}-adapter/AGENTS.md`
+
+**If adapter NOT found** → Use **Workflow: adapter-config**
+
+**If adapter found** → Continue with appropriate workflow below
+
+---
+
 ## Workflow Selection Guide
 
 Always read the specific workflow file before executing. This guide helps you choose which workflow to use.
+
+---
+
+## Phase 0: Pre-Project Setup
+
+### When: No FDD adapter exists (REQUIRED FIRST)
+
+**adapter-config.md** - Create FDD adapter through guided questions
+- **Use when**: Starting FDD on a new project without existing adapter
+- **Creates**: Project-specific adapter in `spec/FDD-Adapter/`
+- **Approach**: Interactive questions, minimal output, no unnecessary content
+- **Next step**: Configure agent tools (optional) or initialize project (workflow 01)
+
+**config-agent-tools.md** - Configure AI agent for FDD (optional)
+- **Use when**: After creating adapter, want to set up agent to use FDD natively
+- **Creates**: Agent-specific config files (`.windsurf/`, `.cursorrules`, `.clinerules`, `.aider.conf.yml`)
+- **Configures**: Rules file + workflow references (format follows agent specification)
+- **Goal**: Agent reads adapter AGENTS.md automatically and uses FDD workflows
+- **Next step**: Initialize project (workflow 01)
 
 ---
 
@@ -105,6 +140,9 @@ Always read the specific workflow file before executing. This guide helps you ch
 ```
 Start FDD work
 │
+├─ No FDD adapter exists?
+│  └─> Use workflow adapter-config
+│
 ├─ No architecture/ directory?
 │  └─> Use workflow 01 (init-project)
 │
@@ -141,7 +179,7 @@ Start FDD work
 
 **New project from scratch**:
 ```
-01-init-project → 02-validate-architecture → 03-init-features
+adapter-config → 01-init-project → 02-validate-architecture → 03-init-features
 → 06-validate-feature → 09-openspec-init → 10-openspec-change-implement
 → 11-openspec-change-complete → 13-openspec-validate → 07-complete-feature
 ```
@@ -175,27 +213,6 @@ Start FDD work
 - **Validate before proceeding** - Use validation workflows at checkpoints
 - **One workflow at a time** - Complete current before starting next
 - **Re-validate after fixes** - Use workflow 06 after workflow 07
-
----
-
-## Quick Workflow Reference
-
-```bash
-/fdd-init-project                     # 01: Initialize FDD structure
-/fdd-validate-architecture            # 02: Validate Overall Design
-/fdd-init-features                    # 03: Generate features from Overall Design
-/fdd-validate-features                # 04: Validate FEATURES.md
-/fdd-init-feature {slug}              # 05: Initialize single feature
-/fdd-validate-feature {slug}          # 06: Validate Feature Design
-/fdd-complete-feature {slug}          # 07: Complete feature
-/fdd-fix-design {slug}                # 08: Fix design issues
-
-/openspec-init {slug}                 # 09: Initialize OpenSpec
-/openspec-change-implement {slug} {id}  # 10: Implement change
-/openspec-change-complete {slug} {id}   # 11: Complete change
-/openspec-change-next {slug}          # 12: Create next change
-/openspec-validate {slug}             # 13: Validate OpenSpec
-```
 
 ---
 

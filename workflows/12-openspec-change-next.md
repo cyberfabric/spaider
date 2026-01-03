@@ -1,7 +1,7 @@
 # Create Next OpenSpec Change
 
 **Phase**: 3 - Feature Implementation  
-**Purpose**: Create next change from Feature DESIGN.md implementation plan
+**Purpose**: Create next change from Feature DESIGN.md implementation plan through guided selection
 
 ---
 
@@ -12,44 +12,136 @@
 - Feature DESIGN.md Section F has multiple changes planned
 - At least one change remaining to implement
 
-## Input Parameters
+---
 
-- **slug**: Feature identifier (lowercase, kebab-case)
-- **next-change-name**: Name for next change from DESIGN.md Section F
+## Overview
+
+This workflow reads the Feature DESIGN.md Section F to identify remaining changes, displays them to the user, and guides through creating the next change.
+
+**Key Principle**: Read plan, show remaining changes, let user choose next.
+
+---
+
+## Interactive Questions
+
+### Q1: Feature Slug
+```
+Which feature are you creating the next change for?
+Provide feature slug: ___
+
+Example: "user-auth", "payment-flow"
+```
+**Store as**: `FEATURE_SLUG`
+
+### Q2: Read and Display Change Status
+
+**Action**: Read `architecture/features/feature-{FEATURE_SLUG}/DESIGN.md` Section F
+
+**Extract**:
+- List of all planned OpenSpec changes
+- Current status of each change (✅ COMPLETED, 🔄 IN_PROGRESS, ⏳ NOT_STARTED)
+- Identify completed changes from `openspec/changes/archive/`
+
+**Display to User**:
+```
+OpenSpec Changes Status (from DESIGN.md Section F):
+────────────────────────────────────────────────────
+
+{For each change in Section F}
+{Status Icon} Change {NNN}: {Change Name}
+  Description: {from DESIGN.md}
+  Scope: {from DESIGN.md}
+  Dependencies: {from DESIGN.md}
+  Status: {✅ COMPLETED / 🔄 IN_PROGRESS / ⏳ NOT_STARTED}
+
+────────────────────────────────────────────────────
+Completed: {count} | In Progress: {count} | Remaining: {count}
+```
+
+### Q3: Select Next Change
+
+**If multiple NOT_STARTED changes available**:
+```
+Which change should be created next?
+
+Options:
+{For each NOT_STARTED change}
+  {N}. Change {NNN}: {name}
+     {brief description}
+     Dependencies: {list or "None"}
+
+Your choice: ___
+```
+
+**If only one NOT_STARTED change remaining**:
+```
+Only one change remaining:
+Change {NNN}: {name}
+
+Proceed with this change? (y/n)
+```
+
+**If no NOT_STARTED changes**:
+```
+✅ All changes completed!
+
+No remaining changes to create.
+Consider running workflow 07-complete-feature to mark feature as done.
+```
+
+**Store as**: `NEXT_CHANGE_NUMBER`, `NEXT_CHANGE_NAME`, `NEXT_CHANGE_DESC`, `NEXT_CHANGE_SCOPE[]`
+
+### Q4: Confirm Creation
+
+**Display Summary**:
+```
+Next Change Creation Summary:
+────────────────────────────────
+Feature: feature-{FEATURE_SLUG}
+Next Change: Change {NEXT_CHANGE_NUMBER}: {NEXT_CHANGE_NAME}
+
+Will create:
+✓ openspec/changes/{NEXT_CHANGE_NAME}/
+  ✓ proposal.md (Why, What, Impact)
+  ✓ tasks.md (Implementation checklist)
+  ✓ specs/ (Delta specifications)
+  ✓ design.md (if complexity requires)
+
+Change details:
+- Description: {NEXT_CHANGE_DESC}
+- Scope: {list NEXT_CHANGE_SCOPE items}
+- Dependencies: {list or "None"}
+
+Proceed with creation? (y/n)
+```
+
+**Expected Outcome**: User confirms or cancels
 
 ---
 
 ## Requirements
 
-### 1: Identify Next Change from Feature Design
+### 1. Create Change Directory Structure
 
-**Requirement**: Review Feature DESIGN.md Section F for next planned change
+**Requirement**: Manually create change directory
 
-**Location**: `architecture/features/feature-{slug}/DESIGN.md`
-
-**Review Section F**:
-```markdown
-## F. Validation & Implementation
-
-### OpenSpec Changes
-
-**Total Changes**: {Number}
-
-#### Change 001: {Completed}
-**Status**: ✅ COMPLETED
-
-#### Change 002: {Next to implement}
-**Status**: ⏳ NOT_STARTED
-...
+**Commands**:
+```bash
+cd architecture/features/feature-{FEATURE_SLUG}/openspec/
+mkdir -p changes/{NEXT_CHANGE_NAME}/specs
 ```
 
-**Manual Step**: Identify next NOT_STARTED change from plan
+**What This Does**:
+- Creates `changes/{NEXT_CHANGE_NAME}/` directory
+- Creates `specs/` subdirectory for delta specifications
 
-**Expected Outcome**: Clear understanding of what next change implements
+**Expected Outcome**: Change directory structure created
+
+**Note**: OpenSpec does not have a `create` command. Changes are created manually.
 
 ---
 
-### 2: Create Change Directory Structure
+### 2. Generate Proposal Document
 
 **Requirement**: Manually create change directory
 
@@ -69,62 +161,86 @@ mkdir -p changes/{next-change-name}/specs
 
 ---
 
-### 3: Create Proposal Document
-
 **Requirement**: Write proposal.md following OpenSpec format
 
-**Location**: `openspec/changes/{next-change-name}/proposal.md`
+**Location**: `openspec/changes/{NEXT_CHANGE_NAME}/proposal.md`
 
-**Required Structure** (OpenSpec standard):
+**Generated Content** (OpenSpec standard):
 ```markdown
-# Change: {Brief description of change}
+# Change: {NEXT_CHANGE_DESC from Q3}
 
 ## Why
-{1-2 sentences on problem/opportunity}
+{Extract "Why" from DESIGN.md Section F for this change if available, otherwise:}
+This change implements Change {NEXT_CHANGE_NUMBER} of {FEATURE_NAME} feature.
+{NEXT_CHANGE_DESC}
 
 ## What Changes
-- {Bullet list of changes}
-- {Mark breaking changes with **BREAKING**}
+{For each item in NEXT_CHANGE_SCOPE from Q3}
+- {Scope item}
+
+{If breaking changes identified in DESIGN.md}
+- **BREAKING**: {Breaking change description}
 
 ## Impact
-- Affected specs: {list capabilities}
-- Affected code: {key files/systems}
+- Affected specs: {Derive from NEXT_CHANGE_SCOPE}
+- Affected code: {Key modules/files from scope}
+- Dependencies: {List dependencies from Q3}
 ```
 
-**Content Source**: Extract from `../../DESIGN.md` Section F for this specific change
+**Content Source**: 
+- Primary: User selection from Q3 + DESIGN.md Section F
+- All content from planned change in DESIGN.md
 
-**Expected Outcome**: Proposal created with proper OpenSpec format
+**Expected Outcome**: Proposal created with actual content from DESIGN.md
 
-**Note**: Use OpenSpec standard format, not custom templates
+**Validation Criteria**:
+- Contains Why, What Changes, Impact sections
+- Content from DESIGN.md, not placeholders
+- Dependencies documented
+- Breaking changes marked if any
 
 ---
 
-### 4: Create Tasks Checklist
+### 3. Generate Tasks Checklist
 
 **Requirement**: Write tasks.md with implementation steps
 
-**Location**: `openspec/changes/{next-change-name}/tasks.md`
+**Location**: `openspec/changes/{NEXT_CHANGE_NAME}/tasks.md`
 
-**Required Structure** (OpenSpec standard):
+**Generated Content** (OpenSpec standard):
 ```markdown
 ## 1. Implementation
-- [ ] 1.1 {Task from DESIGN.md}
-- [ ] 1.2 {Task from DESIGN.md}
-- [ ] 1.3 {Task from DESIGN.md}
-- [ ] 1.4 Write tests
+{Extract tasks from DESIGN.md Section F for this specific change}
+{If detailed tasks in DESIGN.md:}
+- [ ] 1.{N} {Task from DESIGN.md}
+
+{Otherwise, generate from NEXT_CHANGE_SCOPE:}
+{For each scope item, create 1-2 tasks}
+- [ ] 1.{N} {Actionable task derived from scope item}
+
+{Always add:}
+- [ ] 1.{N+1} Write tests for implemented functionality
+- [ ] 1.{N+2} Validate against Feature DESIGN.md Section B/C
+- [ ] 1.{N+3} Update documentation if needed
 ```
 
-**Guidelines**:
-- Number tasks sequentially
-- Break down into specific, actionable items
-- Include testing and documentation tasks
-- Extract tasks from DESIGN.md Section F for this change
+**Task Generation Guidelines**:
+- Primary: Extract from DESIGN.md Section F for this change
+- Fallback: Derive from NEXT_CHANGE_SCOPE items
+- Always include: testing, validation, documentation
+- Number sequentially (1.1, 1.2, etc.)
 
-**Expected Outcome**: Clear implementation checklist
+**Expected Outcome**: Actionable checklist with specific tasks
+
+**Validation Criteria**:
+- Tasks from DESIGN.md or derived from scope
+- Testing included
+- Validation included
+- All tasks actionable and specific
 
 ---
 
-### 5: Create Delta Specifications
+### 4. Create Delta Specifications
 
 **Requirement**: Write delta specs using OpenSpec format
 
@@ -159,7 +275,7 @@ The system SHALL provide...
 
 ---
 
-### 6: Create design.md (Optional)
+### 5. Create design.md (Optional)
 
 **Requirement**: Create design.md only if needed
 
@@ -200,7 +316,7 @@ The system SHALL provide...
 
 ---
 
-### 7: Validate with OpenSpec
+### 6. Validate with OpenSpec
 
 **Requirement**: Validate change structure and specs
 
@@ -222,9 +338,9 @@ openspec validate {next-change-name} --strict
 
 ---
 
-### 8: Update Feature DESIGN.md Status
+### 7. Update Feature DESIGN.md Status
 
-**Requirement**: Mark change as ready for implementation in Feature DESIGN.md
+**Requirement**: Mark change as active in Feature DESIGN.md
 
 **Location**: `../../DESIGN.md`
 
@@ -234,9 +350,12 @@ openspec validate {next-change-name} --strict
 
 ### OpenSpec Changes
 
-See `openspec/changes/` for implementation details:
+**Active Changes**: See `openspec/changes/` for implementation details:
+{List completed changes}
 - `{previous-change}` - ✅ COMPLETED
-- `{next-change-name}` - ⏳ NOT_STARTED (ready)
+{Current change}
+- `{NEXT_CHANGE_NAME}` - 🔄 IN_PROGRESS
+{Remaining changes}
 - `{future-change}` - ⏳ NOT_STARTED
 ```
 
@@ -244,20 +363,68 @@ See `openspec/changes/` for implementation details:
 
 ---
 
+### 8. Show Summary
+
+**Requirement**: Display what was created
+
+**Display Summary**:
+```
+Next Change Created!
+────────────────────────────────────
+Feature: feature-{FEATURE_SLUG}
+
+Created:
+✓ openspec/changes/{NEXT_CHANGE_NAME}/
+  ✓ proposal.md (Why, What, Impact)
+  ✓ tasks.md ({N} implementation tasks)
+  ✓ specs/ directory (ready for delta specs)
+  {If design.md created: "✓ design.md (technical decisions)"}
+
+✓ Feature DESIGN.md Section F updated
+
+Change Details:
+- Number: Change {NEXT_CHANGE_NUMBER}
+- Name: {NEXT_CHANGE_NAME}
+- Description: {NEXT_CHANGE_DESC}
+- Tasks: {N} items to implement
+
+Progress:
+- Completed: {count} changes
+- Current: Change {NEXT_CHANGE_NUMBER}
+- Remaining: {count} changes
+
+Next Steps:
+1. Create delta specifications in specs/{capability}/spec.md
+2. Validate: openspec validate {NEXT_CHANGE_NAME} --strict
+3. Start implementation: Run workflow 10-openspec-change-implement
+```
+
+**Expected Outcome**: Summary displayed
+
+---
+
 ## Completion Criteria
 
 Next change creation complete when:
 
-- [ ] Next change identified from DESIGN.md Section F
-- [ ] `openspec/changes/{next-change-name}/` created manually
-- [ ] `proposal.md` follows OpenSpec format (Why, What Changes, Impact)
-- [ ] `tasks.md` has numbered implementation checklist
-- [ ] Delta specs created in `specs/{capability}/spec.md` with ADDED/MODIFIED/etc
-- [ ] Each requirement has at least one `#### Scenario:`
+- [ ] User selected feature slug (Q1)
+- [ ] Change status read from DESIGN.md Section F (Q2)
+- [ ] User selected next change to create (Q3)
+- [ ] User confirmed creation (Q4)
+- [ ] `openspec/changes/{NEXT_CHANGE_NAME}/` created manually
+- [ ] `proposal.md` generated with content from DESIGN.md:
+  - [ ] Why, What Changes, Impact sections present
+  - [ ] Content from DESIGN.md Section F, not placeholders
+  - [ ] Dependencies documented
+- [ ] `tasks.md` generated with tasks from DESIGN.md or scope:
+  - [ ] Tasks from DESIGN.md or derived from scope
+  - [ ] Testing tasks included
+  - [ ] Validation tasks included
+- [ ] Delta specs directory created (specs content added later)
 - [ ] `design.md` created if complexity requires it (optional)
-- [ ] `openspec validate {next-change-name} --strict` passes
-- [ ] Feature DESIGN.md Section F updated with change status
-- [ ] Ready to start implementation (workflow 10)
+- [ ] Feature DESIGN.md Section F updated with IN_PROGRESS status
+- [ ] Summary displayed to user
+- [ ] Ready to create delta specs and validate
 
 ---
 

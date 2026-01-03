@@ -1,7 +1,7 @@
 # Initialize Feature
 
 **Phase**: 3 - Feature Development  
-**Purpose**: Start work on a specific feature by initializing its design
+**Purpose**: Start work on a specific feature by initializing its design through guided questions
 
 ---
 
@@ -11,22 +11,102 @@
 - Feature listed in manifest
 - All feature dependencies have validated designs (DESIGN.md complete)
 
-## Input Parameters
+---
 
-- **slug**: Feature identifier (lowercase, kebab-case)
-  - Example: `user-auth`, `dashboard-mgmt`
+## Overview
+
+This workflow initializes a feature by gathering context through interactive questions, then generates a Feature Design document with meaningful starter content instead of empty placeholders.
+
+**Key Principle**: Ask questions, generate initial content, make it easy to continue.
+
+---
+
+## Interactive Questions
+
+Ask the user these questions **one by one** to gather requirements:
+
+### Q1: Feature Slug
+```
+What is the slug for this feature? (lowercase, kebab-case)
+Example: "user-auth", "payment-flow", "dashboard-view"
+```
+**Store as**: `FEATURE_SLUG`
+
+### Q2: Feature Name
+```
+What is the human-readable name for this feature?
+Example: "User Authentication", "Payment Processing Flow", "Analytics Dashboard"
+```
+**Store as**: `FEATURE_NAME`
+
+### Q3: Feature Purpose
+```
+What does this feature do and why does it exist?
+Describe in 2-3 sentences.
+
+Example: "This feature handles user login and authentication. 
+It validates credentials, creates sessions, and manages authentication tokens. 
+The goal is to provide secure access control for the application."
+```
+**Store as**: `FEATURE_PURPOSE`
+
+### Q4: Primary Actors
+```
+Who are the primary actors that interact with this feature?
+List 1-3 actors with their roles:
+
+Example:
+- End User: Logs in and accesses protected resources
+- Administrator: Manages user accounts and permissions
+```
+**Store as**: `ACTORS[]` (each with name and role)
+
+### Q5: Main Flows
+```
+What are the 1-3 main actor flows for this feature?
+Briefly describe each flow:
+
+Example:
+- User Login: User enters credentials, system validates, creates session
+- Password Reset: User requests reset, receives email, sets new password
+```
+**Store as**: `MAIN_FLOWS[]` (each with name and brief description)
+
+### Q6: Estimated OpenSpec Changes
+```
+How many OpenSpec changes do you estimate for this feature?
+Consider implementation complexity and scope.
+
+Options:
+  1. Small (1-2 changes)
+  2. Medium (3-5 changes)
+  3. Large (6-10 changes)
+  4. Custom (specify number)
+```
+**Store as**: `CHANGES_COUNT`
 
 ---
 
 ## Requirements
 
-### 1. Verify Feature in Manifest
+### 1. Verify Feature Exists and Read Manifest Data
 
-**Requirement**: Feature must be documented in FEATURES.md
+**Requirement**: Feature must be documented in FEATURES.md and extract metadata
 
-**Expected Outcome**: Feature listed and ready for development
+**Required Actions**:
+- Verify feature slug exists in `architecture/features/FEATURES.md`
+- Extract feature metadata from manifest:
+  - Feature description
+  - Dependencies
+  - Status
+- Read project name from Overall Design
 
-**Validation Criteria**: Feature slug found in manifest
+**Expected Outcome**: Feature verified and metadata collected
+
+**Validation Criteria**: 
+- Feature slug found in manifest
+- Dependencies identified
+- Project name retrieved
 
 ---
 
@@ -57,19 +137,18 @@
 
 ---
 
-### 4. Initialize Feature Design Document
+### 4. Generate Feature Design Document
 
-**Requirement**: Create complete DESIGN.md template
+**Requirement**: Create DESIGN.md with actual content from collected answers
 
 **Required File**: `architecture/features/feature-{slug}/DESIGN.md`
 
-**Template Structure**:
-```bash
-cat > DESIGN.md << 'EOF'
-# {Feature Name} - Feature Design
+**Generated Content**:
+```markdown
+# {FEATURE_NAME from Q2} - Feature Design
 
 **Status**: 🔄 IN_PROGRESS  
-**Module**: {Project Name}
+**Module**: {PROJECT_NAME from manifest}
 
 ---
 
@@ -77,15 +156,16 @@ cat > DESIGN.md << 'EOF'
 
 ### Overview
 
-{Describe what this feature does}
+{FEATURE_NAME from Q2}: {Brief from FEATURES.md manifest}
 
 ### Purpose
 
-{Why this feature exists, what problem it solves}
+{FEATURE_PURPOSE from Q3}
 
 ### Actors
 
-- **Actor Name**: Role and what they do with this feature
+{For each actor in ACTORS[] from Q4}
+- **{Actor Name}**: {Actor role from Q4}
 
 ### References
 
@@ -94,55 +174,54 @@ cat > DESIGN.md << 'EOF'
 - FEATURES.md: `@/architecture/features/FEATURES.md`
 
 **Dependencies**:
-- {List dependent features if any}
+{If dependencies from manifest}
+- {List each dependent feature}
+{Else}
+- None
 
 ---
 
 ## B. Actor Flows
 
-### Flow 1: {Primary Actor Action}
+{For each flow in MAIN_FLOWS[] from Q5}
+### Flow: {Flow Name}
 
-**Actor**: {Actor Name}
+**Actor**: {Primary actor from ACTORS[]}
 
-**Steps**:
-1. Actor does something
-2. System responds
-3. Actor sees result
+**Brief**: {Flow description from Q5}
+
+**Steps** (to be detailed in FDL):
+1. {First step based on flow description}
+2. System processes request
+3. {Result based on flow description}
 
 **Success Scenario**:
-- Outcome 1
-- Outcome 2
+- {Expected outcome}
 
 **Error Scenarios**:
-- Error condition 1 → System behavior
-- Error condition 2 → System behavior
+- To be defined during design
 
 ---
 
 ## C. Algorithms
 
-### Algorithm 1: {Name}
+**Note**: Algorithms will be defined in FDL during feature design.
 
-**Input**: {Parameters}
+{Generate 1-2 algorithm placeholders based on MAIN_FLOWS}
+### Algorithm: {Derived from flow name}
 
-**Output**: {Result}
+**Purpose**: {Based on flow description}
 
-**Steps** (in FDL):
-1. Validate input parameters
-   1. **IF** parameter invalid **THEN** return error
-   2. **IF** parameter valid **THEN** continue
-
-2. **FOR EACH** item in collection:
-   1. Process item
-   2. **IF** condition met **THEN** add to results
-
-3. Return processed results
+**Steps** (in FDL): To be defined
 
 ---
 
 ## D. States
 
-*If feature has state machines, document here. Otherwise mark as N/A*
+{If feature involves state transitions}
+**Note**: Define state machines if applicable.
+{Else}
+N/A - This feature does not require state machine modeling.
 
 ---
 
@@ -150,25 +229,19 @@ cat > DESIGN.md << 'EOF'
 
 ### Database Schema
 
-**Tables/Entities**:
-- Table name: columns, relationships
+**Tables/Entities**: To be defined
 
 ### API Endpoints
 
-**Endpoints** (reference API specification):
-- `GET /api/v1/{resource}`: Description
-- `POST /api/v1/{resource}`: Description
+**Endpoints** (reference Overall Design API specification): To be defined
 
 ### Security
 
-**Authorization**:
-- Who can access what
-- Security checks required
+**Authorization**: {Reference security model from Overall Design}
 
 ### Error Handling
 
-**Errors**:
-- ErrorType: When it occurs, how to handle
+**Errors**: To be defined
 
 ---
 
@@ -176,44 +249,92 @@ cat > DESIGN.md << 'EOF'
 
 ### Testing Scenarios
 
-1. **Scenario Name**:
-   - Given: Initial state
-   - When: Action
-   - Then: Expected result
+{For each flow, generate basic test scenario}
+1. **{Flow name} - Happy Path**:
+   - Given: {Initial state}
+   - When: {Action from flow}
+   - Then: {Expected result}
 
 ### OpenSpec Changes
 
-**Total Changes**: {Number}
+**Total Changes**: {CHANGES_COUNT from Q6}
 
-#### Change 001: {Change Name}
+{Generate placeholders for each change}
+#### Change {001..N}: Initial Implementation Phase {N}
 
 **Status**: ⏳ NOT_STARTED
 
-**Description**: {What this change does}
+**Description**: To be defined during design
 
-**Scope**:
-- Item 1
-- Item 2
+**Scope**: To be defined
 
-**Dependencies**: {Dependencies or None}
+**Dependencies**: None (or previous change)
 
-**Effort**: {Hours estimate}
+**Effort**: To be estimated
 
-**Verification**:
-- How to verify it works
+**Verification**: To be defined
 
 ---
-EOF
 
-  echo "✓ DESIGN.md template created"
-fi
+**Document Status**: Initial version - ready for detailed design
+
+**Next Steps**:
+1. Expand actor flows with detailed FDL
+2. Define algorithms in FDL
+3. Document technical details (DB, API, security)
+4. Create detailed OpenSpec change specifications
+5. Validate design (workflow 06-validate-feature)
 ```
 
-**Expected Result**: DESIGN.md has full template
+**Expected Result**: DESIGN.md with meaningful starter content
+
+**Validation Criteria**:
+- File contains actual content from Q2-Q6
+- Actor names and roles filled from Q4
+- Flow descriptions filled from Q5
+- OpenSpec changes count matches Q6
+- No empty placeholders like "[TODO]"
+- Document ready for user to expand with details
 
 ---
 
-### 5. Update Feature Status
+### 5. Show Summary and Confirm
+
+**Requirement**: Display what will be created and get user confirmation
+
+**Display Summary**:
+```
+Feature Initialization Summary:
+───────────────────────────────
+Feature: {FEATURE_NAME}
+Slug: {FEATURE_SLUG}
+
+Will create:
+✓ architecture/features/feature-{FEATURE_SLUG}/
+  ✓ DESIGN.md (with initial content)
+
+DESIGN.md will include:
+- Purpose: {first 60 chars of FEATURE_PURPOSE}...
+- {count} actors
+- {count} main flows
+- {CHANGES_COUNT} OpenSpec changes planned
+{If dependencies: "- Dependencies: {list}"}
+
+Feature status will change: NOT_STARTED → IN_PROGRESS
+
+Proceed with initialization? (y/n)
+```
+
+**Expected Outcome**: User confirms or cancels
+
+**Validation Criteria**:
+- Summary shows all content to be created
+- User can review before proceeding
+- Easy to abort if needed
+
+---
+
+### 6. Update Feature Status
 
 **Requirement**: Mark feature as IN_PROGRESS in manifest
 
@@ -231,12 +352,20 @@ fi
 
 Feature initialization complete when:
 
-- [ ] Feature exists in FEATURES.md
-- [ ] All dependencies have validated designs
-- [ ] Feature directory created
-- [ ] DESIGN.md created with full template
-- [ ] Feature status IN_PROGRESS
-- [ ] Ready to fill in design details
+- [ ] User answered all questions (Q1-Q6)
+- [ ] User confirmed initialization summary
+- [ ] Feature verified in FEATURES.md
+- [ ] Dependencies verified (if any)
+- [ ] Feature directory created: `architecture/features/feature-{FEATURE_SLUG}/`
+- [ ] DESIGN.md generated with actual content from answers:
+  - [ ] Section A: Feature Context (overview, purpose, actors)
+  - [ ] Section B: Actor Flows (initial flow descriptions from Q5)
+  - [ ] Section C: Algorithms (placeholders based on flows)
+  - [ ] Section E: Technical Details (placeholders)
+  - [ ] Section F: Validation & Implementation (test scenarios, OpenSpec changes)
+- [ ] Feature status updated: NOT_STARTED → IN_PROGRESS
+- [ ] No empty placeholders like "[TODO]" in generated content
+- [ ] Document ready for user to expand with detailed FDL and technical specs
 
 ---
 

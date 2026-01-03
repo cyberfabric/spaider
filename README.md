@@ -219,6 +219,7 @@ feature-login/
 
 **API Contracts** - you choose format:
 - OpenAPI, GraphQL Schema, gRPC, RAML, etc.
+- **CLISPEC** (built-in format for CLI tools)
 - Must be documented before implementation
 
 ---
@@ -229,8 +230,9 @@ feature-login/
 
 **Read these files**:
 1. `README.md` (this file) - Overview
-2. `FDL.md` - Learn plain English algorithm syntax
-3. `workflows/README.md` - Understand workflow system
+2. `QUICKSTART.md` - 5-minute quick start guide with examples
+3. `FDL.md` - Learn plain English algorithm syntax
+4. `workflows/README.md` - Understand workflow system
 
 ### 2. Add FDD to Your Project (15 minutes)
 
@@ -246,20 +248,45 @@ cp -r /path/to/FDD guidelines/FDD
 git submodule add <fdd-repo-url> guidelines/FDD
 ```
 
-### 3. Create Project Adapter (1-2 hours) 🤖
+### 3. Create Project Adapter (5-10 minutes) 🤖
 
-Follow the detailed guide: **`ADAPTER_GUIDE.md`**
+**Run workflow**: `workflows/adapter-config.md` (interactive)
 
-Quick steps:
-1. Create `guidelines/your-project-fdd-adapter/`
-2. Choose domain model format (GTS, CTI, JSON Schema, TypeScript, Protobuf, etc.)
-3. Choose API contract format (OpenAPI, RAML, GraphQL, gRPC, etc.)
-4. Document patterns in `PATTERNS.md`
-5. Set up validation in `VALIDATION.md`
+Or use AI agent:
+```
+Follow @guidelines/FDD/workflows/adapter-config.md to create FDD adapter
+```
 
-**AI agent can help**: Generate adapter structure and templates from `ADAPTER_GUIDE.md`
+This interactive workflow will:
+1. Ask 8 guided questions about your project
+2. Choose domain model format (GTS, JSON Schema, TypeScript, etc.)
+3. Choose API contract format (OpenAPI, GraphQL, CLISPEC, etc.)
+4. Capture security model and non-functional requirements
+5. Generate `spec/FDD-Adapter/AGENTS.md` and `spec/FDD-Adapter/workflows/AGENTS.md`
 
-### 4. Initialize Architecture (30 minutes) 🤖
+**Result**: Adapter created at `spec/FDD-Adapter/` with status COMPLETE or INCOMPLETE
+
+For manual setup, see: **`ADAPTER_GUIDE.md`**
+
+### 4. Configure AI Agent (2 minutes, optional) 🤖
+
+**Run workflow**: `workflows/config-agent-tools.md` (interactive)
+
+This optional workflow sets up your AI agent (Windsurf, Cursor, Cline, Aider) to use FDD natively:
+- Creates agent-specific configuration files
+- Windsurf: `.windsurf/rules.md` + workflow wrappers
+- Cursor: `.cursorrules` (single file)
+- Cline: `.clinerules` (single file)
+- Aider: `.aider.conf.yml` (YAML config)
+
+All configs:
+- ✅ Tell agent to read FDD adapter first
+- ✅ Provide FDD workflow references
+- ✅ Follow agent-specific format
+
+**Result**: Agent reads `spec/FDD-Adapter/AGENTS.md` automatically
+
+### 5. Initialize Architecture (30 minutes) 🤖
 
 **AI agent workflow**: Ask your AI agent to follow `workflows/01-init-project.md`
 
@@ -278,7 +305,7 @@ cat > architecture/DESIGN.md << 'EOF'
 EOF
 ```
 
-### 5. Start First Feature (1-2 hours) 🤖
+### 6. Start First Feature (1-2 hours) 🤖
 
 **AI agent workflow**: Ask your AI agent to follow `workflows/05-init-feature.md`
 
@@ -300,42 +327,11 @@ EOF
 
 ## IDE Setup
 
-### VS Code / Cursor / Windsurf
+To set up your AI assistant (Windsurf, Cursor, Cline, etc.) to work natively with FDD:
 
-**Recommended Extensions**:
-- Markdown All in One (preview, TOC)
-- Draw.io Integration (architecture diagrams)
-- OpenAPI (Swagger) Editor (if using OpenAPI)
+**Use workflow**: `workflows/config-agent-tools.md`
 
-**Workspace Settings** (`.vscode/settings.json`):
-```json
-{
-  "files.associations": {
-    "**/architecture/**/*.md": "markdown",
-    "**/workflows/*.md": "markdown"
-  },
-  "markdown.extension.toc.levels": "2..6",
-  "editor.wordWrap": "on"
-}
-```
-
-**Snippets** (optional, `.vscode/fdd.code-snippets`):
-```json
-{
-  "FDL Algorithm": {
-    "prefix": "fdl-algo",
-    "body": [
-      "### Algorithm: ${1:Name}",
-      "",
-      "1. ${2:First step}",
-      "2. ${3:Second step}",
-      "   2.1. IF ${4:condition}",
-      "       2.1.1. ${5:action}",
-      "3. ${6:Third step}"
-    ]
-  }
-}
-```
+This workflow creates agent-specific files (`.windsurf/rules.md`, workflow wrappers) so your agent reads the FDD adapter and uses FDD workflows naturally.
 
 ---
 
@@ -343,34 +339,7 @@ EOF
 
 FDD is designed to work with AI coding assistants (but doesn't require them).
 
-### Setup AI Assistant for FDD
-
-**1. Configure AI to read FDD docs**:
-
-Add to your IDE's AI assistant configuration or user rules:
-```
-Always read @guidelines/FDD/AGENTS.md for FDD methodology.
-Always read @guidelines/{project}-fdd-adapter/AGENTS.md for project-specific patterns.
-Follow FDD workflows in @guidelines/FDD/workflows/.
-```
-
-**2. Common AI workflows**:
-
-```bash
-# Let AI initialize project
-"Follow @guidelines/FDD/workflows/01-init-project.md to initialize FDD structure"
-
-# Let AI create feature
-"Follow @guidelines/FDD/workflows/05-init-feature.md to create feature-login"
-
-# Let AI validate design
-"Follow @guidelines/FDD/workflows/06-validate-feature.md to validate feature-login"
-
-# Let AI implement OpenSpec change
-"Follow @guidelines/FDD/workflows/10-openspec-change-implement.md for feature-login change 001"
-```
-
-**3. AI limitations**:
+### AI Limitations
 
 AI assistants can:
 - ✅ Initialize structures
@@ -471,34 +440,36 @@ Humans must:
 ## Directory Structure
 
 ```
-guidelines/FDD/                                 # Core FDD (standalone, universal)
+spec/FDD/                                       # Core FDD (standalone, universal)
 ├── README.md                                   # This file - overview, getting started
+├── QUICKSTART.md                               # 5-minute quick start guide
 ├── AGENTS.md                                   # AI agent instructions
-├── FDL.md                                     # FDD Description Language syntax
-├── ADAPTER_GUIDE.md                           # How to create project adapter
-└── workflows/                                  # 12 universal workflows
-    ├── README.md                              # Workflow system overview
-    ├── AGENTS.md                              # Workflow selection (for AI)
-    ├── 01-init-project.md                     # Initialize FDD structure
-    ├── 02-validate-architecture.md            # Validate Overall Design
-    ├── 03-init-features.md                    # Generate features
-    ├── 04-validate-features.md                # Validate FEATURES.md
-    ├── 05-init-feature.md                     # Initialize single feature
-    ├── 06-validate-feature.md                 # Validate Feature Design
-    ├── 07-complete-feature.md                 # Mark feature complete
-    ├── 08-fix-design.md                       # Fix design issues
-    ├── 09-openspec-init.md                    # Initialize OpenSpec
-    ├── 10-openspec-change-implement.md        # Implement change
-    ├── 11-openspec-change-complete.md         # Complete change
-    ├── 12-openspec-change-next.md             # Create next change
-    └── 13-openspec-validate.md                # Validate OpenSpec
+├── FDL.md                                      # FDD Description Language syntax
+├── CLISPEC.md                                  # CLI command specification format
+├── ADAPTER_GUIDE.md                            # How to create project adapter
+└── workflows/                                  # 15 universal workflows
+    ├── README.md                               # Workflow system overview
+    ├── AGENTS.md                               # Workflow selection (for AI)
+    ├── adapter-config.md                       # Create project adapter (Phase 0)
+    ├── config-agent-tools.md                   # Configure AI agent tools (Phase 0, optional)
+    ├── 01-init-project.md                      # Initialize FDD structure
+    ├── 02-validate-architecture.md             # Validate Overall Design
+    ├── 03-init-features.md                     # Generate features
+    ├── 04-validate-features.md                 # Validate FEATURES.md
+    ├── 05-init-feature.md                      # Initialize single feature
+    ├── 06-validate-feature.md                  # Validate Feature Design
+    ├── 07-complete-feature.md                  # Mark feature complete
+    ├── 08-fix-design.md                        # Fix design issues
+    ├── 09-openspec-init.md                     # Initialize OpenSpec
+    ├── 10-openspec-change-implement.md         # Implement change
+    ├── 11-openspec-change-complete.md          # Complete change
+    ├── 12-openspec-change-next.md              # Create next change
+    └── 13-openspec-validate.md                 # Validate OpenSpec
 
-guidelines/your-project-fdd-adapter/            # Your project adapter (create this)
-├── README.md                                   # Integration overview
+spec/FDD-Adapter/                               # Your project adapter (created by workflow)
 ├── AGENTS.md                                   # AI instructions (project-specific)
-├── PATTERNS.md                                 # Implementation patterns
-├── VALIDATION.md                               # Validation requirements
-└── COMMON_PITFALLS.md                         # Common mistakes
+└── workflows/
+    └── AGENTS.md                              # Workflow extensions (project-specific)
 
 architecture/                                    # Your designs (created by workflows)
 ├── DESIGN.md                                   # Overall Design
@@ -518,8 +489,10 @@ architecture/                                    # Your designs (created by work
 ### For Developers
 
 - **This File** (`README.md`) - Overview, getting started, team workflow
-- **`FDL.md`** - Plain English algorithm syntax guide
-- **`workflows/README.md`** - All 12 workflows overview
+- **`QUICKSTART.md`** - 5-minute quick start guide with examples
+- **`FDL.md`** - FDD Description Language syntax guide
+- **`CLISPEC.md`** - CLI command specification format
+- **`workflows/README.md`** - All 14 workflows overview
 
 ### For AI Assistants
 
@@ -530,6 +503,7 @@ architecture/                                    # Your designs (created by work
 ### For Creating Adapters
 
 - **`ADAPTER_GUIDE.md`** - Complete guide for creating project adapters
+- **`workflows/adapter-config.md`** - Interactive workflow for adapter creation
 
 ---
 
@@ -722,23 +696,29 @@ fdd check fdl <slug>               # Validate FDL syntax
 
 **Features**:
 - Core + Adapters architecture (technology-agnostic core, framework-specific adapters)
-- Universal Workflows (12 IDE-agnostic workflow guides)
+- Universal Workflows (14 IDE-agnostic workflow guides)
 - Two-level design (Overall Design → Feature Design)
 - OpenSpec change management (universal)
-- Algorithm Description Language (ADL)
+- FDD Description Language (FDL)
+- CLISPEC format (CLI command specification)
 - Design Requirements (formal specifications without prescribing technologies)
 - Validation-first approach
 - Framework adapters pattern
+- Quick start guide for rapid onboarding
 
 **Structure**:
 - Core FDD (universal, framework-agnostic methodology)
 - Project adapters (technology-specific integration)
-- 12 universal workflows (IDE-agnostic guides)
+- 14 universal workflows (IDE-agnostic guides)
 - Design requirements (formal specifications without technology lock-in)
+- Built-in formats (FDL, CLISPEC)
 
 **Documentation**:
-- Complete methodology guide
-- 12 universal workflows (IDE-agnostic)
+- Complete methodology guide (README.md)
+- Quick start guide (QUICKSTART.md)
+- 14 universal workflows (IDE-agnostic)
+- FDD Description Language spec (FDL.md)
+- CLI specification format (CLISPEC.md)
 - Framework adapter templates
 
 ---

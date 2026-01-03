@@ -1,7 +1,7 @@
 # Initialize OpenSpec for Feature
 
 **Phase**: 3 - Feature Development  
-**Purpose**: Create OpenSpec structure and first change for feature implementation
+**Purpose**: Create OpenSpec structure and first change for feature implementation through guided selection
 
 ---
 
@@ -11,16 +11,119 @@
 - Feature status IN_PROGRESS
 - Feature directory exists: `architecture/features/feature-{slug}/`
 
-## Input Parameters
+---
 
-- **slug**: Feature identifier (lowercase, kebab-case)
-- **change-name**: Descriptive name for first change (e.g., "implement-core" - will be prefixed with number by OpenSpec)
+## Overview
+
+This workflow initializes OpenSpec structure for a feature, then guides you through creating the first change by reading planned changes from Feature DESIGN.md Section F.
+
+**Key Principle**: Read design, propose changes, confirm before creating.
+
+---
+
+## Interactive Questions
+
+### Q1: Feature Slug
+```
+Which feature are you initializing OpenSpec for?
+Provide feature slug: ___
+
+Example: "user-auth", "payment-flow"
+```
+**Store as**: `FEATURE_SLUG`
+
+### Q2: Read and Display Planned Changes
+
+**Action**: Read `architecture/features/feature-{FEATURE_SLUG}/DESIGN.md` Section F
+
+**Extract**:
+- OpenSpec changes list from Section F
+- Each change should have: name, description, scope, dependencies
+
+**Display to User**:
+```
+Planned OpenSpec Changes (from DESIGN.md Section F):
+───────────────────────────────────────────────────
+
+{If changes found in Section F}
+1. {Change 001 name}
+   Description: {from DESIGN.md}
+   Scope: {from DESIGN.md}
+   Dependencies: {from DESIGN.md}
+
+2. {Change 002 name}
+   Description: {from DESIGN.md}
+   Scope: {from DESIGN.md}
+   Dependencies: {from DESIGN.md}
+
+...
+
+{If no changes in Section F or Section F empty}
+⚠️ Section F does not have detailed OpenSpec changes.
+You'll need to define the first change manually.
+```
+
+### Q3: Select or Define First Change
+
+**If changes found in Section F**:
+```
+Which change should be created first?
+
+Options:
+  1. Change 001: {name from DESIGN.md}
+  2. Change 002: {name from DESIGN.md}
+  ...
+  N. Define custom change
+
+Your choice: ___
+```
+
+**If no changes in Section F**:
+```
+Section F doesn't have detailed changes. Let's define the first change:
+
+Change name (kebab-case, e.g., "implement-core"): ___
+Brief description: ___
+Key scope items (one per line):
+- ___
+- ___
+- ___
+```
+
+**Store as**: `FIRST_CHANGE_NAME`, `FIRST_CHANGE_DESC`, `FIRST_CHANGE_SCOPE[]`
+
+### Q4: Confirm Initialization
+
+**Display Summary**:
+```
+OpenSpec Initialization Summary:
+────────────────────────────────
+Feature: feature-{FEATURE_SLUG}
+First Change: {FIRST_CHANGE_NAME}
+
+Will create:
+✓ openspec/ directory structure
+✓ openspec/specs/ (source of truth)
+✓ openspec/changes/{FIRST_CHANGE_NAME}/
+  ✓ proposal.md (Why, What, Impact)
+  ✓ tasks.md (Implementation checklist)
+  ✓ specs/ (Delta specifications)
+  ✓ design.md (if complexity requires)
+
+First change details:
+- Description: {FIRST_CHANGE_DESC}
+- Scope: {list FIRST_CHANGE_SCOPE items}
+
+Proceed with initialization? (y/n)
+```
+
+**Expected Outcome**: User confirms or cancels
 
 ---
 
 ## Requirements
 
-### 1: Initialize OpenSpec with CLI Tool
+### 1. Initialize OpenSpec with CLI Tool
 
 **Requirement**: Use `openspec init` to create structure
 
@@ -42,7 +145,7 @@ openspec init
 
 ---
 
-### 2: Create First Change Manually
+### 2. Create First Change Manually
 
 **Requirement**: Manually create change directory structure
 
@@ -62,61 +165,84 @@ mkdir -p changes/{change-name}/specs
 
 ---
 
-### 3: Create Proposal Document
+### 3. Generate Proposal Document
 
 **Requirement**: Write proposal.md following OpenSpec format
 
-**Location**: `openspec/changes/{change-name}/proposal.md`
+**Location**: `openspec/changes/{FIRST_CHANGE_NAME}/proposal.md`
 
-**Required Structure** (OpenSpec standard):
+**Generated Content** (OpenSpec standard):
 ```markdown
-# Change: {Brief description of change}
+# Change: {FIRST_CHANGE_DESC from Q3}
 
 ## Why
-{1-2 sentences on problem/opportunity}
+{Extract from DESIGN.md Section F if available, otherwise:}
+This change implements the first phase of {FEATURE_NAME} feature.
+{FIRST_CHANGE_DESC}
 
 ## What Changes
-- {Bullet list of changes}
-- {Mark breaking changes with **BREAKING**}
+{For each item in FIRST_CHANGE_SCOPE from Q3}
+- {Scope item}
+
+{If any breaking changes identified}
+- **BREAKING**: {Breaking change description}
 
 ## Impact
-- Affected specs: {list capabilities}
-- Affected code: {key files/systems}
+- Affected specs: {Derive from FIRST_CHANGE_SCOPE}
+- Affected code: {Key modules/files from scope}
 ```
 
-**Content Source**: Extract from `../../DESIGN.md` Section F
+**Content Source**: 
+- Primary: User answers from Q3
+- Secondary: `../../DESIGN.md` Section F (if detailed change found)
 
-**Expected Outcome**: Proposal created with proper OpenSpec format
+**Expected Outcome**: Proposal created with actual content from user input
 
-**Note**: Use OpenSpec standard format, not custom templates
+**Validation Criteria**:
+- Contains Why, What Changes, Impact sections
+- Content based on user answers, not placeholders
+- Breaking changes marked if any
 
 ---
 
-### 4: Create Tasks Checklist
+### 4. Generate Tasks Checklist
 
 **Requirement**: Write tasks.md with implementation steps
 
-**Location**: `openspec/changes/{change-name}/tasks.md`
+**Location**: `openspec/changes/{FIRST_CHANGE_NAME}/tasks.md`
 
-**Required Structure** (OpenSpec standard):
+**Generated Content** (OpenSpec standard):
 ```markdown
 ## 1. Implementation
-- [ ] 1.1 Create database schema
-- [ ] 1.2 Implement API endpoint
-- [ ] 1.3 Add frontend component
-- [ ] 1.4 Write tests
+{Generate tasks from FIRST_CHANGE_SCOPE}
+{For each scope item, create 1-3 tasks}
+- [ ] 1.{N} {Actionable task derived from scope item}
+
+{Always add testing task}
+- [ ] 1.{N+1} Write tests for implemented functionality
+
+{Add validation task}
+- [ ] 1.{N+2} Validate against Feature DESIGN.md Section B/C
 ```
 
-**Guidelines**:
-- Number tasks sequentially
-- Break down into specific, actionable items
-- Include testing and documentation tasks
+**Task Generation Guidelines**:
+- Derive from FIRST_CHANGE_SCOPE items
+- Each scope item → 1-3 specific tasks
+- Always include testing
+- Always include validation
+- Number sequentially (1.1, 1.2, etc.)
 
-**Expected Outcome**: Clear implementation checklist
+**Expected Outcome**: Actionable checklist with meaningful tasks
+
+**Validation Criteria**:
+- Tasks derived from scope, not generic
+- Testing included
+- Validation included
+- All tasks actionable and specific
 
 ---
 
-### 5: Create Delta Specifications
+### 5. Create Delta Specifications
 
 **Requirement**: Write delta specs using OpenSpec format
 
@@ -149,7 +275,7 @@ The system SHALL provide...
 
 ---
 
-### 6: Create design.md (Optional)
+### 6. Create design.md (Optional)
 
 **Requirement**: Create design.md only if needed
 
@@ -190,7 +316,7 @@ The system SHALL provide...
 
 ---
 
-### 7: Validate with OpenSpec
+### 7. Validate with OpenSpec
 
 **Requirement**: Validate change structure and specs
 
@@ -212,25 +338,62 @@ openspec validate {change-name} --strict
 
 ---
 
-### 8: Link to Feature DESIGN.md
+### 8. Update Feature DESIGN.md
 
-**Requirement**: Reference OpenSpec change in Feature DESIGN.md
+**Requirement**: Mark first change as initialized in Feature DESIGN.md
 
 **Location**: `../../DESIGN.md` (Feature DESIGN.md, not openspec/design.md)
 
-**Add to Section F**:
+**Update Section F**:
 ```markdown
 ## F. Validation & Implementation
 
 ### OpenSpec Changes
 
-See `openspec/changes/` for implementation details:
-- `{change-name}` - {Brief description}
+**Active Changes**: See `openspec/changes/` for implementation details:
+- `{FIRST_CHANGE_NAME}` - {FIRST_CHANGE_DESC} [Status: 🔄 IN_PROGRESS]
+
+{Keep remaining planned changes from original Section F}
 ```
 
-**Expected Outcome**: Feature DESIGN.md references OpenSpec change
+**Expected Outcome**: Feature DESIGN.md updated with active change status
 
 **Note**: Feature design is in `architecture/features/feature-{slug}/DESIGN.md`
+
+---
+
+### 9. Show Summary
+
+**Requirement**: Display what was created
+
+**Display Summary**:
+```
+OpenSpec Initialization Complete!
+────────────────────────────────────
+Feature: feature-{FEATURE_SLUG}
+
+Created:
+✓ openspec/ directory structure initialized
+✓ openspec/changes/{FIRST_CHANGE_NAME}/
+  ✓ proposal.md (Why, What, Impact)
+  ✓ tasks.md ({N} implementation tasks)
+  ✓ specs/ directory (ready for delta specs)
+  {If design.md created: "✓ design.md (technical decisions)"}
+
+✓ Feature DESIGN.md Section F updated
+
+First Change Details:
+- Name: {FIRST_CHANGE_NAME}
+- Description: {FIRST_CHANGE_DESC}
+- Tasks: {N} items to implement
+
+Next Steps:
+1. Create delta specifications in specs/{capability}/spec.md
+2. Validate: openspec validate {FIRST_CHANGE_NAME} --strict
+3. Start implementation: Run workflow 10-openspec-change-implement
+```
+
+**Expected Outcome**: Summary displayed
 
 ---
 
@@ -238,16 +401,24 @@ See `openspec/changes/` for implementation details:
 
 OpenSpec initialization complete when:
 
-- [ ] `openspec/specs/` directory exists
-- [ ] `openspec/changes/{change-name}/` created manually
-- [ ] `proposal.md` follows OpenSpec format (Why, What Changes, Impact)
-- [ ] `tasks.md` has numbered implementation checklist
-- [ ] Delta specs created in `specs/{capability}/spec.md` with ADDED/MODIFIED/etc
-- [ ] Each requirement has at least one `#### Scenario:`
+- [ ] User selected feature slug (Q1)
+- [ ] Planned changes read from DESIGN.md Section F (Q2)
+- [ ] User selected or defined first change (Q3)
+- [ ] User confirmed initialization (Q4)
+- [ ] `openspec/` initialized with `openspec init` command
+- [ ] `openspec/changes/{FIRST_CHANGE_NAME}/` created manually
+- [ ] `proposal.md` generated with actual content from Q3:
+  - [ ] Why, What Changes, Impact sections present
+  - [ ] Content from user answers, not placeholders
+- [ ] `tasks.md` generated with tasks derived from scope:
+  - [ ] Tasks specific to scope items
+  - [ ] Testing tasks included
+  - [ ] Validation tasks included
+- [ ] Delta specs directory created (specs content added later)
 - [ ] `design.md` created if complexity requires it (optional)
-- [ ] `openspec validate {change-name} --strict` passes
-- [ ] Feature DESIGN.md (../../DESIGN.md) Section F references change
-- [ ] Ready to start implementation
+- [ ] Feature DESIGN.md Section F updated with active change
+- [ ] Summary displayed to user
+- [ ] Ready to create delta specs and validate
 
 ---
 

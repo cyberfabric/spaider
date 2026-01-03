@@ -4,6 +4,54 @@
 
 ---
 
+## ⚠️ PREREQUISITE: FDD ADAPTER REQUIRED
+
+**FDD CANNOT WORK WITHOUT A PROJECT-SPECIFIC ADAPTER**
+
+Before doing ANY FDD work, you **MUST** verify that a project adapter exists:
+
+**Check for adapter**:
+1. Look for `{adapter-directory}/AGENTS.md` that extends `../FDD/AGENTS.md`
+2. Common locations:
+   - `spec/{project-name}-adapter/AGENTS.md`
+   - `guidelines/{project-name}-adapter/AGENTS.md`
+   - `docs/{project-name}-adapter/AGENTS.md`
+
+**If adapter NOT found**:
+```
+❌ STOP: FDD adapter not found.
+
+FDD requires a project-specific adapter before any work can begin.
+
+Would you like to create an adapter now? (recommended)
+→ Run Workflow: adapter-config (workflows/adapter-config.md)
+
+This will guide you through:
+- Domain model technology selection
+- API contract format
+- Testing and build tools
+- Project-specific conventions
+```
+
+**If adapter found but INCOMPLETE**:
+```
+⚠️ WARNING: Adapter is marked as INCOMPLETE.
+
+Missing specifications:
+{List from adapter AGENTS.md}
+
+ALL workflows are BLOCKED.
+
+Please complete the adapter by adding missing specifications.
+```
+
+**Only proceed with FDD workflows if**:
+- ✅ Adapter exists
+- ✅ Adapter extends FDD AGENTS.md
+- ✅ Adapter status is COMPLETE (or user acknowledges INCOMPLETE status)
+
+---
+
 ## CRITICAL RULES - NEVER VIOLATE
 
 **Design Hierarchy** (strict order, no violations):
@@ -259,19 +307,33 @@ Everything else is adapter-specific:
 
 ## Quick Reference
 
+**New to FDD? Start here**: `QUICKSTART.md` - 5-minute guide with examples
+
 **When Starting FDD Work**:
-1. Read `AGENTS.md` (this file) - Core methodology
-2. Read `workflows/AGENTS.md` - Workflow selection guide
-3. Read `FDL.md` - FDL syntax reference
+1. **Check for FDD Adapter** - REQUIRED before any work
+   - Look for `{adapter-dir}/AGENTS.md`
+   - If not found → Run Workflow: adapter-config
+2. Read `QUICKSTART.md` (if new to FDD) - Quick start guide
+3. Read `AGENTS.md` (this file) - Core methodology
+4. Read `workflows/AGENTS.md` - Workflow selection guide
+5. Read `FDL.md` - FDL syntax reference
 
 **Key Files**:
 - `architecture/DESIGN.md` - Overall Design (≤5000 lines, ≥90/100)
 - `architecture/features/FEATURES.md` - Feature manifest
 - `architecture/features/feature-{slug}/DESIGN.md` - Feature Design (≤4000 lines, 100/100)
 - `architecture/features/feature-{slug}/openspec/` - OpenSpec changes
+- `CLISPEC.md` - CLI command specification format
 
-**Workflow Selection**:
-- See `workflows/AGENTS.md` for decision tree and complete workflow list
+**Key Workflows**: See `workflows/AGENTS.md`
+
+**Key Concepts**: Design Hierarchy, FDL, Actor Flows, Domain Model, OpenSpec
+
+**Built-in Formats**:
+- **CLISPEC**: CLI command specification format (`CLISPEC.md`)
+  - Human and machine-readable
+  - For CLI tools documentation
+  - Structured command format
 
 **Remember**:
 - ✅ Actor Flows (Section B) are PRIMARY - start design here

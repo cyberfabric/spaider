@@ -1,14 +1,121 @@
 # Initialize FDD Project
 
 **Phase**: 1 - Architecture Design  
-**Purpose**: Create FDD project structure with Overall Design template
+**Purpose**: Create FDD project structure with Overall Design template through guided questions
 
 ---
 
 ## Prerequisites
 
+- FDD adapter exists and is valid (run workflow `adapter-config` first if needed)
 - Project repository exists
 - Write permissions in project directory
+
+---
+
+## Overview
+
+This workflow creates FDD project structure and Overall Design document through interactive questions. The workflow gathers project context first, then generates structured documentation with actual content instead of empty placeholders.
+
+**Key Principle**: Ask questions, generate meaningful content, avoid empty templates.
+
+---
+
+## Interactive Questions
+
+Ask the user these questions **one by one** to gather requirements:
+
+### Q1: Module/System Name
+```
+What is the name of this module or system?
+Example: "User Management Service", "Payment API", "Analytics Dashboard"
+```
+**Store as**: `MODULE_NAME`
+
+### Q2: System Vision
+```
+What does this system do and why does it exist?
+Describe in 2-4 sentences the core purpose and value.
+
+Example: "This system manages user authentication and authorization 
+for the platform. It provides secure login, role-based access control, 
+and user profile management. The goal is to centralize identity 
+management across all services."
+```
+**Store as**: `SYSTEM_VISION`
+
+### Q3: Core Capabilities
+```
+What are the main capabilities this system provides?
+List 3-7 key capabilities (one per line):
+
+Example:
+- User registration and login
+- Password reset and recovery
+- Role and permission management
+- User profile management
+- Session management
+```
+**Store as**: `CAPABILITIES[]`
+
+### Q4: Actors
+```
+Who are the actors (users/systems) that interact with this system?
+For each actor, provide:
+- Actor name
+- Role and responsibilities
+
+Example:
+- End User: Regular user who logs in and manages their profile
+- Administrator: Manages users, roles, and permissions
+- External Service: Other services that validate tokens and check permissions
+```
+**Store as**: `ACTORS[]` (each with name and description)
+
+### Q5: Key Business Rules
+```
+What are the key business rules or principles for this system?
+List 2-5 important rules that guide the design.
+
+Example:
+- Passwords must meet complexity requirements (8+ chars, mixed case, numbers)
+- Sessions expire after 24 hours of inactivity
+- Users can only have one active session at a time
+- All authentication attempts are logged for security audit
+```
+**Store as**: `BUSINESS_RULES[]`
+
+### Q6: Architecture Style
+```
+What is the architectural style of this system?
+Options:
+  1. Monolithic application
+  2. Microservice
+  3. CLI tool
+  4. Library/SDK
+  5. Serverless functions
+  6. Other (specify)
+```
+**Store as**: `ARCHITECTURE_STYLE`
+
+**If user selects "Other"**, ask:
+```
+Please describe the architectural style: ___
+```
+
+### Q7: Additional Context (Optional)
+```
+Is there any additional context about this system?
+
+Examples:
+- Integration requirements
+- Performance constraints
+- Compliance requirements
+- Migration from existing system
+
+Additional context (optional, free form): ___
+```
+**Store as**: `ADDITIONAL_CONTEXT`
 
 ---
 
@@ -37,101 +144,153 @@
 
 ---
 
-### 2. Initialize Overall Design Document
+### 2. Generate Overall Design Document
 
-**Requirement**: Create `architecture/DESIGN.md` with complete section structure
+**Requirement**: Create `architecture/DESIGN.md` with actual content based on collected answers
 
 **Required Content**:
-- File: `architecture/DESIGN.md`
-- **Section A**: Business Context (required)
-  - System vision description
-  - Core capabilities list
-  - Actors and their roles
-- **Section B**: Requirements & Principles (required)
-  - Use cases and actor interactions
-  - Business rules and principles
-  - Key constraints
-- **Section C**: Technical Architecture (required)
-  - Architecture overview and components
-  - Domain model specification (DML)
-  - API contract specification
-  - Security model
-  - Non-functional requirements
-- **Section D**: Project-Specific Details (optional, not validated)
-  - Integration points
-  - Future enhancements
-  - Project-specific notes
-  - Any additional context not covered by A-C
+Generate `architecture/DESIGN.md` with the following structure and actual content from answers:
 
-**Template Example**:
 ```markdown
-# Overall Design
+# Overall Design: {MODULE_NAME}
 
 ## A. Business Context
 
 ### System Vision
-[Describe what the system does and why it exists]
+
+{SYSTEM_VISION from Q2}
 
 ### Core Capabilities
-- Capability 1: [Description]
-- Capability 2: [Description]
+
+{For each capability in CAPABILITIES[]}
+- **{Capability}**: {Description from user input}
 
 ### Actors
-- **Actor Name**: [Role and responsibilities]
+
+{For each actor in ACTORS[]}
+- **{Actor Name}**: {Role and responsibilities from user input}
 
 ## B. Requirements & Principles
 
 ### Use Cases
-[Actor interactions and use cases]
+
+{Generate placeholder based on actors and capabilities:}
+Primary use cases derived from actors and capabilities:
+
+{For each actor, list 2-3 example use cases based on their role}
+- {Actor} can {capability-related action}
+
+**Note**: Detailed actor flows will be designed in Feature Design documents.
 
 ### Business Rules
-[Key business rules and principles]
+
+{For each rule in BUSINESS_RULES[]}
+- {Business rule from user input}
+
+### Design Principles
+
+{Auto-generate based on FDD principles:}
+- **Separation of Concerns**: Clear separation between domain model, API contracts, and implementation
+- **Design First**: All features designed before implementation
+- **Type Safety**: Strong typing through domain model
+- **Traceability**: All code traceable to design decisions
 
 ## C. Technical Architecture
 
 ### Architecture Overview
-[System components and layers]
+
+**Style**: {ARCHITECTURE_STYLE from Q6}
+
+{If ARCHITECTURE_STYLE is recognized, add relevant details:}
+{For "Microservice": "Independent service with its own domain model and API contract."}
+{For "CLI tool": "Command-line interface following CLI design patterns."}
+{For "Library/SDK": "Reusable library with stable public API."}
+{etc.}
+
+**Key Components**:
+- Domain Model: Types and business logic ({DML_TECH from adapter})
+- API Layer: {API_TECH from adapter} contracts
+- Implementation: Following FDD workflows
 
 ### Domain Model
-[Link to DML specifications]
 
-### API Contract
-[Link to API specifications]
+**Technology**: {DML_TECH from adapter}
 
-## D. Project-Specific Details (Optional)
-[Additional context not covered by A-C]
-```
+**Location**: {DML_LOCATION from adapter}
 
-**Expected Outcome**: Complete DESIGN.md template exists
+**Specification**: See adapter for DML syntax and validation rules
 
-**Validation Criteria**:
-- File `architecture/DESIGN.md` exists
-- Contains sections A-C (D is optional)
-- Each required section has subsections defined
-- Placeholders for content present
-- No sections H or beyond present
+**Types**: To be defined during architecture development
+
+**Linking**: {DML_SYNTAX_REFERENCE from adapter}
+
+### API Contracts
+
+{If API_TECH is not "None"}
+**Technology**: {API_TECH from adapter}
+
+**Location**: {API_LOCATION from adapter}
+
+**Specification**: See adapter for API format and validation rules
+
+**Endpoints**: To be defined during architecture development
+
+### Security Model
+
+{SECURITY_MODEL from adapter}
+
+### Non-Functional Requirements
+
+{NFR_LIST from adapter}
+
+{If additional NFRs from architecture style}
+{Add relevant NFRs based on ARCHITECTURE_STYLE}
+
+## D. Project-Specific Details
+
+{Only include if ADDITIONAL_CONTEXT from Q7 is provided}
+
+{ADDITIONAL_CONTEXT}
 
 ---
 
-### 3. Initialize API Contract Specification
+**Document Status**: Initial version - ready for detailed design
 
-**Requirement**: Create baseline API specification file(s)
+**Next Steps**:
+1. Fill in domain model types
+2. Define API endpoints
+3. Validate architecture (workflow 02-validate-architecture)
+4. Generate features (workflow 03-init-features)
+```
 
-**Required Content** (format per adapter):
-- API specification file(s) in adapter-defined location
-- Valid specification format (e.g., GTS, CTI, OpenAPI 3.0+, GraphQL Schema, gRPC .proto)
-- Basic metadata (title, version, description)
-- Server/endpoint configuration
-- At least one sample endpoint defined (e.g., health check)
-- Placeholder for additional endpoints
-
-**Expected Outcome**: Valid API specification exists
+**Expected Outcome**: DESIGN.md with meaningful initial content
 
 **Validation Criteria**:
-- API specification file(s) exist in correct location
-- Contains valid structure per chosen format
-- Has required metadata sections
-- At least one endpoint/service defined
+- File `architecture/DESIGN.md` exists
+- Contains sections A-D with actual content from user answers
+- System vision, capabilities, actors filled from Q2-Q4
+- Business rules filled from Q5
+- Architecture style filled from Q6
+- Technical architecture references adapter settings
+- Additional context included if provided in Q7
+- Document ready for user to add domain model types and API endpoints
+- No empty placeholders like "[TODO]" or "[Description]"
+
+---
+
+### 3. Initialize API Contract Directory
+
+**Requirement**: Create API specification directory structure per adapter settings
+
+**Required Actions**:
+- Create directory: {API_LOCATION from adapter}
+- Note: Specific API contract files will be created as part of Overall Design development
+
+**Expected Outcome**: API specification directory exists and is ready for use
+
+**Validation Criteria**:
+- Directory {API_LOCATION} exists
+- Directory is writable
 
 ---
 
@@ -140,31 +299,85 @@
 **Requirement**: Initialize features tracking document
 
 **Required Content**:
-- File: `architecture/features/FEATURES.md`
-- Module name placeholder
-- Status: PLANNING
-- Note about running validation workflow first
-- Reference to next workflows
+```markdown
+# Features Manifest: {MODULE_NAME}
+
+**Status**: PLANNING
+
+## Features
+
+Features will be generated after Overall Design validation.
+
+**Next Steps**:
+1. Complete Overall Design (add domain model types and API endpoints)
+2. Validate architecture: `workflows/02-validate-architecture.md`
+3. Generate features: `workflows/03-init-features.md`
+```
 
 **Expected Outcome**: Features manifest placeholder created
 
 **Validation Criteria**:
 - File `architecture/features/FEATURES.md` exists
-- Contains module name placeholder
-- References validation and init-features workflows
+- Contains module name from Q1
+- References next workflows
 
 ---
 
-### 5. Version Control Integration (Optional)
+### 5. Show Summary and Confirm
+
+**Requirement**: Display what will be created and get user confirmation
+
+**Display Summary**:
+```
+FDD Project Initialization Summary:
+───────────────────────────────────
+Module: {MODULE_NAME}
+Architecture: {ARCHITECTURE_STYLE}
+
+Will create:
+✓ architecture/
+  ✓ DESIGN.md (with content from your answers)
+  ✓ features/
+    ✓ FEATURES.md (placeholder)
+  ✓ diagrams/
+✓ {DML_LOCATION from adapter}/
+✓ {API_LOCATION from adapter}/
+
+DESIGN.md will include:
+- System vision: {first 60 chars of SYSTEM_VISION}...
+- {count} capabilities
+- {count} actors
+- {count} business rules
+- Technical architecture (from adapter)
+{If ADDITIONAL_CONTEXT: "- Additional project context"}
+
+Proceed with initialization? (y/n)
+```
+
+**Expected Outcome**: User confirms or cancels
+
+**Validation Criteria**:
+- Summary shows all files to be created
+- User can review before proceeding
+- Easy to abort if needed
+
+---
+
+### 6. Version Control Integration (Optional)
 
 **Requirement**: Add FDD structure to version control system
 
-**Required Actions**:
+**Ask user**:
+```
+Commit changes to version control? (y/n)
+```
+
+**If yes**:
 - Stage all created FDD directories and files
-- Commit with descriptive message
+- Commit with message: "Initialize FDD project: {MODULE_NAME}"
 - Verify commit successful
 
-**Expected Outcome**: FDD structure under version control
+**Expected Outcome**: FDD structure under version control (if requested)
 
 **Validation Criteria**:
 - All FDD directories tracked in VCS
@@ -176,30 +389,64 @@
 
 Project initialization is complete when:
 
-- [ ] All required directories exist and are accessible
-- [ ] `architecture/DESIGN.md` exists with all sections A-F structured
-- [ ] API contract specification file(s) exist and valid
-- [ ] DML specification directory initialized
-- [ ] `architecture/features/FEATURES.md` placeholder exists
-- [ ] Directory structure follows FDD conventions and adapter requirements
-- [ ] All files have appropriate placeholders for content
-- [ ] (Optional) FDD structure committed to version control
+- [ ] User answered all relevant questions (Q1-Q7)
+- [ ] User confirmed initialization summary
+- [ ] All required directories created:
+  - [ ] `architecture/`
+  - [ ] `architecture/features/`
+  - [ ] `architecture/diagrams/`
+  - [ ] {DML_LOCATION from adapter}
+  - [ ] {API_LOCATION from adapter}
+- [ ] `architecture/DESIGN.md` generated with actual content from answers:
+  - [ ] Section A: Business Context (vision, capabilities, actors)
+  - [ ] Section B: Requirements & Principles (use cases, business rules, design principles)
+  - [ ] Section C: Technical Architecture (overview, domain model, API contracts, security, NFRs)
+  - [ ] Section D: Project-Specific Details (if provided)
+- [ ] `architecture/features/FEATURES.md` placeholder created
+- [ ] No empty placeholders like "[TODO]" in generated content
+- [ ] Summary shown with created files
+- [ ] (Optional) Changes committed to version control if user requested
+
+---
+
+## Important Rules
+
+### DO NOT:
+- ❌ Skip questions - ask all relevant questions one by one
+- ❌ Create empty placeholders in DESIGN.md like "[TODO]" or "[Description]"
+- ❌ Generate content without user input
+- ❌ Assume answers - always ask explicitly
+- ❌ Create files before user confirms summary
+
+### DO:
+- ✅ Ask questions one at a time
+- ✅ Wait for answers before proceeding
+- ✅ Generate meaningful content from answers
+- ✅ Show clear summary before creating files
+- ✅ Allow user to review and cancel if needed
 
 ---
 
 ## Common Challenges
 
-### Challenge: Determining Directory Structure
+### Challenge: User Unsure About System Vision
 
-**Resolution**: Follow FDD standard structure as defined above. Consistency across projects enables tooling and understanding.
+**Resolution**: Guide user with examples. Ask clarifying questions:
+- What problem does this solve?
+- Who will use it?
+- What's the primary value?
 
-### Challenge: Existing Conflicting Structure
+### Challenge: Too Many or Too Few Capabilities
 
-**Resolution**: If project has existing structure, integrate FDD directories alongside existing ones. FDD doesn't replace project structure, it adds architecture documentation layer.
+**Resolution**: Aim for 3-7 core capabilities. If more, suggest grouping related ones. If fewer, explore if capabilities can be broken down.
 
-### Challenge: Unclear Module Boundaries
+### Challenge: Unclear Actor Roles
 
-**Resolution**: Start with broader module definition. Can refine through Overall Design process. Better to start broad and clarify than to start too narrow.
+**Resolution**: Focus on "who does what". Each actor should have clear responsibilities. Examples help clarify.
+
+### Challenge: Existing Project Structure
+
+**Resolution**: FDD structure integrates alongside existing directories. It's documentation layer, not replacement.
 
 ---
 
@@ -207,21 +454,25 @@ Project initialization is complete when:
 
 After project initialization:
 
-1. **Develop Overall Design**: Fill `architecture/DESIGN.md` with actual content
-   - Define system vision and core capabilities
-   - Identify actors and their use cases
-   - Define domain model types
-   - Specify API endpoints
+1. **Complete Domain Model Types**: Edit `architecture/DESIGN.md` Section C
+   - Add type definitions per DML specification
+   - Define entities, value objects, DTOs
+   - Document relationships
 
-2. **Validate Architecture**: Execute validation workflow
-   - Ensures structural completeness
-   - Checks content adequacy
-   - Identifies gaps
+2. **Define API Endpoints**: Edit `architecture/DESIGN.md` Section C
+   - Specify endpoints per API specification
+   - Document request/response formats
+   - Define error responses
 
-3. **Generate Features**: After validation succeeds
-   - Analyzes capabilities in Overall Design
-   - Creates feature breakdown
-   - Establishes dependency graph
+3. **Validate Architecture**: Run workflow `02-validate-architecture.md`
+   - Ensures completeness
+   - Validates structure
+   - Checks consistency
+
+4. **Generate Features**: After validation, run workflow `03-init-features.md`
+   - Extracts features from capabilities
+   - Creates feature structure
+   - Establishes dependencies
 
 ---
 

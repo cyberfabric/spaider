@@ -74,11 +74,13 @@ Everything else is adapter-specific. Define as needed:
 - Naming conventions
 
 ### API Contract Format
-- Technology (OpenAPI, GraphQL, gRPC, etc.)
-- Location (`architecture/api-specs/`, per-feature, etc.)
-- Linking syntax (`@API.GET:/path`, `@Feature.{slug}`)
+- Technology (OpenAPI, GraphQL, gRPC, CLISPEC, etc.)
+- Location (`architecture/api-specs/`, `architecture/cli-specs/`, etc.)
+- Linking syntax (`@API.GET:/path`, `@CLI.command-name`, `@Feature.{slug}`)
 - Validation commands
 - API conventions
+
+**Note**: For CLI tools, consider using **CLISPEC** - a built-in, simple format for CLI command documentation. See `CLISPEC.md` for specification.
 
 ### Implementation Details
 - Database technology and patterns
