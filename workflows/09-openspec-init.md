@@ -320,7 +320,32 @@ openspec validate {change-name} --strict
 
 ---
 
-### 8. Update Feature DESIGN.md
+### 8. Update Feature DESIGN.md Header
+
+**Requirement**: Update status in DESIGN.md header if needed
+
+**Location**: `../../DESIGN.md` - header section (lines 1-5)
+
+**Check Current Status**: If status is `NOT_STARTED`, update to `IN_PROGRESS`
+
+**Status Update**:
+```markdown
+# {Feature Name} - Feature Design
+
+**Status**: 🔄 IN_PROGRESS  
+**Module**: {module-name}
+```
+
+**What to Change**:
+- Status line: Update from `⏳ NOT_STARTED` to `🔄 IN_PROGRESS` (if needed)
+
+**Expected Outcome**: Feature header reflects IN_PROGRESS status
+
+**Note**: If already IN_PROGRESS (e.g., from workflow 05), no change needed
+
+---
+
+### 9. Update Feature DESIGN.md Section F
 
 **Requirement**: Mark first change as initialized in Feature DESIGN.md
 
@@ -344,7 +369,7 @@ openspec validate {change-name} --strict
 
 ---
 
-### 9. Update FEATURES.md Status
+### 10. Update FEATURES.md Status
 
 **Requirement**: Mark feature as IN_PROGRESS in features manifest
 
@@ -370,7 +395,7 @@ openspec validate {change-name} --strict
 
 ---
 
-### 10. Show Summary
+### 11. Show Summary
 
 **Requirement**: Display what was created
 
