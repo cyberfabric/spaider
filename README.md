@@ -22,6 +22,332 @@ FDD helps teams build software by:
 
 ---
 
+## Key Strengths
+
+### 1. 🎯 Interactive Workflows - Your AI Pair Programmer
+
+FDD provides **14 interactive workflows** that guide you step-by-step through the entire development process. Each workflow asks questions, validates answers, and creates exactly what you need.
+
+**Example: Creating a Project Adapter**
+
+Instead of reading documentation and figuring out what to do, just run:
+```
+Follow @spec/FDD/workflows/adapter-config.md
+```
+
+The workflow asks 8 targeted questions:
+```
+Q1: What is your project name?
+→ "fdd-cli"
+
+Q2: Choose domain model technology:
+   1. GTS (Global Type System)
+   2. JSON Schema
+   3. TypeScript interfaces
+   ...
+→ Select: 1
+
+Q3: Choose API contract format:
+   1. OpenAPI/Swagger
+   2. CLISPEC (for CLI tools)
+   3. GraphQL
+   ...
+→ Select: 2
+```
+
+**Result**: Fully configured adapter created in 5-10 minutes. No guessing, no mistakes.
+
+**Example: Initializing a Feature**
+
+```
+Follow @spec/FDD/workflows/05-init-feature.md
+```
+
+Workflow guides you through:
+- Q1: Feature name and slug
+- Q2: Feature purpose (extracted or custom)
+- Q3: Actors involved
+- Q4: Dependencies on other features
+- Q5: Planned OpenSpec changes
+
+**Result**: Complete feature directory with DESIGN.md template, openspec structure, and entry in FEATURES.md - all in 10 minutes.
+
+**Why This Is Powerful**:
+- ✅ **No memorization** - Workflows guide you every time
+- ✅ **No mistakes** - Each step validated before proceeding
+- ✅ **Consistent results** - Same structure every time
+- ✅ **AI-friendly** - AI agents follow workflows naturally
+- ✅ **Human-readable** - Anyone can execute manually if needed
+
+### 2. 🔧 Adapter System - Works With Any Tech Stack
+
+FDD core is **100% technology-agnostic**. Your project adapter makes it specific to YOUR stack.
+
+**Adapters define**:
+- **Domain model format**: GTS, JSON Schema, TypeScript, Protobuf, CTI, etc.
+- **API contracts**: OpenAPI, GraphQL, gRPC, RAML, CLISPEC, etc.
+- **Testing strategy**: Jest, Pytest, Go test, etc.
+- **Build tools**: Webpack, Vite, Cargo, Maven, etc.
+- **Project conventions**: Naming, structure, security model
+
+**Example Adapters**:
+
+**Microservice with REST API**:
+```yaml
+Domain Model: OpenAPI + JSON Schema
+API Contracts: OpenAPI 3.1
+Testing: Jest + Supertest
+Deployment: Docker + Kubernetes
+```
+
+**CLI Tool**:
+```yaml
+Domain Model: GTS (Global Type System)
+API Contracts: CLISPEC (command specifications)
+Testing: Vitest
+Deployment: npm publish
+```
+
+**GraphQL Backend**:
+```yaml
+Domain Model: GraphQL Schema
+API Contracts: GraphQL SDL
+Testing: Apollo Server Testing
+Deployment: Serverless
+```
+
+**Why This Matters**:
+- ✅ **Use your existing stack** - No forced technology choices
+- ✅ **Migrate gradually** - Add FDD to existing projects
+- ✅ **Team flexibility** - Different teams, different stacks, same methodology
+- ✅ **Future-proof** - New tech? Just create new adapter
+
+### 3. 📋 Workflow-Driven Development - Everything Has a Process
+
+In FDD, **every action is a workflow**. Development becomes predictable and repeatable.
+
+**Workflow Phases**:
+
+```
+Phase 0: Setup
+├─ adapter-config.md        → Create project adapter
+└─ config-agent-tools.md    → Configure AI agent (optional)
+
+Phase 1: Architecture
+├─ 01-init-project.md       → Initialize FDD structure
+└─ 02-validate-architecture.md → Validate Overall Design
+
+Phase 2: Feature Planning
+├─ 03-init-features.md      → Generate features from design
+├─ 04-validate-features.md  → Validate feature manifest
+├─ 05-init-feature.md       → Create single feature
+└─ 06-validate-feature.md   → Validate feature design
+
+Phase 3: Implementation
+├─ 09-openspec-init.md      → Initialize OpenSpec
+├─ 10-openspec-change-implement.md → Implement change
+├─ 11-openspec-change-complete.md  → Complete change
+├─ 12-openspec-change-next.md      → Create next change
+├─ 13-openspec-validate.md  → Validate OpenSpec structure
+├─ 07-complete-feature.md   → Mark feature complete
+└─ 08-fix-design.md         → Fix design issues
+```
+
+**Real Development Flow**:
+```
+Day 1: Create adapter (workflow adapter-config)
+       → 10 minutes, adapter ready
+
+Day 2: Initialize project (workflow 01)
+       → 30 minutes, architecture/ created
+       
+       Write Overall Design
+       → 2-3 hours, DESIGN.md complete
+       
+       Validate design (workflow 02)
+       → 5 minutes, score 95/100 ✅
+
+Day 3: Generate features (workflow 03)
+       → 5 minutes, 8 features extracted
+       
+       Validate features (workflow 04)
+       → 5 minutes, manifest validated ✅
+
+Week 1-2: For each feature:
+          - Initialize (workflow 05) → 10 min
+          - Write design → 1-2 hours
+          - Validate (workflow 06) → 5 min
+          - Init OpenSpec (workflow 09) → 5 min
+          - Implement changes (workflow 10) → variable
+          - Complete (workflow 07) → 5 min
+```
+
+**Why Workflows Matter**:
+- ✅ **Nothing forgotten** - Checklists ensure completeness
+- ✅ **Clear handoffs** - Team knows exactly what to do next
+- ✅ **Progress tracking** - Always know where you are
+- ✅ **Onboarding speed** - New members follow workflows
+- ✅ **Quality gates** - Validation before proceeding
+
+### 4. 🤝 Deep OpenSpec Integration - Design to Code Traceability
+
+FDD and OpenSpec form a **complete system**: FDD designs WHAT to build, OpenSpec tracks HOW you build it.
+
+**The Integration**:
+
+```
+FDD Feature Design (DESIGN.md)
+│
+├─ Section B: Actor Flows
+│  → Defines what users do
+│
+├─ Section F: Implementation Plan
+│  → Lists OpenSpec changes needed
+│
+└─ Validated ✅
+    ↓
+    
+OpenSpec Changes (openspec/changes/)
+│
+├─ Change 001: Authentication
+│  ├─ proposal.md  → Why (references DESIGN.md Section B)
+│  ├─ tasks.md     → Implementation steps
+│  └─ specs/       → Technical specifications
+│
+├─ Change 002: Authorization
+│  └─ ... (same structure)
+│
+└─ All changes implement exactly what Feature Design specified
+```
+
+**Concrete Example**:
+
+**Feature Design** (`feature-login/DESIGN.md`):
+```markdown
+## B. Actor Flows
+
+### Flow: User Login
+1. User enters email and password
+2. System validates credentials
+3. System creates session
+4. System redirects to dashboard
+
+## F. Implementation Plan
+
+### OpenSpec Changes
+1. `setup-user-model` - Create User entity and database schema
+2. `implement-auth` - Add authentication logic and session management
+3. `create-login-ui` - Build login page and form validation
+```
+
+**OpenSpec Changes** (`feature-login/openspec/changes/`):
+```
+001-setup-user-model/
+├─ proposal.md    → "Implements User entity from Feature DESIGN.md Section E"
+├─ tasks.md       → Checklist referencing design specs
+└─ specs/         → User model specification
+
+002-implement-auth/
+├─ proposal.md    → "Implements Actor Flow 'User Login' from Section B"
+├─ tasks.md       → Credential validation, session creation
+└─ specs/         → Auth API specification
+
+003-create-login-ui/
+├─ proposal.md    → "Implements UI for Actor Flow from Section B"
+└─ tasks.md       → Form, validation, error handling
+```
+
+**Why This Synergy Is Powerful**:
+- ✅ **Complete traceability** - Business requirement → design → implementation → code
+- ✅ **No ambiguity** - Every OpenSpec change references specific design section
+- ✅ **Review at right level** - Stakeholders review design, developers review changes
+- ✅ **Audit trail** - Know why every change was made
+- ✅ **Rollback safety** - Can revert changes without breaking design coherence
+
+### 5. 🏗️ Structured Project Organization - Rules and Validation
+
+FDD enforces **consistent structure and validation** across your entire project.
+
+**Project Structure Rules**:
+
+```
+architecture/
+├── DESIGN.md                    # Overall Design (required)
+│   ├── Section A: Business Context
+│   ├── Section B: Requirements
+│   ├── Section C: Technical Architecture
+│   └── Section D: Project Details (optional)
+│
+├── diagrams/                    # Architecture diagrams
+│
+└── features/                    # All features
+    ├── FEATURES.md             # Feature manifest (generated)
+    │
+    └── feature-{slug}/         # Individual feature
+        ├── DESIGN.md           # Feature design (required)
+        │   ├── Section A: Overview
+        │   ├── Section B: Actor Flows (PRIMARY)
+        │   ├── Section C: Algorithms
+        │   ├── Section D: States (optional)
+        │   ├── Section E: Technical Details
+        │   └── Section F: Implementation Plan
+        │
+        └── openspec/           # OpenSpec structure (standard)
+            ├── project.md
+            ├── specs/          # Source of truth
+            └── changes/        # Active and archived
+```
+
+**Validation Rules Enforced**:
+
+**Overall Design Validation** (workflow 02):
+- ✅ All sections present (A, B, C)
+- ✅ All actors defined
+- ✅ Domain model documented (in chosen DML format)
+- ✅ API contracts documented (in chosen format)
+- ✅ No contradictions in architecture
+- ✅ Score ≥90/100 before proceeding
+
+**Feature Design Validation** (workflow 06):
+- ✅ All sections present (A-F)
+- ✅ Section B (Actor Flows) is PRIMARY and complete
+- ✅ Algorithms in FDL only (no code)
+- ✅ No type redefinitions (must reference Overall Design)
+- ✅ All dependencies declared
+- ✅ OpenSpec changes planned
+- ✅ Score 100/100 + 100% completeness
+
+**Documentation Rules**:
+- ✅ **FDL only in designs** - No code in DESIGN.md files
+- ✅ **Single source of truth** - Types defined once in Overall Design
+- ✅ **Cross-references validated** - All references must exist
+- ✅ **Status tracking** - Feature status always accurate
+- ✅ **Dependency checking** - No circular dependencies allowed
+
+**Why Structure and Validation Matter**:
+- ✅ **Consistency** - Every feature follows same pattern
+- ✅ **Quality gates** - Can't proceed with incomplete designs
+- ✅ **Team coordination** - Everyone knows where to find things
+- ✅ **Maintenance ease** - Structure is predictable
+- ✅ **AI-friendly** - Clear structure helps AI navigate and generate
+
+**Example Validation Failure**:
+```
+❌ Feature Design Validation Failed
+
+Issues Found:
+1. Section B (Actor Flows) incomplete - missing "User Logout" flow
+2. Section E redefines type "User" - must reference Overall Design
+3. Section F missing OpenSpec change for "session management"
+
+Score: 78/100 (minimum: 100/100)
+Completeness: 85% (minimum: 100%)
+
+→ Fix issues and re-run validation (workflow 06)
+```
+
+---
+
 ## Why Use FDD?
 
 ### What You Get With FDD
