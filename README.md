@@ -952,61 +952,31 @@ Implement user authentication with email/password.
 
 ---
 
-## Roadmap
+## FDD CLI Tool
 
-### FDD CLI Tool (Planned)
+**Status**: 🚀 **Active Development**
 
-**Goal**: Create an `fdd` CLI tool to automate FDD workflows, similar to how OpenSpec automates change management.
+The `fdd-cli` tool automates FDD workflows - structure initialization, design validation, feature management, and consistency checks. It works alongside OpenSpec for complete design-to-code workflow automation.
 
-**Why**: Currently, FDD workflows are manual guides that require AI assistants or humans to execute. The `fdd` tool will provide:
-- ✅ Automated structure initialization
-- ✅ Design validation automation
-- ✅ Feature manifest generation
-- ✅ Consistency checks across designs
-- ✅ Integration with OpenSpec for seamless workflow
+**Repository**: [https://github.com/ainetx/fdd-cli](https://github.com/ainetx/fdd-cli)
 
-**Planned Commands**:
+**Why This Tool**:
+- Automate FDD workflow execution (init, validate, generate)
+- Enforce consistency across designs
+- Integrate with OpenSpec for seamless change management
+- Provide instant feedback on design quality
+
+**Example Usage** *(in development)*:
 ```bash
-# Project initialization
-fdd init                           # Initialize FDD structure
-fdd init --adapter <name>          # Initialize with specific adapter
-
-# Architecture workflows
-fdd validate architecture          # Validate Overall Design
-fdd validate architecture --report # Generate detailed validation report
-
-# Feature management
-fdd features generate              # Generate FEATURES.md from Overall Design
-fdd features validate              # Validate FEATURES.md consistency
-fdd feature init <slug>            # Initialize new feature
-fdd feature validate <slug>        # Validate feature design
-fdd feature complete <slug>        # Mark feature as complete
-
-# Design inspection
-fdd show architecture              # Show Overall Design summary
-fdd show feature <slug>            # Show feature design summary
-fdd list features                  # List all features with status
-fdd list features --status IN_PROGRESS  # Filter by status
-
-# OpenSpec integration
-fdd openspec init <slug>           # Initialize OpenSpec for feature
-fdd openspec validate <slug>       # Validate OpenSpec structure
-
-# Validation helpers
-fdd check types <slug>             # Check for type redefinitions
-fdd check links <slug>             # Check cross-references validity
-fdd check fdl <slug>               # Validate FDL syntax
+fdd init                    # Initialize FDD structure
+fdd validate architecture   # Validate Overall Design
+fdd feature init <slug>     # Initialize new feature
+fdd validate feature <slug> # Validate feature design
 ```
 
-**Implementation Approach**:
-- **Language**: Node.js/TypeScript (for cross-platform compatibility)
-- **Package**: `npm install -g @fdd/cli` or similar
-- **Integration**: Works alongside `openspec` CLI tool
-- **Adapters**: Support pluggable adapters for different tech stacks
+**Built with FDD**: The `fdd-cli` project itself is developed using FDD methodology - a real-world example of FDD in action. See the repository for complete designs, workflows, and implementation approach.
 
-**Timeline**: To be determined based on community feedback and adoption.
-
-**Status**: 📋 Planning phase - gathering requirements and use cases.
+For detailed documentation, architecture, and implementation status, visit the repository.
 
 ---
 
