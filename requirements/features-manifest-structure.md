@@ -68,6 +68,21 @@
 
 6. **Scope**: `**Scope**:` followed by bulleted list
 
+7. **Requirements Covered**: `**Requirements Covered**:` followed by comma-separated full requirement IDs from DESIGN.md Section B
+   - Format: Full ID from DESIGN.md (e.g., `fdd-acronis-mcp-req-workflow-context`, `fdd-acronis-mcp-nfr-performance`)
+   - Multiple requirements: `fdd-acronis-mcp-req-workflow-context, fdd-acronis-mcp-req-requirements-access`
+   - Must reference actual requirement IDs from `architecture/DESIGN.md` Section B.1 (FR-XXX) and B.2 (NFR-XXX)
+
+8. **Principles Covered** (optional): `**Principles Covered**:` followed by comma-separated principle IDs from DESIGN.md Section B.3
+   - Format: Full ID from DESIGN.md (e.g., `fdd-acronis-mcp-principle-context-provider`)
+   - Multiple principles: `fdd-acronis-mcp-principle-context-provider, fdd-acronis-mcp-principle-stateless`
+   - Must reference actual principle IDs from `architecture/DESIGN.md` Section B.3
+
+9. **Constraints Affected** (optional): `**Constraints Affected**:` followed by comma-separated constraint IDs from DESIGN.md Section B.4
+   - Format: Full ID from DESIGN.md (e.g., `fdd-acronis-mcp-constraint-atlassian-api`)
+   - Multiple constraints: `fdd-acronis-mcp-constraint-atlassian-api, fdd-acronis-mcp-constraint-python-version`
+   - Must reference actual constraint IDs from `architecture/DESIGN.md` Section B.4
+
 **Example**:
 ```markdown
 ### 1. [feature-user-auth](feature-user-auth/) ⏳ CRITICAL
@@ -145,6 +160,68 @@
 2. **Completeness**
    - All Overall Design capabilities covered by features
    - No orphaned features (not mapped to capabilities)
+
+### ID Traceability Validation
+
+**CRITICAL**: Full traceability chain from BUSINESS.md → DESIGN.md → FEATURES.md
+
+**ID Type Catalog**:
+
+**BUSINESS.md contains**:
+- Actors: `fdd-{project}-actor-{name}` (Section B)
+- Capabilities: `fdd-{project}-capability-{name}` (Section C)
+- Use Cases: `fdd-{project}-usecase-{name}` (Section D)
+
+**DESIGN.md contains**:
+- Functional Requirements: `fdd-{project}-req-{name}` (Section B.1)
+- Non-Functional Requirements: `fdd-{project}-nfr-{name}` (Section B.2)
+- Principles: `fdd-{project}-principle-{name}` (Section B.3)
+- Constraints: `fdd-{project}-constraint-{name}` (Section B.4)
+
+**FEATURES.md references**: Only DESIGN.md IDs (requirements, principles, constraints)
+
+---
+
+**Traceability Rules**:
+
+1. **BUSINESS.md → DESIGN.md** (validated in overall-design-structure.md):
+   - All capability IDs from BUSINESS.md Section C MUST be referenced in DESIGN.md requirement **Source** field
+   - All use case IDs from BUSINESS.md Section D MUST be referenced in DESIGN.md requirement **Source** field
+   - All actor IDs from BUSINESS.md Section B MUST be referenced in DESIGN.md (if applicable to system)
+
+2. **DESIGN.md → FEATURES.md** (validated in features-manifest-structure.md):
+   - All requirement IDs from DESIGN.md Section B.1 (FR-XXX) MUST appear in at least one feature's "Requirements Covered"
+   - All requirement IDs from DESIGN.md Section B.2 (NFR-XXX) MUST appear in at least one feature's "Requirements Covered"
+   - Principle IDs from DESIGN.md Section B.3 SHOULD appear in "Principles Covered" (if feature implements principle)
+   - Constraint IDs from DESIGN.md Section B.4 SHOULD appear in "Constraints Affected" (if feature affected by constraint)
+
+3. **ID Format Validation**:
+   - All IDs follow format: `fdd-{project}-{type}-{name}`
+   - FEATURES.md must use exact IDs from DESIGN.md (no short codes like "FR-001")
+   - No capability/usecase IDs in FEATURES.md (wrong level - they belong in DESIGN.md)
+
+**Validation Checks**:
+- ✅ Every capability ID from BUSINESS.md is referenced in DESIGN.md requirement source field
+- ✅ Every requirement ID from DESIGN.md appears in at least one feature's "Requirements Covered"
+- ✅ No orphaned requirements (DESIGN.md requirements not covered by any feature)
+- ✅ No invalid IDs (FEATURES.md references non-existent DESIGN.md IDs)
+- ✅ ID format consistency (all IDs follow naming convention)
+
+**Example Traceability Chain**:
+```
+BUSINESS.md:
+├─ fdd-acronis-mcp-capability-workflow-mgmt (Section C)
+└─ References in:
+   └─ DESIGN.md FR-001: fdd-acronis-mcp-req-workflow-context
+      └─ References in:
+         └─ FEATURES.md Feature #1: fdd-context-provider
+            └─ Requirements Covered: fdd-acronis-mcp-req-workflow-context
+```
+
+**Scoring Impact**:
+- Missing traceability: -10 points per orphaned requirement
+- Invalid ID references: -5 points per invalid ID
+- Format violations: -2 points per violation
 
 ---
 
