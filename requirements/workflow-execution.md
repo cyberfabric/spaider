@@ -29,13 +29,19 @@ MUST read `workflow-execution-validations.md` WHEN executing validation workflow
 ### Before Starting ANY Workflow
 
 **MUST**:
-1. Read workflow file completely
-2. Identify workflow type (Operation or Validation)
-3. Read type-specific execution instructions
-4. Check all prerequisites
-5. Validate prerequisites before proceeding
+1. **Check Adapter Initialization** - MANDATORY
+   - Search for `{adapter-directory}/FDD-Adapter/AGENTS.md`
+   - If NOT found: STOP, propose bootstrap, run `adapter` workflow
+   - If found: Continue
+2. Read workflow file completely
+3. Identify workflow type (Operation or Validation)
+4. Read type-specific execution instructions
+5. Read `adapter-triggers.md` for trigger rules
+6. Check all prerequisites
+7. Validate prerequisites before proceeding
 
 **MUST NOT**:
+- Skip adapter initialization check
 - Skip prerequisites validation
 - Proceed if prerequisites fail
 - Create files before user confirmation (operation workflows)
@@ -44,9 +50,9 @@ MUST read `workflow-execution-validations.md` WHEN executing validation workflow
 ### Prerequisites Validation
 
 **Check**:
-1. Required files exist at specified paths
-2. Required files are validated (meet score threshold)
-3. FDD Adapter exists and is COMPLETE
+1. Adapter initialization (mandatory for ALL workflows)
+2. Required files exist at specified paths
+3. Required files are validated (meet score threshold)
 4. Parent artifacts are valid
 
 **If ANY prerequisite fails**:
@@ -55,6 +61,11 @@ MUST read `workflow-execution-validations.md` WHEN executing validation workflow
 3. Suggest prerequisite workflow to run
 4. Wait for user to fix prerequisites
 5. Do NOT proceed with current workflow
+
+**Adapter Prerequisite**:
+- Minimal adapter (just Extends) is sufficient for most workflows
+- Evolved adapter (with specs) preferred but not required
+- If adapter missing: Run `adapter` workflow Mode 1 (Bootstrap) first
 
 ### Reading Specifications
 
@@ -85,6 +96,23 @@ MUST read `workflow-execution-validations.md` WHEN executing validation workflow
 - Suggest next workflow
 - Never create validation report files
 
+### Adapter Trigger Monitoring
+
+**MUST read**: `adapter-triggers.md`
+
+**During workflow execution**:
+1. Monitor for trigger events (file changes, validations, decisions)
+2. When trigger detected: Run trigger-specific scan
+3. If conditions met: Propose adapter update to user
+4. If user accepts: Run `adapter` workflow (appropriate mode)
+5. Continue original workflow after adapter update
+
+**Agent responsibilities**:
+- Detect triggers automatically
+- Propose adapter updates with context
+- Never run adapter without approval
+- Never skip adapter opportunities
+
 ### Context Usage
 
 **MUST**:
@@ -92,12 +120,14 @@ MUST read `workflow-execution-validations.md` WHEN executing validation workflow
 - Reference existing artifacts when relevant
 - Propose answers based on available information
 - Show reasoning for proposals
+- Monitor for adapter triggers
 
 **MUST NOT**:
 - Make up information
 - Assume without context
 - Skip asking when uncertain
 - Proceed without user confirmation (operations)
+- Skip adapter trigger proposals
 
 ### Error Handling
 

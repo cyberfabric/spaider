@@ -18,35 +18,50 @@
 
 ## Overview
 
-**FDD Adapter** - OPTIONAL project-specific configuration extending FDD core methodology
+**FDD Adapter** - Dynamic project-specific configuration that evolves with the project
 
-**Purpose**: Define project-specific implementations for:
-- Domain model technology and format
-- API contract format and conventions
-- Testing framework and tools
-- Build and deployment tools
-- Behavior description language (optional FDL override)
-- Project structure and conventions
+**Philosophy**: 
+- Adapter specs **derive from design decisions**, not predefined templates
+- Technical decisions appear during design → captured in adapter
+- Existing projects → adapter discovers patterns from code/docs/ADRs
+- Greenfield projects → adapter starts minimal, grows with design
 
-**When Required**:
-- OPTIONAL for Product Manager workflows (business context is generic)
-- OPTIONAL for Architect workflows (can use defaults)
-- RECOMMENDED for Solution Architect workflows (technical formats)
-- REQUIRED for Developer workflows (code conventions mandatory)
+**Purpose**: Capture and formalize project-specific technical decisions:
+- Tech stack (languages, frameworks, databases)
+- Architecture patterns (discovered from design/code)
+- Domain model format (determined during design)
+- API contract format (determined during design)
+- Code conventions (discovered from existing code or defined during development)
+- Build/deploy practices (from configs or ADRs)
+- Testing strategy (from design or existing tests)
 
-**Auto-Trigger**: Agent MUST stop and run `adapter` workflow WHEN:
-- User specifies domain model format/location
-- User specifies API contract format/location
-- User specifies custom file structures
-- User specifies project-specific conventions
-- Implementation workflows started without adapter
+**Lifecycle**:
+1. **Bootstrap**: Minimal AGENTS.md with `Extends` only
+2. **Discovery** (existing project): Scan code/docs/ADRs → propose specs
+3. **Evolution** (during design): Design decisions → update adapter specs
+4. **Refinement** (during implementation): Code patterns → update adapter specs
 
-**Location**: `{adapter-directory}/FDD-Adapter/` where `{adapter-directory}` is one of:
-- `spec/FDD-Adapter/`
-- `guidelines/FDD-Adapter/`
-- `docs/FDD-Adapter/`
+**Location**: `{adapter-directory}/FDD-Adapter/` where user chooses:
+- `guidelines/FDD-Adapter/` (common)
+- `spec/FDD-Adapter/` (alternative)
+- `docs/FDD-Adapter/` (alternative)
+- Custom path
 
-**Status**: MUST be marked as COMPLETE or INCOMPLETE
+**Bootstrap Structure**:
+```
+FDD-Adapter/
+├── AGENTS.md              # Minimal: only Extends declaration
+└── specs/                 # Created dynamically during workflows
+    ├── tech-stack.md     # From DESIGN.md + ADRs + discovery
+    ├── patterns.md       # From design decisions + code analysis
+    ├── domain-model.md   # From DESIGN.md Section C.2
+    ├── api-contracts.md  # From DESIGN.md Section C.3
+    ├── conventions.md    # From code style + ADRs
+    ├── build-deploy.md   # From configs + ADRs
+    ├── testing.md        # From test frameworks + ADRs
+    ├── snippets/         # Code examples from implementation
+    └── examples/         # Pattern examples from features
+```
 
 ---
 
@@ -58,154 +73,134 @@
 
 **Purpose**: Adapter-specific navigation for AI agents (MUST WHEN format)
 
-**Primary Content**: MUST WHEN instructions pointing to detailed specification files
+**Two Phases**:
 
-**Structure**:
-1. Header with extension declaration
-2. MUST WHEN instructions (navigation to specs)
-3. Adapter status
-
-**MUST contain WHEN-based navigation** to:
-- Domain model specification file
-- API contract specification file
-- Testing specification file
-- Build/deployment specification file
-- Project structure specification file
-
-**Format**:
+#### Phase 1: Bootstrap (Minimal)
+**When**: Project initialization, no design yet
 ```markdown
 # FDD Adapter: {Project Name}
 
-**Extends**: `../../FDD/AGENTS.md`
+**Extends**: `../FDD/AGENTS.md`
+```
+
+**That's it.** No specs, no MUST rules yet.
+
+#### Phase 2: With Specs (After Discovery/Design)
+**When**: After discovery workflow OR after design decisions
+```markdown
+# FDD Adapter: {Project Name}
+
+**Extends**: `../FDD/AGENTS.md`
 
 **Version**: {version}  
-**Status**: COMPLETE | INCOMPLETE  
-**Last Updated**: YYYY-MM-DD
+**Last Updated**: YYYY-MM-DD  
+**Tech Stack**: {Primary language/framework}
 
 ---
+
+MUST read `specs/tech-stack.md` WHEN checking dependencies or versions
 
 MUST read `specs/domain-model.md` WHEN working with domain types
 
 MUST read `specs/api-contracts.md` WHEN working with API endpoints
 
-MUST read `specs/testing.md` WHEN writing or running tests
+MUST read `specs/patterns.md` WHEN implementing architecture patterns
+
+MUST read `specs/conventions.md` WHEN writing code or documentation
 
 MUST read `specs/build-deploy.md` WHEN building or deploying
 
-MUST read `specs/project-structure.md` WHEN creating files or directories
-
-MUST read `specs/conventions.md` WHEN writing code or documentation
+MUST read `specs/testing.md` WHEN writing or running tests
 ```
 
-**Detailed Specification Files** (in `{adapter-directory}/FDD-Adapter/specs/`):
+**Note**: MUST rules are added **only after** corresponding spec files are created
 
-- `domain-model.md` - Domain model technology, location, format, examples
-- `api-contracts.md` - API contract technology, location, format, examples
-- `testing.md` - Testing frameworks, commands, coverage requirements
-- `build-deploy.md` - Build commands, deployment process, CI/CD
-- `project-structure.md` - Directory structure, file locations
-- `conventions.md` - Coding standards, naming conventions, patterns
+**Specification Files** (created dynamically in `specs/`):
+
+| Spec File | Created From | Contains |
+|-----------|--------------|----------|
+| `tech-stack.md` | DESIGN.md + ADRs + discovery | Languages, frameworks, databases, versions |
+| `domain-model.md` | DESIGN.md Section C.2 + ADRs | Schema format, entity structure, examples |
+| `api-contracts.md` | DESIGN.md Section C.3 + ADRs | Contract format, endpoint patterns, examples |
+| `patterns.md` | Design decisions + code analysis | Architecture patterns, when to use, examples |
+| `conventions.md` | Code analysis + ADRs + configs | Naming, style, file organization |
+| `build-deploy.md` | Configs + ADRs + discovery | Build commands, CI/CD, deployment steps |
+| `testing.md` | Test code + ADRs + discovery | Test frameworks, structure, commands |
+| `snippets/{category}.md` | Implementation code | Reusable code snippets, utilities |
+| `examples/{feature}.md` | Feature implementations | Pattern usage examples from features |
+
+**Creation triggers** (see adapter workflow)
 
 ---
 
 ## Validation Criteria
 
-### File Structure Validation
+### Two-Phase Validation
 
-1. **AGENTS.md exists**
-   - File located at `{adapter-directory}/FDD-Adapter/AGENTS.md`
-   - File is not empty
-   - File contains required sections
+Adapter validation depends on project phase:
+- **Phase 1: Bootstrap** - Minimal adapter (new projects)
+- **Phase 2: Evolved** - Full adapter with specs
 
-2. **Extension declaration present**
-   - Contains `**Extends**: ../../FDD/AGENTS.md` or relative path to FDD AGENTS.md
-   - Extension path is valid
-   - Points to FDD core AGENTS.md
+---
 
-3. **Status declared**
-   - Status field present
-   - Status is COMPLETE or INCOMPLETE
-   - If INCOMPLETE, missing specifications listed
+### Phase 1: Bootstrap Validation (Minimal)
 
-### Content Validation
+**Applies to**: New projects without specs yet
 
-1. **Project identification**
-   - Project name specified
-   - Project root path specified
-   - Architecture root path specified
-   - All paths are valid and accessible
+#### Structure (100 points)
 
-2. **Domain model specification**
-   - Technology name specified
-   - Location path specified (relative to project root)
-   - Format described in detail
-   - Type identifier format defined with examples
-   - Location is accessible and contains domain model files
+**Check**:
+- [ ] AGENTS.md file exists at `{adapter-directory}/FDD-Adapter/AGENTS.md`
+- [ ] Contains project name heading (e.g., `# FDD Adapter: ProjectName`)
+- [ ] Contains `**Extends**: {path}/FDD/AGENTS.md` declaration
 
-3. **API contracts specification**
-   - Technology name specified
-   - Location path specified (relative to project root)
-   - Format described in detail
-   - Endpoint format defined with examples
-   - Location is accessible and contains API contract files
+**Scoring**: All-or-nothing - 100/100 if all checks pass, 0/100 if any fails
 
-4. **Testing framework specification**
-   - Unit test framework specified
-   - Integration test framework specified
-   - E2E test framework specified
-   - Test location specified
-   - Test command specified and executable
-   - Coverage command specified (if applicable)
+**Pass threshold**: 100/100
 
-5. **Build tools specification**
-   - Build command specified and executable
-   - Clean command specified and executable
-   - Lint command specified and executable
+---
 
-6. **Behavior description language**
-   - Uses FDL or custom BDL specified
-   - Specification path provided
-   - If custom BDL, specification file exists and is valid
+### Phase 2: Evolved Adapter Validation
 
-7. **Project structure defined**
-   - Architecture files structure shown
-   - Source code structure shown
-   - All paths are consistent with project identification
+**Applies to**: Projects with DESIGN.md OR discovered codebase
 
-### Completeness Validation
+#### Structure (25 points)
 
-1. **All required sections present**
-   - Project Identification
-   - Technology Stack (Domain Model, API Contracts, Testing, Build Tools, BDL)
-   - Project Structure
+**Check**:
+- [ ] AGENTS.md exists with Extends declaration (5)
+- [ ] AGENTS.md has Version and Last Updated fields (5)
+- [ ] AGENTS.md has Tech Stack summary (5)
+- [ ] MUST rules present for each spec file (5)
+- [ ] No orphaned MUST rules (specs missing) (5)
 
-2. **No placeholders**
-   - No `[TODO]` markers
-   - No `[TBD]` markers
-   - No `{fill this}` placeholders
-   - No empty sections
+#### Completeness (30 points)
 
-3. **Commands are OS agnostic**
-   - No OS-specific path separators (use `/` or cross-platform notation)
-   - No OS-specific commands (no `ls`, `cat`, `grep`, etc.)
-   - Commands work on Windows, macOS, Linux
+**Check**:
+- [ ] tech-stack.md complete: languages, frameworks, databases with versions (5)
+- [ ] domain-model.md complete: format, location, examples (5)
+- [ ] api-contracts.md complete: format, patterns, examples (5)
+- [ ] patterns.md has ≥1 pattern with implementation (5)
+- [ ] conventions.md has naming, style, structure (5)
+- [ ] build-deploy.md has build, test, deploy commands (5)
 
-### Validation Scoring
+#### Clarity (20 points)
 
-**Total**: 100 points
+**Check**:
+- [ ] All specs have clear format descriptions (5)
+- [ ] Examples are concrete (not generic placeholders) (5)
+- [ ] Commands are cross-platform compatible (5)
+- [ ] No `[TODO]`, `[TBD]`, or placeholder text (5)
 
-**Breakdown**:
-- File structure (10 points): File exists, extends correctly, status declared
-- Project identification (10 points): Name, paths specified and valid
-- Domain model (20 points): Complete specification with examples
-- API contracts (20 points): Complete specification with examples
-- Testing framework (15 points): All frameworks and commands specified
-- Build tools (10 points): All commands specified and executable
-- BDL specification (5 points): Valid specification path
-- Project structure (10 points): Complete structure definition
-- Completeness (10 points): No placeholders, OS agnostic
+#### Integration (25 points)
 
-**Pass threshold**: ≥90/100
+**Check**:
+- [ ] Each spec references source (ADR ID, DESIGN.md section, file path) (10)
+- [ ] All source references are valid and accessible (10)
+- [ ] Specs consistent with DESIGN.md (if exists) (5)
+
+**Total**: 100/100
+
+**Pass threshold**: ≥80/100
 
 ---
 

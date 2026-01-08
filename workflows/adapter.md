@@ -1,12 +1,26 @@
 ---
-description: Create or update FDD adapter
+description: FDD Adapter Router - Choose adapter workflow mode
 ---
 
-# Create or Update FDD Adapter
+# FDD Adapter Workflow (Router)
 
 **Type**: Operation  
-**Role**: Project Manager, Architect  
-**Artifact**: `{adapter-directory}/FDD-Adapter/AGENTS.md` and spec files
+**Role**: Any  
+**Artifact**: `{adapter-directory}/FDD-Adapter/AGENTS.md` + specs
+
+---
+
+## Purpose
+
+**Router workflow** - Determines which adapter workflow to execute based on:
+- User intent
+- Adapter state (exists/missing)
+- Project state (greenfield/existing)
+
+**Delegates to**:
+- `adapter-bootstrap` - Minimal initialization (new projects)
+- `adapter-auto` - Automatic project scanning (existing codebases)
+- `adapter-manual` - Manual specification updates (user-initiated)
 
 ---
 
@@ -15,218 +29,287 @@ description: Create or update FDD adapter
 **MUST read**: `../requirements/adapter-structure.md`
 
 Extract:
-- Required file structure (AGENTS.md + specs/)
-- Required AGENTS.md format (MUST WHEN instructions)
-- Required spec files (domain-model, api-contracts, testing, build-deploy, project-structure, conventions)
-- Validation criteria
+- Adapter lifecycle phases
+- When to use each mode
 
 ---
 
 ## Prerequisites
 
-**MUST validate**:
+**Prerequisites**:
 - [ ] Project repository exists - validate: Check .git directory exists
 - [ ] Write permissions - validate: Can create directories and files
 
-**No other prerequisites** - This is typically first workflow
+---
+
+## Decision Flow
+
+### 1. Check Adapter State
+
+Search for adapter:
+- `guidelines/FDD-Adapter/AGENTS.md`
+- `spec/FDD-Adapter/AGENTS.md`
+- `docs/FDD-Adapter/AGENTS.md`
+
+**Result**:
+- `ADAPTER_EXISTS = true/false`
+- `ADAPTER_DIR = path` (if exists)
+
+### 2. Determine Context
+
+**If called from workflow trigger** (adapter-triggers.md):
+```yaml
+Context: trigger-based evolution
+Mode: EVOLUTION (handled by adapter-triggers, not this router)
+Action: Skip router, direct execution
+```
+
+**If called manually by user**:
+```yaml
+Context: user-initiated
+Continue to Step 3
+```
+
+### 3. Analyze User Intent
+
+**Check user request for keywords**:
+
+```yaml
+Keywords for BOOTSTRAP:
+  - "initialize adapter"
+  - "create adapter"
+  - "setup adapter"
+  - "bootstrap"
+  
+Keywords for AUTO:
+  - "scan project"
+  - "discover"
+  - "analyze codebase"
+  - "auto-scan"
+  - "from sources"
+  
+Keywords for MANUAL:
+  - "add {spec}"
+  - "update {spec}"
+  - "add pattern"
+  - "add snippet"
+  - "manually"
+```
+
+**If keywords found**:
+- Route to appropriate workflow
+- Continue to Step 5
+
+**If NO keywords** (ambiguous):
+- Continue to Step 4
+
+### 4. Interactive Mode Selection
+
+**If ADAPTER_EXISTS = false**:
+
+```
+No adapter found.
+
+Choose initialization mode:
+  1. Bootstrap - Create minimal adapter (just Extends)
+     → For greenfield projects
+     → Specs added later through design workflow
+  
+  2. Auto-scan - Scan existing project and generate specs
+     → For existing codebases
+     → Discovers tech stack, patterns, conventions
+  
+Choose: [1-2]
+```
+
+**If ADAPTER_EXISTS = true**:
+
+```
+Adapter found at: {ADAPTER_DIR}
+
+Current specs:
+  - specs/tech-stack.md
+  - specs/domain-model.md
+  - specs/api-contracts.md
+
+Choose update mode:
+  1. Auto-scan - Re-scan project for new patterns
+     → Discovers changes in codebase
+     → Proposes additions/updates
+  
+  2. Manual update - Manually add/update specifications
+     → Interactive Q&A
+     → Precise control over content
+  
+Choose: [1-2]
+```
+
+**Based on choice**:
+- Set `MODE = bootstrap | auto | manual`
+
+### 5. Route to Specific Workflow
+
+**MODE = bootstrap**:
+```yaml
+Execute: adapter-bootstrap.md
+Purpose: Create minimal AGENTS.md
+Result: {ADAPTER_DIR}/FDD-Adapter/AGENTS.md (with Extends only)
+```
+
+**MODE = auto**:
+```yaml
+Execute: adapter-auto.md
+Purpose: Scan project and generate specs
+Result: AGENTS.md + specs/*.md files
+```
+
+**MODE = manual**:
+```yaml
+Execute: adapter-manual.md
+Purpose: Interactive specification update
+Result: Created/updated spec files
+```
+
+### 6. Delegate Execution
+
+**Run selected workflow**:
+```
+Routing to: {selected-workflow}
+Executing: {selected-workflow}.md
+
+[workflow execution output]
+```
+
+### 7. Return Control
+
+After workflow completes:
+```
+═══════════════════════════════════════════════
+Adapter Workflow Complete
+
+Mode: {bootstrap|auto|manual}
+Location: {ADAPTER_DIR}
+Files: [list of created/updated files]
+
+Validation: [score/status from workflow]
+═══════════════════════════════════════════════
+```
 
 ---
 
-## Steps
+## Automatic Routing Examples
 
-### 1. Detect Mode
+### Example 1: User Says "initialize adapter"
 
-Search for existing adapter in common locations:
-- `spec/FDD-Adapter/AGENTS.md`
-- `guidelines/FDD-Adapter/AGENTS.md`
-- `docs/FDD-Adapter/AGENTS.md`
+```yaml
+Step 1: Check adapter → NOT found
+Step 3: Keyword detected → "initialize"
+Step 5: Route to → adapter-bootstrap
+Execute: adapter-bootstrap.md
+Result: Minimal AGENTS.md created
+```
 
-**If adapter found**:
-- UPDATE mode - Read existing adapter, propose changes
-- Store found location as `ADAPTER_DIR`
+### Example 2: User Says "scan project"
 
-**If NOT found**:
-- CREATE mode - Generate adapter from scratch
-- Ask user for adapter location (Step 2)
+```yaml
+Step 1: Check adapter → Found (minimal)
+Step 3: Keyword detected → "scan"
+Step 5: Route to → adapter-auto
+Execute: adapter-auto.md
+Result: Specs generated from codebase
+```
 
-### 2. Determine Adapter Location (CREATE mode only)
+### Example 3: User Says "add Redis to adapter"
 
-**Skip if UPDATE mode** (location already known)
+```yaml
+Step 1: Check adapter → Found (with specs)
+Step 3: Keyword detected → "add"
+Step 5: Route to → adapter-manual
+Execute: adapter-manual.md
+Result: specs/tech-stack.md updated
+```
 
-Ask user:
-**Context**: Choose adapter directory location
+---
 
-**Options**:
-1. `spec/FDD-Adapter/` (recommended for technical projects)
-2. `guidelines/FDD-Adapter/` (recommended for documentation-heavy projects)
-3. `docs/FDD-Adapter/` (alternative)
-4. Custom path
+## Interactive Routing Examples
 
-**Propose**: `spec/FDD-Adapter/` (most common)
+### Example 4: Ambiguous "update adapter"
 
-Store as: `ADAPTER_DIR`
+```yaml
+Step 1: Check adapter → Found
+Step 3: No specific keywords
+Step 4: Interactive selection
 
-### 3. Mode-Specific Actions
+Agent asks:
+  "Choose update mode:
+   1. Auto-scan
+   2. Manual update"
 
-**CREATE Mode**:
-- Proceed to Step 4 for interactive input collection
+User: "1"
+Step 5: Route to → adapter-auto
+Execute: adapter-auto.md
+```
 
-**UPDATE Mode**:
-- Read existing AGENTS.md and all spec files
-- Extract current configuration:
-  - Project name
-  - Domain model technology and location
-  - API contract technology and location
-  - Testing frameworks and commands
-  - Build commands
-  - Project structure
-  - Conventions
-- Ask user: What to update?
-  - Update domain model specs
-  - Update API contract specs
-  - Update testing specs
-  - Update build/deploy specs
-  - Update project structure
-  - Update conventions
-  - Add missing spec files
-- Proceed to Step 4 with targeted questions
+### Example 5: No adapter exists, user says "run adapter"
 
-### 4. Interactive Input Collection
+```yaml
+Step 1: Check adapter → NOT found
+Step 3: No specific keywords
+Step 4: Interactive selection
 
-**Mode-specific behavior**:
+Agent asks:
+  "Choose initialization mode:
+   1. Bootstrap
+   2. Auto-scan"
 
-**Q1: Project Name**
-- Context: Name for this project
-- **CREATE**: Propose based on repository name or package.json name
-- **UPDATE**: Show current name, ask to change or keep
-- Store as: `PROJECT_NAME`
+User: "2"
+Step 5: Route to → adapter-auto
+Execute: adapter-auto.md
+```
 
-**Q2: Domain Model Technology**
-- Context: Technology for domain model definitions
-- Examples: GTS, TypeScript, JSON Schema, Protobuf, OpenAPI schemas
-- **CREATE**: Detect from project (look for .gts, .proto, schemas/)
-- **UPDATE**: Show current technology, ask to change or keep
-- Store as: `DML_TECH`
+---
 
-**Q3: Domain Model Location**
-- Context: Where domain model files are stored (relative to project root)
-- Examples: `gts/`, `schemas/`, `proto/`, `src/types/`
-- **CREATE**: Detect from project structure
-- **UPDATE**: Show current location, ask to update or keep
-- Store as: `DML_LOCATION`
+## Quick Reference
 
-**Q4: API Contract Technology**
-- Context: Technology for API definitions
-- Examples: OpenAPI, gRPC, GraphQL, REST (no spec), tRPC
-- **CREATE**: Detect from project files
-- **UPDATE**: Show current technology, ask to change or keep
-- Store as: `API_TECH`
-
-**Q5: API Contract Location**
-- Context: Where API specs are stored (relative to project root)
-- Examples: `docs/api/`, `api/`, `openapi/`, `proto/`
-- **CREATE**: Detect from project structure
-- **UPDATE**: Show current location, ask to update or keep
-- Store as: `API_LOCATION`
-
-**Q6: Testing Framework**
-- Context: Testing tools used
-- Ask for: Unit test framework, Integration test framework, E2E framework
-- **CREATE**: Detect from package.json, Cargo.toml, etc.
-- **UPDATE**: Show current frameworks, ask to update or keep
-- Store as: `TEST_FRAMEWORKS`
-
-**Q7: Test Commands**
-- Context: Commands to run tests
-- Ask for: Test command, Coverage command
-- **CREATE**: Detect from package.json scripts, Makefile
-- **UPDATE**: Show current commands, ask to update or keep
-- Store as: `TEST_COMMANDS`
-
-**Q8: Build Commands**
-- Context: Commands for build, clean, lint
-- **CREATE**: Detect from package.json, Makefile, Cargo.toml
-- **UPDATE**: Show current commands, ask to update or keep
-- Store as: `BUILD_COMMANDS`
-
-**Q9: Behavior Description Language**
-- Context: Use FDL or custom
-- Options: FDL (default) | Custom
-- **CREATE**: Default to FDL
-- **UPDATE**: Show current choice, ask to change or keep
-- If custom, ask for spec file path
-- Store as: `BDL_CHOICE`
-
-### 5. Create Directory Structure (CREATE mode only)
-
-**CREATE Mode**:
-- Create directories: `{ADAPTER_DIR}/` and `{ADAPTER_DIR}/specs/`
-
-**UPDATE Mode**:
-- Skip (directories already exist)
-
-### 6. Generate/Update Content
-
-**CREATE mode**: Generate complete adapter from scratch
-
-**UPDATE mode**: Update specific spec files based on changes
-
-Generate/update content following `adapter-structure.md`:
-- AGENTS.md - Header with Extends, MUST WHEN instructions
-- `domain-model.md` - Technology, location, format, examples
-- `api-contracts.md` - Technology, location, format, examples
-- `testing.md` - Frameworks, commands, location
-- `build-deploy.md` - Build, clean, lint commands
-- `project-structure.md` - Architecture + source structure
-- `conventions.md` - Coding standards, patterns
-
-### 7. Summary and Confirmation
-
-Show:
-- **CREATE**: Adapter location: `{ADAPTER_DIR}` (new adapter)
-- **UPDATE**: Adapter location: `{ADAPTER_DIR}` (updating existing)
-- Files to be created/updated: AGENTS.md + spec files
-- Technology stack summary
-- All collected information
-- Changes summary (for UPDATE mode)
-
-Ask: Proceed? [yes/no/modify]
-
-### 8. Create or Update Files
-
-**CREATE Mode**:
-- Create all directories
-- Create AGENTS.md
-- Create all 6 spec files
-
-**UPDATE Mode**:
-- Update AGENTS.md if needed
-- Update modified spec files only
-- Create missing spec files if any
-
-After operation:
-- Verify all files exist
-- Verify content correct
+| User Intent | Adapter State | Route To |
+|-------------|---------------|----------|
+| "Initialize/create/setup" | Missing | `adapter-bootstrap` |
+| "Scan/discover/analyze" | Any | `adapter-auto` |
+| "Add/update {spec}" | Exists | `adapter-manual` |
+| Ambiguous request | Missing | Ask: bootstrap or auto |
+| Ambiguous request | Exists | Ask: auto or manual |
+| Triggered from workflow | Any | Direct evolution (not via router) |
 
 ---
 
 ## Validation
 
-Run: `adapter-validate`
+Each delegated workflow runs its own validation.
 
-Expected:
-- Score: ≥90/100
-- Status: PASS
-- All spec files validated
+Router does NOT validate - it only routes.
 
 ---
 
-## Next Steps
+## Notes
 
-**Recommended**:
-- `adapter-agents` - Configure AI agent integration (optional)
-- `business-context` - Start defining business requirements
+**This is a routing workflow** - it does NOT create files itself.
 
-**Can proceed without adapter** for:
-- Product Manager workflows (business-context, business-validate)
-- Early Architect workflows (design with defaults)
+**Purpose**: Simplify adapter workflow selection for users
+
+**Trigger-based evolution**: Does NOT use this router - evolution calls are direct
+
+**User-initiated updates**: Always go through this router for clarity
+
+---
+
+## References
+
+**Delegates to**:
+- `adapter-bootstrap.md` - Minimal initialization
+- `adapter-auto.md` - Automatic scanning
+- `adapter-manual.md` - Manual updates
+
+**Referenced by**:
+- `adapter-structure.md` - Main workflow reference
+- `workflow-execution.md` - Adapter initialization check
+- `adapter-triggers.md` - Trigger-based calls (bypass router)
