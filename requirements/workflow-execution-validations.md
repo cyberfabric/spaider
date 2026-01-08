@@ -32,6 +32,8 @@
 
 ## Overview
 
+**⚠️ MUST READ FIRST**: `execution-protocol.md` - Mandatory protocol including self-test
+
 **Validation workflows** - Fully automated procedures to validate artifacts
 
 **This file defines**: Specific execution instructions for validation workflows
@@ -223,7 +225,62 @@
 - PASS: Score ≥ threshold
 - FAIL: Score < threshold
 
-### 9. Output to Chat
+### 9. Agent Self-Test (MANDATORY Before Reporting)
+
+**⚠️ Complete BEFORE outputting validation results**
+
+**Agent MUST answer YES to ALL questions**:
+
+#### Execution Completeness Check
+1. ⚠️ **Did I read execution-protocol.md before starting?**
+   - [ ] YES - Read and followed all 4 phases
+   - [ ] NO - Validation is INVALID, must restart
+
+2. ⚠️ **Did I read the ENTIRE artifact line by line?**
+   - [ ] YES - Read from line 1 to end
+   - [ ] NO - Validation is INVALID, must restart
+
+3. ⚠️ **Did I check EVERY validation criterion from requirements?**
+   - [ ] YES - Verified each criterion individually
+   - [ ] NO - Validation is INVALID, must restart
+
+4. ⚠️ **Did I verify EACH ID format individually?**
+   - [ ] YES - Checked each ID against format requirements
+   - [ ] NO - Validation is INVALID, must restart
+
+#### Systematic Verification Check
+5. ⚠️ **Did I run grep searches for common issues?**
+   - [ ] YES - Ran: TODO, TBD, `**ID**:`, placeholders
+   - [ ] NO - Validation is INVALID, must restart
+
+6. ⚠️ **Did I check ADR headers for ID fields? (if validating ADR.md)**
+   - [ ] YES - Verified `**ID**:` after EACH `## ADR-` heading
+   - [ ] NO - Validation is INVALID, must restart
+
+7. ⚠️ **Did I check requirement traceability? (if validating DESIGN.md)**
+   - [ ] YES - Verified `**Capabilities**:`, `**Actors**:` fields
+   - [ ] NO - Validation is INVALID, must restart
+
+8. ⚠️ **Did I cross-reference EVERY actor/capability/requirement?**
+   - [ ] YES - Built index, verified each reference
+   - [ ] NO - Validation is INVALID, must restart
+
+#### Score Verification Check
+9. ⚠️ **Is my score calculation arithmetically correct?**
+   - [ ] YES - Verified addition
+   - [ ] NO - Must recalculate, validation may be invalid
+
+10. ⚠️ **Did I compare score to correct threshold from requirements?**
+    - [ ] YES - Used exact threshold from requirements file
+    - [ ] NO - Must check threshold, validation may be invalid
+
+**If ANY answer 1-8 is NO → Validation is INVALID, must restart with execution-protocol.md**
+
+**If answers 9-10 are NO → Fix calculation, may need to restart**
+
+---
+
+### 10. Output to Chat
 
 **Format** (directly in chat, NO files):
 ```markdown
@@ -277,6 +334,18 @@
 
 {If FAIL}:
 ❌ Validation failed. Fix issues above, then re-run validation.
+
+---
+
+### Self-Test Confirmation
+
+**Agent confirms**:
+✅ Completed self-test (Section 9)
+✅ All 10 questions answered YES
+✅ Validation execution was systematic and complete
+✅ Protocol compliance verified
+
+Self-test passed: YES
 ```
 
 **MUST**:

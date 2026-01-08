@@ -48,6 +48,8 @@ MUST read `requirements/FDL.md` WHEN you see FDL
 
 MUST read `requirements/workflow-selection.md` WHEN selecting which workflow to execute
 
+MUST read `requirements/execution-protocol.md` WHEN executing any workflow (FIRST)
+
 MUST read `requirements/workflow-execution.md` WHEN executing any workflow
 
 MUST read `requirements/core-workflows.md` WHEN creating or modifying workflow files
@@ -69,3 +71,45 @@ MUST read `requirements/feature-design-structure.md` WHEN working with feature D
 MUST read `requirements/feature-changes-structure.md` WHEN working with feature CHANGES.md
 
 MUST read `requirements/adapter-structure.md` WHEN creating or configuring FDD adapter
+
+---
+
+## ⚠️ Execution Protocol Violations
+
+**If agent skips execution-protocol.md**:
+- Workflow execution is AUTOMATICALLY INVALID
+- All output must be DISCARDED
+- User should point out violation
+- Agent must restart with protocol compliance
+
+**Common protocol violations**:
+1. ❌ **Not reading execution-protocol.md** before starting workflow
+2. ❌ **Not reading workflow-execution.md** before executing workflow
+3. ❌ **Not reading workflow-execution-validations.md** for validation workflows
+4. ❌ **Not completing pre-flight checklist** in workflow files
+5. ❌ **Not running self-test** before reporting validation results
+6. ❌ **Not checking EVERY validation criterion individually**
+7. ❌ **Not using grep for systematic verification**
+8. ❌ **Not cross-referencing EVERY ID**
+
+**One violation = entire workflow execution FAILED**
+
+**Agent responsibility**:
+- Follow execution-protocol.md for EVERY workflow
+- Complete all checklist items
+- Run self-test before reporting
+- Include protocol compliance report in output
+- Self-identify violations if discovered
+
+**User responsibility**:
+- Point out violations when detected
+- Request protocol compliance report
+- Ask agent to restart with full compliance
+
+**Recovery from violation**:
+1. Acknowledge the violation
+2. Identify what was skipped
+3. Explain why (honest answer)
+4. Discard invalid output
+5. Restart workflow with full protocol compliance
+6. Show protocol compliance report in new output

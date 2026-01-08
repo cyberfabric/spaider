@@ -224,42 +224,17 @@
 
 ---
 
-### Section G: Implementation Plan
+### Section G: Additional Context (Optional)
 
-**Purpose**: List of OpenSpec changes implementing requirements
+**Purpose**: Dependencies, references, and supplementary information
 
-**Change Name Format**: `fdd-{project-name}-feature-{feature-slug}-change-{short-name}`
-- **Components**:
-  - `fdd-` - Prefix indicating FDD methodology
-  - `{project-name}` - Project name in kebab-case (from project context)
-  - `-feature-` - Feature scope indicator
-  - `{feature-slug}` - Feature identifier in kebab-case
-  - `-change-` - Change indicator
-  - `{short-name}` - Short descriptive name in kebab-case (2-4 words)
-- **Example**: `fdd-payment-system-feature-user-auth-change-login-implementation`
-- **Must match**: OpenSpec change directory naming convention
+**Content may include**:
+- **Dependencies**: Other features this feature depends on or blocks
+- **References**: Links to related documentation, specs, standards
+- **Notes**: Implementation notes, known limitations, future enhancements
+- **Diagrams**: Links to architecture diagrams or flowcharts
 
-**Required content per change**:
-- **Format**: `1. **change-name** [status]` (numbered list, not subsections)
-- **Change numbering**: 1, 2, 3, 4, etc. (sequential)
-- **Status**: ⏳ NOT_STARTED, 🔄 IN_PROGRESS, ✅ COMPLETED
-- **Description**: What will be implemented
-- **Implements Requirements**: List of requirement IDs from Section F (1-5 per change)
-  - Format: `fdd-{project}-feature-{feature}-req-{short-name}` (use actual requirement IDs)
-  - Example: `fdd-payment-system-feature-user-auth-req-login-flow`, `fdd-payment-system-feature-user-auth-req-token-validation`
-- **Dependencies**: Other change names or "None"
-
-**Prohibited content**:
-- ❌ Subsections like `### Active Changes`, `### Planned Changes`
-- ❌ Grouping changes by status
-- ❌ Any `###` headings within Section G
-
-**Validation**:
-- ≥1 change present
-- All changes at same level (no subsections)
-- Each change implements 1-5 requirements from Section F
-- All Section F requirements referenced by ≥1 change
-- Dependencies are valid
+**Note**: Implementation planning and change tracking is handled in separate `CHANGES.md` file (see `feature-changes-structure.md`)
 
 ---
 
@@ -275,8 +250,9 @@
 ### Structure Validation
 
 1. **All required sections present**
-   - Sections A, B, C, D, E, F, G (7 sections)
-   - Correct section order (A → B → C → D → E → F → G)
+   - Sections A, B, C, D, E, F (6 sections required)
+   - Section G (Additional Context) is optional
+   - Correct section order (A → B → C → D → E → F → [G])
    - Each section has proper heading (`## A.`, `## B.`, etc.)
    - No duplicate sections
 
@@ -337,22 +313,10 @@
      - Each testing scenario has `**ID**: {id}` label before scenario description
      - Test code must reference these IDs for traceability
 
-7. **Section G (Implementation Plan)**
-   - ≥1 change present
-   - No subsections (flat structure)
-   - All requirements from F covered
-   - Dependencies valid
-   - **Change Name Format Validation**:
-     - All change names match format: `fdd-{project-name}-feature-{feature-slug}-change-{short-name}`
-     - All change names are unique within Section G
-     - Change names use kebab-case (lowercase with hyphens)
-   - **Requirement Reference Validation**:
-     - All requirement IDs referenced in "Implements Requirements" exist in Section F
-     - Every requirement from Section F is referenced by ≥1 change
-     - Each change implements 1-5 requirements (not 0, not >5)
-   - **Dependency Validation**:
-     - All dependencies reference valid change names from Section G
-     - No circular dependencies between changes
+7. **Section G (Additional Context)** - Optional
+   - If present, may include dependencies, references, notes
+   - No specific structure requirements
+   - **Note**: Implementation changes belong in `CHANGES.md`, not in DESIGN.md
 
 ### Cross-Validation with Overall Design
 
@@ -416,11 +380,10 @@
 - Recommendations: What to fix
 
 **Scoring**:
-- Structure (20 points): All sections present
+- Structure (20 points): All required sections present (A-F)
 - FDL Compliance (30 points): Sections B, C, D use valid FDL
-- Technical Details (20 points): Section E complete
-- Requirements (15 points): Section F formalized with tests
-- Implementation Plan (15 points): Section G complete
+- Technical Details (25 points): Section E complete
+- Requirements (25 points): Section F formalized with tests
 
 ---
 
@@ -480,8 +443,15 @@ Output: metric_value
 **REQ-001**: Dashboard MUST load within 2 seconds
 ...
 
-## G. Additional Context
-...
+## G. Additional Context (Optional)
+
+### Dependencies
+- **Depends On**: feature-user-auth
+- **Blocks**: feature-reporting
+
+### References
+- Overall Design: `architecture/DESIGN.md`
+- External Spec: https://example.com/spec
 ```
 
 **Invalid feature DESIGN.md**:

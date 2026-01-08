@@ -10,6 +10,32 @@ description: Validate implemented change
 
 ---
 
+## ⚠️ PRE-FLIGHT CHECKLIST (MUST Complete Before Proceeding)
+
+**Agent MUST verify before starting this workflow**:
+
+**Navigation Rules Compliance**:
+- [ ] ✅ Read `../requirements/execution-protocol.md` (MANDATORY BASE)
+- [ ] ✅ Read `../requirements/workflow-execution.md` (General execution)
+- [ ] ✅ Read `../requirements/workflow-execution-validations.md` (Validation specifics)
+
+**Workflow-Specific Requirements**:
+- [ ] ✅ Read `../requirements/feature-changes-structure.md` (This workflow's requirements)
+- [ ] ✅ Read adapter specs/testing.md (Test requirements)
+- [ ] ✅ Check adapter initialization (FDD-Adapter/AGENTS.md exists)
+- [ ] ✅ Validate all prerequisites from Prerequisites section below
+
+**Self-Check**:
+- [ ] ✅ I have read ALL files listed above
+- [ ] ✅ I understand "Maximum Attention to Detail" requirement
+- [ ] ✅ I am ready to check EVERY validation criterion individually
+- [ ] ✅ I will verify tests pass and build succeeds
+- [ ] ✅ I will complete self-test before reporting results
+
+**⚠️ If ANY checkbox is unchecked → STOP and read missing files first**
+
+---
+
 ## Requirements
 
 **MUST read**:

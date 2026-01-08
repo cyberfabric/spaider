@@ -8,6 +8,8 @@
 
 ## Overview
 
+**⚠️ MUST READ FIRST**: `execution-protocol.md` - Mandatory protocol for ALL workflows
+
 **Workflow execution** - Instructions for agents to execute workflows correctly
 
 **This file defines**: General execution requirements for ALL workflow types
@@ -29,11 +31,16 @@ MUST read `workflow-execution-validations.md` WHEN executing validation workflow
 ### Before Starting ANY Workflow
 
 **MUST**:
-1. **Check Adapter Initialization** - MANDATORY
+1. **Follow Execution Protocol** - MANDATORY
+   - Read `requirements/execution-protocol.md` FIRST
+   - Complete all protocol phases (1-4)
+   - Answer all readiness check questions
+   - Verify protocol compliance before proceeding
+2. **Check Adapter Initialization** - MANDATORY
    - Search for `{adapter-directory}/FDD-Adapter/AGENTS.md`
    - If NOT found: STOP, propose bootstrap, run `adapter` workflow
    - If found: Continue
-2. Read workflow file completely
+3. Read workflow file completely
 3. Identify workflow type (Operation or Validation)
 4. Read type-specific execution instructions
 5. Read `adapter-triggers.md` for trigger rules
