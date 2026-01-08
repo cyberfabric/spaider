@@ -99,6 +99,48 @@
 - Coverage validation
 - Cross-reference validation
 
+### 3.5. Adapter Specs Validation (MANDATORY)
+
+**⚠️ MUST ALWAYS READ ADAPTER SPECS**:
+
+**Mandatory reading**:
+1. ✅ **MUST** read `{adapter-directory}/FDD-Adapter/AGENTS.md`
+2. ✅ **MUST** read ALL specs listed as MANDATORY in adapter's AGENTS.md
+3. ✅ **MUST** read ALL specs relevant to artifact being validated (as specified by adapter)
+
+**Adapter defines validation scope**:
+- Adapter's AGENTS.md specifies which specs are MANDATORY vs optional
+- Adapter's AGENTS.md specifies WHEN to read each spec (e.g., "WHEN working with REST APIs")
+- Follow adapter's navigation rules exactly as written
+
+**Generic validation checks** (adapter defines specifics):
+1. ✅ All file paths follow adapter's project structure conventions
+2. ✅ All module/component structures follow adapter's architecture patterns
+3. ✅ All API specifications follow adapter's API contract conventions
+4. ✅ All implementation patterns follow adapter's best practices
+5. ✅ All domain/data models follow adapter's domain modeling conventions
+6. ✅ All naming conventions follow adapter's coding standards
+7. ✅ All test structures follow adapter's testing guidelines
+8. ✅ All technical specifications match adapter's technology stack requirements
+
+**MUST verify**:
+- Read EVERY spec file listed in adapter's AGENTS.md for this artifact type
+- Check artifact content against EVERY rule defined in adapter specs
+- Verify conformance with adapter's architecture patterns
+- Check that no adapter conventions are violated
+- Validate all referenced files/paths exist per adapter structure
+
+**Score**: 10 points (deducted from other categories if violations found)
+
+**Report**:
+- Each file path not following adapter's project structure (cite spec file)
+- Each pattern violation with expected pattern from adapter spec
+- Each convention violation with reference to adapter spec section
+- Each missing adapter spec reading
+- Spec file name and section for each violation
+
+**CRITICAL**: This step is MANDATORY for ALL validation workflows. Skipping adapter specs validation = INVALID validation.
+
 ### 4. Structure Validation
 
 **⚠️ MUST verify EACH item individually**:
@@ -175,6 +217,14 @@
 4. References use valid IDs from parent
 5. No conflicting statements
 
+**Check against adapter specs**:
+6. No violations of adapter's architecture patterns
+7. No violations of adapter's module/component structure
+8. No violations of adapter's API integration patterns
+9. No violations of adapter's domain model conventions
+10. No violations of adapter's API contract standards
+11. No violations of adapter's naming and coding conventions
+
 **Score**: Points specified in requirements (typically 20-30)
 
 **Report**:
@@ -182,6 +232,7 @@
 - Each incorrect reference
 - Each redefined type
 - Each invalid ID reference
+- Each adapter spec violation with spec file reference
 
 ### 7. Coverage Validation
 

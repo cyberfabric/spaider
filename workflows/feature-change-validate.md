@@ -75,6 +75,10 @@ Extract:
 - Build succeeds (per adapter build command)
 - No compilation errors
 - Linter passes (per adapter lint command)
+- **Change ID tags present**: All modified/new code tagged with `@fdd-change:fdd-{project}-{feature}-change-{slug}` or `@fdd-change:change-{slug}`
+  - Use `grep -r "@fdd-change:change-{slug}"` or `grep -r "@fdd-change:fdd-" to verify tag presence
+  - Verify tags in all files listed in CHANGES.md tasks
+  - Each major function/class/module related to change MUST have tag
 
 **Test Validation**:
 - Unit tests pass (per adapter test command)
@@ -98,9 +102,10 @@ Extract:
 - All task groups validated (## 1. Implementation, ## 2. Testing)
 
 Calculate score:
-- Code Quality (25 pts)
+- Code Quality (20 pts)
+- Code Tagging (10 pts)
 - Test Coverage (30 pts)
-- Requirements Match (30 pts)
+- Requirements Match (25 pts)
 - Task Completion (15 pts)
 
 ### 4. Output Results to Chat
@@ -117,15 +122,19 @@ Calculate score:
 
 ### Findings
 
-**Code Quality** ({X}/25):
+**Code Quality** ({X}/20):
 ✅ | ❌ Build status
 ✅ | ❌ Lint status
+
+**Code Tagging** ({X}/10):
+✅ | ❌ Change ID tags present: `@fdd-change:change-{slug}` or full format found in {X} files
+✅ | ❌ All task files have corresponding tags
 
 **Test Coverage** ({X}/30):
 ✅ | ❌ Tests pass: {X}/{total}
 ✅ | ❌ Coverage: {X}%
 
-**Requirements Match** ({X}/30):
+**Requirements Match** ({X}/25):
 ✅ | ❌ {requirement check}
 
 **Task Completion** ({X}/15):

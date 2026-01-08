@@ -187,6 +187,7 @@
 - Each change MUST implement 1-N requirements from feature DESIGN.md
 - Code MUST pass all tests
 - Code MUST follow adapter conventions
+- Code MUST be tagged with `@fdd-change:{change-id}` comments for traceability
 
 **Adapter Requirement**: REQUIRED
 - Code conventions mandatory
@@ -416,11 +417,12 @@
     
 17. `feature-change-implement` - Type: Operation
     - Implement specific change
+    - Tag all code with change identifier
     - Prerequisite: CHANGES.md validated
     
 18. `feature-change-validate` - Type: Validation
     - Prerequisite: Change implemented
-    - Validates: Code vs requirements, tests pass
+    - Validates: Code vs requirements, tests pass, change tags present
 
 ---
 

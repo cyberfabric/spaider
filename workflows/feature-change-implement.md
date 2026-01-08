@@ -61,6 +61,49 @@ Follow MUST WHEN instructions for:
 - Testing requirements
 - Build requirements
 
+### 3.1 Code Tagging Requirements
+
+**MUST tag all code changes with change identifier**:
+
+**Tag format**: `@fdd-change:fdd-{project}-{feature}-change-{slug}`
+
+**Short format allowed**: `@fdd-change:change-{slug}` (within single feature context)
+
+**Tag placement**:
+- At the beginning of new functions/methods
+- At the beginning of modified functions/methods
+- In complex code blocks implementing change logic
+- In test files for change validation
+
+**Examples**:
+```rust
+// @fdd-change:change-gts-schema-types
+pub struct SchemaV1 {
+    pub schema_id: String,
+    pub version: String,
+}
+```
+
+```typescript
+// @fdd-change:change-api-rest-endpoints
+export async function handleSchemaQuery(
+    req: Request
+): Promise<SchemaResponse> {
+    // Implementation
+}
+```
+
+**Multiple changes in same file**:
+```python
+# @fdd-change:change-schema-validation
+def validate_schema_structure(schema: dict):
+    pass
+
+# @fdd-change:change-type-conversion
+def convert_gts_to_json_schema(gts_schema):
+    pass
+```
+
 ### 4. Implement Tasks
 
 **For each task in change**:

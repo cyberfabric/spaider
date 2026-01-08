@@ -67,7 +67,7 @@
 ```markdown
 ## Change {Number}: {Change Name}
 
-**ID**: `change-{slug}`  
+**ID**: `fdd-{project}-{feature}-change-{slug}`  
 **Status**: ⏳ NOT_STARTED | 🔄 IN_PROGRESS | ✅ COMPLETED  
 **Priority**: HIGH | MEDIUM | LOW  
 **Effort**: {story points or hours}  
@@ -140,6 +140,7 @@
 - Module: `{module path}`
 - Functions: {function signatures}
 - Implementation: {high-level implementation approach}
+- **Code Tagging**: MUST tag all code with `@fdd-change:fdd-{project}-{feature}-change-{slug}` or short `@fdd-change:change-{slug}` within feature context
 
 ### Dependencies
 
@@ -176,142 +177,106 @@
 - No linter errors
 - Documentation updated
 - Implements all referenced requirements
+- **Code tagged**: All modified/new code has `@fdd-change:{change-id}` tags
 
 ---
 ```
 
 ---
 
-## Change Directory Structure
+## Code Tagging Requirements
 
-**Each change MUST have directory**: `architecture/features/feature-{slug}/changes/change-{slug}/`
+**Purpose**: Enable traceability from code to change identifiers for auditing, debugging, and impact analysis
 
-**Directory contents**:
-```
-changes/change-{slug}/
-├── tasks.md              # Task breakdown with status
-├── specification.md      # Detailed implementation spec
-├── notes.md              # Implementation notes (optional)
-└── validation.md         # Validation checklist
-```
+**Tag Format**: `@fdd-change:fdd-{project}-{feature}-change-{slug}`
 
-### tasks.md
+**Short Format Allowed in Code**: `@fdd-change:change-{slug}` (when context is clear within single feature)
 
-```markdown
-# Tasks: {Change Name}
+**Mandatory Placement**:
+- At the beginning of all new functions, methods, classes, structs, types
+- At the beginning of modified functions, methods, classes that implement change logic
+- In complex code blocks directly implementing change requirements
+- In test files validating change functionality
 
-**Change**: `change-{slug}`  
-**Status**: {status}
+**Language-Specific Format**:
+- **Rust**: `// @fdd-change:{change-id}`
+- **TypeScript/JavaScript**: `// @fdd-change:{change-id}`
+- **Python**: `# @fdd-change:{change-id}`
+- **Go**: `// @fdd-change:{change-id}`
+- **Java/C#**: `// @fdd-change:{change-id}`
+- **SQL**: `-- @fdd-change:{change-id}`
 
----
+**Examples**:
 
-## Task List
+```rust
+// @fdd-change:change-gts-schema-types
+// OR full format: @fdd-change:fdd-analytics-feature-schema-query-returns-change-gts-schema-types
+pub struct SchemaV1 {
+    pub schema_id: String,
+    pub version: String,
+    pub fields: Vec<SchemaField>,
+}
 
-## 1. Implementation
-
-### 1.1 {Task Group Name}
-- [ ] 1.1.1 {Task description including action and file path}
-- [ ] 1.1.2 {Task description including action and file path}
-
-## 2. Testing
-
-### 2.1 {Test Group Name}
-- [ ] 2.1.1 {Test description and validation criteria}
-- [ ] 2.1.2 {Test description and validation criteria}
-
-{Continue for all tasks}
-
----
-
-## Progress
-
-**Total Tasks**: {count}  
-**Completed**: {count}  
-**In Progress**: {count}  
-**Remaining**: {count}
-
-**Current Task**: {current task number and description}
+// @fdd-change:change-gts-schema-types
+impl SchemaV1 {
+    pub fn new(schema_id: String) -> Self {
+        Self {
+            schema_id,
+            version: "1.0".to_string(),
+            fields: Vec::new(),
+        }
+    }
+}
 ```
 
-### specification.md
+```typescript
+// @fdd-change:change-api-rest-endpoints
+export async function handleSchemaQuery(
+    req: Request,
+    context: QueryContext
+): Promise<SchemaResponse> {
+    // Implementation
+}
 
-```markdown
-# Implementation Specification: {Change Name}
-
-**Change**: `change-{slug}`
-
----
-
-## Domain Model
-
-{Complete domain model specification}
-
-## API Contracts
-
-{Complete API contract specification}
-
-## Database Schema
-
-{Complete database schema specification}
-
-## Code Structure
-
-{Complete code structure specification}
-
-## Implementation Approach
-
-{Step-by-step implementation approach}
+// @fdd-change:change-api-rest-endpoints
+export class SchemaQueryHandler {
+    async execute(query: SchemaQuery): Promise<SchemaResult> {
+        // Implementation
+    }
+}
 ```
 
-### validation.md
+**Multiple Changes in Same File**:
+```python
+# @fdd-change:change-schema-validation
+def validate_schema_structure(schema: dict) -> ValidationResult:
+    pass
 
-```markdown
-# Validation Checklist: {Change Name}
-
-**Change**: `change-{slug}`
-
----
-
-## Code Validation
-
-- [ ] All tasks completed
-- [ ] All files created/modified
-- [ ] Code follows adapter conventions
-- [ ] Type definitions match domain model
-- [ ] API contracts implemented correctly
-
-## Testing Validation
-
-- [ ] Unit tests written
-- [ ] Unit tests pass
-- [ ] Integration tests written
-- [ ] Integration tests pass
-- [ ] E2E tests written
-- [ ] E2E tests pass
-- [ ] Test coverage ≥{threshold}%
-
-## Documentation Validation
-
-- [ ] Code documented
-- [ ] API endpoints documented
-- [ ] Database schema documented
-- [ ] README updated
-
-## Quality Validation
-
-- [ ] No linter errors
-- [ ] No linter warnings
-- [ ] Build succeeds
-- [ ] No type errors
-- [ ] No security vulnerabilities
-
-## Requirements Validation
-
-- [ ] All referenced requirements implemented
-- [ ] Implementation matches feature DESIGN.md
-- [ ] No contradictions with parent artifacts
-- [ ] All edge cases handled
+# @fdd-change:change-type-conversion
+def convert_gts_to_json_schema(gts_schema: GTSSchema) -> dict:
+    pass
 ```
+
+**Test Files**:
+```rust
+// @fdd-change:change-gts-schema-types
+#[cfg(test)]
+mod schema_v1_tests {
+    use super::*;
+    
+    #[test]
+    fn test_schema_creation() {
+        let schema = SchemaV1::new("test-schema".to_string());
+        assert_eq!(schema.version, "1.0");
+    }
+}
+```
+
+**Validation**:
+- Use `grep -r "@fdd-change:{change-id}"` to find all tagged code
+- Verify all files listed in CHANGES.md tasks have corresponding tags
+- Verify all major functions/classes implementing change have tags
+- Tag count should correlate with implementation scope
 
 ---
 
@@ -336,10 +301,6 @@ changes/change-{slug}/
    - All changes have status
    - All changes have priority
    - All changes reference feature requirements
-
-4. **Change directories exist**
-   - Directory for each change at `changes/change-{slug}/`
-   - All required files present (tasks.md, specification.md, validation.md)
 
 ### Content Validation
 
@@ -423,7 +384,8 @@ changes/change-{slug}/
 - File structure (10 points): CHANGES.md + change directories
 - Change structure (20 points): All required sections, no placeholders
 - Task breakdown (15 points): Granular, actionable, validated
-- Specification (20 points): Complete domain/API/DB/code specs
+- Specification (15 points): Complete domain/API/DB/code specs
+- Code tagging (5 points): Tag format specified, validation approach defined
 - Testing (15 points): Unit/integration/E2E coverage
 - Consistency (10 points): No contradictions with parent artifacts
 - Completeness (10 points): All requirements covered, 100% coverage
@@ -461,7 +423,7 @@ changes/change-{slug}/
 
 ## Change 1: Event Schema Definition
 
-**ID**: `change-event-schema`  
+**ID**: `fdd-analytics-feature-event-tracking-change-event-schema`  
 **Status**: ✅ COMPLETED  
 **Priority**: HIGH  
 **Effort**: 3 story points  
@@ -544,7 +506,7 @@ Define domain model for analytics events including event types, properties, and 
 
 ## Change 2: Event Ingestion API
 
-**ID**: `change-event-api`  
+**ID**: `fdd-analytics-feature-event-tracking-change-event-api`  
 **Status**: 🔄 IN_PROGRESS  
 **Priority**: HIGH  
 **Effort**: 5 story points  
@@ -558,7 +520,7 @@ Define domain model for analytics events including event types, properties, and 
 
 ## Change 3: Event Storage
 
-**ID**: `change-event-storage`  
+**ID**: `fdd-analytics-feature-event-tracking-change-event-storage`  
 **Status**: ⏳ NOT_STARTED  
 **Priority**: MEDIUM  
 **Effort**: 5 story points  
@@ -567,16 +529,6 @@ Define domain model for analytics events including event types, properties, and 
 ---
 
 {Similar structure for Change 3}
-```
-
-### Valid Change Directory
-
-```
-changes/change-event-schema/
-├── tasks.md              # 3 tasks listed with status
-├── specification.md      # GTS schema specification
-├── notes.md              # Implementation notes
-└── validation.md         # Validation checklist (all checked)
 ```
 
 ---
