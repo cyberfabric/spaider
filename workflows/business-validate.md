@@ -33,21 +33,70 @@ Extract:
 
 ## Steps
 
-### 1. Execute Validation
+### 1. Execute Detailed Validation
+
+**⚠️ CRITICAL**: MUST read `../requirements/workflow-execution-validations.md` for detailed validation requirements
+
+**⚠️ MUST** perform validation with **MAXIMUM ATTENTION TO DETAIL**
 
 Follow validation criteria from `business-context-structure.md`:
-- Structure (25 pts): Sections A-D present, correct numbering
-- Completeness (30 pts): No placeholders, all IDs valid, content complete
-- ID Formats (25 pts): Actor IDs, capability IDs follow format
-- Consistency (20 pts): Capabilities reference valid actors
+
+#### Structure Validation (25 pts)
+**MUST verify EACH item**:
+- [ ] Section A: VISION present with exact heading
+- [ ] Section B: Actors present with exact heading
+- [ ] Section C: Capabilities present with exact heading
+- [ ] Section D: Use Cases (optional) - if present, verify exact heading
+- [ ] Section E: Additional Context (optional) - if present, verify exact heading
+- [ ] Section numbering follows A, B, C, D, E format
+- [ ] Section order is correct (A → B → C → [D] → [E])
+- [ ] NO Section D named "Additional Context" (MUST be "Use Cases" or absent)
+- [ ] Headers use ## for sections, #### for actors/capabilities
+- [ ] No prohibited sections present
+
+#### Completeness Validation (30 pts)
+**MUST check EVERY line**:
+- [ ] Section A contains: Purpose, Target Users, Key Problems Solved, Success Criteria
+- [ ] Success criteria are measurable (specific numbers/percentages)
+- [ ] At least 2 paragraphs in Section A
+- [ ] At least 1 actor defined in Section B
+- [ ] Each actor has: #### heading, **ID**: line, **Role**: line
+- [ ] Actors grouped by Human Actors and System Actors
+- [ ] At least 1 capability defined in Section C
+- [ ] Each capability has: #### heading, **ID**: line, feature list, **Actors**: line
+- [ ] NO placeholders (TODO, TBD, [Description], etc.)
+- [ ] NO empty sections or sections with only HTML comments
+- [ ] All content is substantive, not placeholder text
+
+#### ID Formats Validation (25 pts)
+**MUST verify EACH ID individually**:
+- [ ] ALL actor IDs follow format: `fdd-{project}-actor-{name}` in kebab-case
+- [ ] ALL capability IDs follow format: `fdd-{project}-capability-{name}` in kebab-case
+- [ ] If Section D present: ALL use case IDs follow format: `fdd-{project}-usecase-{name}`
+- [ ] ALL IDs are wrapped in backticks
+- [ ] ALL IDs appear immediately after heading with format: `**ID**: \`fdd-...\``
+- [ ] ALL IDs are unique (no duplicates across entire document)
+- [ ] Project name is consistent across all IDs
+
+#### Consistency Validation (20 pts)
+**MUST verify EVERY reference**:
+- [ ] Build index of ALL actor IDs from Section B
+- [ ] For EACH capability in Section C:
+  - [ ] Verify **Actors**: line exists
+  - [ ] Verify at least 1 actor ID listed
+  - [ ] Verify EACH actor ID in backticks
+  - [ ] Verify EACH actor ID exists in Section B index
+- [ ] If Section D present, verify EACH **Actor**: line references valid actor IDs
+- [ ] Count and report: X/Y actor references validated
+- [ ] NO invalid or non-existent actor references
 
 Calculate total score
 
-### 2. Output Results to Chat
+### 2. Output Detailed Results to Chat
 
 **Format**:
 ```markdown
-## Validation: BUSINESS.md
+## Validation: BUSINESS.md ({module-name})
 
 **Score**: {X}/100  
 **Status**: PASS | FAIL  
@@ -58,31 +107,52 @@ Calculate total score
 ### Findings
 
 **Structure** ({X}/25):
-✅ | ❌ {item}
+✅ Section A: VISION present and correctly named
+✅ | ❌ Section B: Actors present and correctly named
+✅ | ❌ Section C: Capabilities present and correctly named
+✅ | ❌ Section D: Use Cases (optional) - check if present and correctly named
+✅ | ❌ Section E: Additional Context (optional) - check if present and correctly named
+✅ | ❌ Section numbering follows A, B, C, D, E
+✅ | ❌ Section order correct
+✅ | ❌ Headers formatted correctly
+❌ CRITICAL: Section D incorrectly named "Additional Context" (should be "Use Cases" or absent)
 
 **Completeness** ({X}/30):
-✅ | ❌ {item}
+✅ | ❌ Section A contains all required components
+✅ | ❌ Success criteria measurable ({count} criteria)
+✅ | ❌ {count} actors defined
+✅ | ❌ {count} capabilities defined
+✅ | ❌ No placeholders found
+✅ | ❌ All sections have substantive content
 
 **ID Formats** ({X}/25):
-✅ | ❌ {item}
+✅ | ❌ All {count} actor IDs follow format `fdd-{project}-actor-{name}`
+✅ | ❌ All {count} capability IDs follow format `fdd-{project}-capability-{name}`
+✅ | ❌ All IDs unique (checked {total} IDs)
+✅ | ❌ All IDs wrapped in backticks
+✅ | ❌ All IDs appear immediately after headings
 
 **Consistency** ({X}/20):
-✅ | ❌ {item}
+✅ | ❌ All capability actor references validated (checked {count} references)
+✅ | ❌ All referenced actor IDs exist in Section B
+✅ | ❌ All actor IDs in backticks
+✅ | ❌ No orphaned references
 
 ---
 
 ### Recommendations
 
-**High Priority**:
-1. {Fix}
+**High Priority** (must fix to pass):
+1. {Specific fix with file location and expected vs actual}
+2. {Another specific fix}
 
 ---
 
 ### Next Steps
 
-{If PASS}: ✅ Proceed to `design` workflow
+{If PASS}: ✅ Validation passed! Proceed to `design` workflow
 
-{If FAIL}: ❌ Fix issues, re-run validation
+{If FAIL}: ❌ Validation failed. Fix the {count} issues listed above, then re-run `business-validate`
 ```
 
 ---

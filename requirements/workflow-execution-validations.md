@@ -1,8 +1,32 @@
 # FDD Validation Workflow Execution
 
-**Version**: 1.0  
+**Version**: 1.1  
 **Purpose**: Define execution specifics for validation workflows  
 **Scope**: All validation workflows (validate structure/completeness)
+
+---
+
+## ⚠️ CRITICAL: Maximum Attention to Detail Required ⚠️
+
+**MUST** perform validation with **MAXIMUM ATTENTION TO DETAIL**:
+
+- ✅ **MUST** check **EVERY SINGLE** validation criterion from requirements file
+- ✅ **MUST** verify **EACH ITEM** individually, not in groups
+- ✅ **MUST** read **COMPLETE** artifact from start to end
+- ✅ **MUST** validate **EVERY** ID format, **EVERY** reference, **EVERY** section
+- ✅ **MUST** check for **ALL** placeholders, **ALL** empty sections, **ALL** missing content
+- ✅ **MUST** cross-reference **EVERY** actor/capability/requirement ID
+- ✅ **MUST** report **EVERY** issue found, no matter how small
+
+**MUST NOT** perform superficial validation:
+
+- ❌ **DO NOT** skip any validation checks
+- ❌ **DO NOT** assume sections are correct without verifying
+- ❌ **DO NOT** group checks together without individual verification
+- ❌ **DO NOT** skip reading any part of the artifact
+- ❌ **DO NOT** give benefit of doubt - verify everything
+
+**One missed issue = INVALID validation**
 
 ---
 
@@ -36,22 +60,29 @@
 ### 2. Requirements File Reading
 
 **Read**:
-1. Requirements file specified in workflow
+1. Open requirements/{artifact}-structure.md
 2. Extract validation criteria sections
 3. Extract scoring breakdown
 4. Extract pass threshold
+5. Extract EVERY checklist item per category
+6. Extract EVERY validation rule specified
 
 **MUST**:
 - Use requirements file as source of truth
 - Never invent validation criteria
 - Follow scoring exactly as specified
 - Use terminology from requirements
+- Read **COMPLETE** validation criteria section
+- Extract **EVERY SINGLE** validation item
+- Check **EACH** criterion individually
 
 **MUST NOT**:
 - Make up additional criteria
 - Skip criteria from requirements
 - Change scoring weights
 - Use different terminology
+- Skip any validation items
+- Group checks without individual verification
 
 ### 3. Parent Artifacts Reading
 
@@ -68,38 +99,70 @@
 
 ### 4. Structure Validation
 
+**⚠️ MUST verify EACH item individually**:
+
 **Check against requirements**:
-1. All required sections present
-2. Section numbering correct
-3. Section order correct
-4. Required subsections present
-5. Headers formatted correctly
+1. ✅ Section A present and correctly named
+2. ✅ Section B present and correctly named
+3. ✅ Section C present and correctly named
+4. ✅ Section D present (if required) and correctly named
+5. ✅ Section E present (if used) and correctly named
+6. ✅ Section numbering follows A, B, C, D, E format
+7. ✅ Section order is exactly as specified in requirements
+8. ✅ Required subsections present in each section
+9. ✅ Headers formatted correctly (## for sections, #### for items)
+10. ✅ No extra sections beyond what's allowed
+11. ✅ No prohibited sections present
+
+**MUST check**:
+- Read the ENTIRE artifact from line 1 to end
+- Verify EACH section heading matches requirements EXACTLY
+- Check section names character-by-character (e.g., "Use Cases" vs "Additional Context")
+- Verify subsection structure in EACH section
+- Check that Section D is "Use Cases" (optional) NOT "Additional Context"
+- Check that Section E is "Additional Context" (optional) if present
 
 **Score**: Points specified in requirements (typically 20-25)
 
 **Report**:
-- Each missing section
-- Each incorrect numbering
+- Each missing section with specific name
+- Each incorrect section name (expected vs actual)
+- Each incorrect numbering (expected vs actual)
 - Each wrong order
 - Each missing subsection
+- Each formatting issue
 
 ### 5. Completeness Validation
 
+**⚠️ MUST check EVERY line for issues**:
+
 **Check**:
-1. No placeholder markers (TODO, TBD, [Description], ...)
-2. No empty sections
-3. All IDs follow format from requirements
-4. All IDs are unique
-5. All required content present per section
+1. ✅ No placeholder markers: TODO, TBD, [Description], [Fill in], etc.
+2. ✅ No empty sections or sections with only comments
+3. ✅ No HTML comments without real content
+4. ✅ All IDs follow exact format from requirements (verify EACH ID)
+5. ✅ All IDs are unique (check for duplicates across entire document)
+6. ✅ All required content present per section (check EACH section)
+7. ✅ All required fields present (Purpose, Role, ID, etc.)
+8. ✅ All bulleted lists have actual content, not placeholders
+9. ✅ All tables/structures are complete
+10. ✅ All cross-references point to valid targets
+
+**MUST verify**:
+- Read EVERY line of the artifact
+- Check EVERY ID individually against format requirements
+- Search for ALL common placeholder patterns
+- Verify EACH section has substantive content
+- Check that content is complete, not just present
 
 **Score**: Points specified in requirements (typically 25-30)
 
 **Report**:
-- Each placeholder found
-- Each empty section
-- Each invalid ID format
-- Each duplicate ID
-- Each missing content item
+- Each placeholder found with line location
+- Each empty section with section name
+- Each invalid ID format with expected format
+- Each duplicate ID with both locations
+- Each missing content item with section reference
 
 ### 6. Non-Contradiction Validation
 
@@ -120,18 +183,33 @@
 
 ### 7. Coverage Validation
 
+**⚠️ MUST verify EVERY reference and requirement**:
+
 **Check**:
-1. All parent requirements addressed
-2. All referenced IDs exist in parent artifacts
-3. All actors/capabilities/requirements from parent covered
-4. No orphaned references
+1. ✅ All parent requirements addressed (check EACH requirement individually)
+2. ✅ All referenced IDs exist in parent artifacts (verify EACH reference)
+3. ✅ All actors from parent covered (check EACH actor)
+4. ✅ All capabilities from parent covered (check EACH capability)
+5. ✅ All requirements from parent covered (check EACH requirement)
+6. ✅ No orphaned references (verify EVERY ID reference)
+7. ✅ All **Actors**: lines reference valid actors
+8. ✅ All capability references point to valid capabilities
+9. ✅ All use case references point to valid use cases
+
+**MUST verify**:
+- Build complete index of ALL IDs in parent artifacts
+- Check EVERY single reference in current artifact against index
+- Verify EVERY actor ID in **Actors**: lines exists in parent
+- Check EVERY capability reference in flows/descriptions
+- Count coverage: X of Y requirements covered
 
 **Score**: Points specified in requirements (typically 20-25)
 
 **Report**:
-- Each missing requirement coverage
-- Each non-existent ID reference
-- Each uncovered parent concept
+- Each missing requirement coverage with requirement ID
+- Each non-existent ID reference with location
+- Each uncovered parent concept with details
+- Coverage statistics (e.g., "8/10 actors covered, missing: X, Y")
 
 ### 8. Scoring and Status
 
