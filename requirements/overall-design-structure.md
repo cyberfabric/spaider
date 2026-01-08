@@ -1,5 +1,14 @@
 # Technical Design (DESIGN.md) Structure Requirements
 
+**MUST read and follow**: `../workflows/design.md`
+
+**This file defines**: Structure only (WHAT to create)  
+**Workflow defines**: Process (HOW to create)
+
+⚠️ **Do NOT use this file alone. Execute the workflow, not just the structure.**
+
+---
+
 **Version**: 2.0  
 **Purpose**: Defines structure and validation criteria for Technical Design documentation
 

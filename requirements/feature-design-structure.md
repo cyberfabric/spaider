@@ -1,5 +1,14 @@
 # Feature Design Structure Requirements
 
+**MUST read and follow**: `../workflows/feature.md`
+
+**This file defines**: Structure only (WHAT to create)  
+**Workflow defines**: Process (HOW to create)
+
+⚠️ **Do NOT use this file alone. Execute the workflow, not just the structure.**
+
+---
+
 **Purpose**: Define required structure for `architecture/features/feature-{slug}/DESIGN.md`
 
 **Used by**:

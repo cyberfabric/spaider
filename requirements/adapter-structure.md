@@ -1,5 +1,14 @@
 # FDD Adapter Structure Requirements
 
+**MUST read and follow**: `../workflows/adapter.md`
+
+**This file defines**: Structure only (WHAT to create)  
+**Workflow defines**: Process (HOW to create)
+
+⚠️ **Do NOT use this file alone. Execute the workflow, not just the structure.**
+
+---
+
 **Version**: 1.0  
 **Purpose**: Define structure and validation criteria for FDD Adapter
 

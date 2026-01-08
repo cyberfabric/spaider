@@ -1,5 +1,14 @@
 # Business Context Structure Requirements
 
+**MUST read and follow**: `../workflows/business-context.md`
+
+**This file defines**: Structure only (WHAT to create)  
+**Workflow defines**: Process (HOW to create)
+
+⚠️ **Do NOT use this file alone. Execute the workflow, not just the structure.**
+
+---
+
 **Version**: 1.0  
 **Purpose**: Defines structure and validation criteria for Business Context documentation
 

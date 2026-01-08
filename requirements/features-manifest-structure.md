@@ -1,5 +1,15 @@
-# Features Manifest Structure Requirements
+# Features Manifest (FEATURES.md) Structure Requirements
 
+**MUST read and follow**: `../workflows/features.md`
+
+**This file defines**: Structure only (WHAT to create)  
+**Workflow defines**: Process (HOW to create)
+
+⚠️ **Do NOT use this file alone. Execute the workflow, not just the structure.**
+
+---
+
+**Version**: 1.0  
 **Purpose**: Define required structure for `architecture/features/FEATURES.md`
 
 **Used by**:

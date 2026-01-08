@@ -1,5 +1,14 @@
 # Feature Changes (Implementation Plan) Structure Requirements
 
+**MUST read and follow**: `../workflows/feature-changes.md`
+
+**This file defines**: Structure only (WHAT to create)  
+**Workflow defines**: Process (HOW to create)
+
+⚠️ **Do NOT use this file alone. Execute the workflow, not just the structure.**
+
+---
+
 **Version**: 1.0  
 **Purpose**: Define structure for feature implementation plan (replaces OpenSpec)
 
