@@ -266,7 +266,10 @@ Extract:
 ✅ | ❌ Error handling complete
 
 **Code Tagging** ({X}/10):
-✅ | ❌ All feature code tagged: {X} files with @fdd-change tags
+✅ | ❌ All feature code tagged with:
+   - @fdd-change:{change-id} (from CHANGES source)
+   - @fdd-flow:{flow-id}, @fdd-algo:{algo-id}, @fdd-state:{state-id}, @fdd-req:{req-id}, @fdd-test:{test-id} (from feature DESIGN.md)
+✅ | ❌ Validator searched code for ALL IDs from DESIGN.md (Sections B/C/D/F) and CHANGES source
 
 ---
 

@@ -63,19 +63,30 @@ Follow MUST WHEN instructions for:
 
 ### 3.1 Code Tagging Requirements
 
-**MUST tag all code changes with change identifier**:
+**MUST tag all code with IDs from both CHANGES and DESIGN**:
 
-**Tag format**: `@fdd-change:fdd-{project}-{feature}-change-{slug}` (ONLY full format allowed)
+- Change ID: `@fdd-change:fdd-{project}-{feature}-change-{slug}` (from CHANGES source)
+- Flow ID: `@fdd-flow:{flow-id}` (Section B of DESIGN)  
+  _Example_: `@fdd-flow:fdd-analytics-feature-gts-core-flow-route-crud-operations`
+- Algorithm ID: `@fdd-algo:{algo-id}` (Section C of DESIGN)  
+  _Example_: `@fdd-algo:fdd-analytics-feature-gts-core-algo-routing-logic`
+- State ID: `@fdd-state:{state-id}` (Section D of DESIGN, if present)  
+  _Example_: `@fdd-state:fdd-analytics-feature-gts-core-state-entity-lifecycle`
+- Requirement ID: `@fdd-req:{req-id}` (Section F of DESIGN)  
+  _Example_: `@fdd-req:fdd-analytics-feature-gts-core-req-routing`
+- Test scenario ID: `@fdd-test:{test-id}` (Section F of DESIGN)  
+  _Example_: `@fdd-test:fdd-analytics-feature-gts-core-test-routing-table-lookup`
 
 **Tag placement**:
-- At the beginning of new functions/methods
-- At the beginning of modified functions/methods
-- In complex code blocks implementing change logic
-- In test files for change validation
+- At the beginning of new/modified functions, methods, structs, or complex blocks implementing the logic
+- At the beginning of test modules/functions that implement test scenarios
+- Prefer multiple tags when a block covers multiple IDs (e.g., change + req + algo)
 
-**Examples**:
+**Examples (multiple IDs allowed)**:
 ```rust
 // @fdd-change:fdd-analytics-feature-schema-query-returns-change-gts-schema-types
+// @fdd-req:fdd-analytics-feature-schema-query-returns-req-routing
+// @fdd-algo:fdd-analytics-feature-schema-query-returns-algo-routing-logic
 pub struct SchemaV1 {
     pub schema_id: String,
     pub version: String,
@@ -91,9 +102,10 @@ export async function handleSchemaQuery(
 }
 ```
 
-**Multiple changes in same file**:
+**Multiple changes/IDs in same file**:
 ```python
 # @fdd-change:fdd-analytics-feature-schema-query-returns-change-schema-validation
+# @fdd-req:fdd-analytics-feature-schema-query-returns-req-validation
 def validate_schema_structure(schema: dict):
     pass
 
@@ -101,6 +113,17 @@ def validate_schema_structure(schema: dict):
 def convert_gts_to_json_schema(gts_schema):
     pass
 ```
+
+### 3.2 Tag Verification (agent checklist)
+
+**ALWAYS verify** (before finishing implementation):
+- Grep/search code for ALL IDs from CHANGES (change IDs) and DESIGN (flow/algo/state/req/test)
+- Confirm tags exist in the files that implement corresponding logic/tests
+- If any DESIGN ID has no code tag → report as gap and/or add tag
+
+**Suggested searches**:
+- `@fdd-change:` to list change-tagged files
+- `@fdd-flow:`, `@fdd-algo:`, `@fdd-state:`, `@fdd-req:`, `@fdd-test:` to confirm DESIGN coverage
 
 ### 4. Implement Tasks
 
