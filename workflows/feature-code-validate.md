@@ -21,7 +21,7 @@ description: Validate feature code implementation against feature design
 
 **Workflow-Specific Requirements**:
 - [ ] ✅ Open and follow `../requirements/feature-design-structure.md` (Feature design requirements)
-- [ ] ✅ Open and follow `../requirements/feature-changes-structure.md` (Changes structure)
+- [ ] ✅ Open and follow `../requirements/feature-changes-structure.md` (Changes structure) — optional when CHANGES are absent; still read for format awareness
 - [ ] ✅ Open and follow adapter specs/testing.md (Test requirements)
 - [ ] ✅ Open and follow adapter specs/feature-status-validation.md (Status validation)
 - [ ] ✅ Check adapter initialization (FDD-Adapter/AGENTS.md exists)
@@ -55,7 +55,7 @@ description: Validate feature code implementation against feature design
 
 **ALWAYS open and follow**:
 - `../requirements/feature-design-structure.md` (feature design structure)
-- `../requirements/feature-changes-structure.md` (changes structure)
+- `../requirements/feature-changes-structure.md` (changes structure) — read for format; if CHANGES are absent or intentionally skipped, apply only relevant parts
 - `{adapter-directory}/FDD-Adapter/specs/testing.md` (test requirements)
 - `{adapter-directory}/FDD-Adapter/specs/feature-status-validation.md` (status validation)
 
@@ -71,14 +71,15 @@ Extract:
 
 **MUST validate**:
 - [ ] Feature DESIGN.md exists and validated (100/100 + 100%)
-- [ ] CHANGES source exists and validated (active or archived)
-- [ ] At least one change with status IN_PROGRESS or COMPLETED
+- [ ] CHANGES source available **OR** explicitly recorded as “CHANGES not provided / skipped by author”
 - [ ] Adapter exists - validate: Required for validation
 
- **CHANGES source selection**:
- - **Preferred**: Use active `CHANGES.md` in the feature directory.
- - **Fallback**: If active `CHANGES.md` does not exist, use the most recent archived changes file in `archive/`.
-   - Choose the newest `YYYY-MM-DD-CHANGES.md` (lexicographically latest date).
+**CHANGES source selection (when available)**:
+- **Preferred**: Use active `CHANGES.md` in the feature directory.
+- **Fallback**: If active `CHANGES.md` does not exist, use the most recent archived changes file in `archive/`.
+  - Choose the newest `YYYY-MM-DD-CHANGES.md` (lexicographically latest date).
+**If no CHANGES are provided**:
+- Document “CHANGES unavailable; change-based checks skipped” and proceed with design-only validation.
 
 ---
 
@@ -88,17 +89,17 @@ Extract:
 
 **Read feature artifacts**:
 1. Open feature DESIGN.md
-2. Open feature CHANGES source (active `CHANGES.md` or latest archived `archive/YYYY-MM-DD-CHANGES.md`)
+2. If CHANGES are available: Open feature CHANGES source (active `CHANGES.md` or latest archived `archive/YYYY-MM-DD-CHANGES.md`)
 3. Extract feature slug from paths
 
 **Extract validation scope**:
 - All requirements from DESIGN.md Section F
 - All testing scenarios from DESIGN.md Section F
-- All changes from CHANGES source (to identify code locations)
+- If CHANGES exist: All changes from CHANGES source (to identify code locations). If CHANGES are absent, note “change map skipped”.
 
 ### 2. Build Codebase Map
 
-**Use CHANGES.md to identify code**:
+**If CHANGES exist, use them to identify code**:
 1. Extract all file paths from all changes (tasks section)
 2. Extract all @fdd-change tags used
 3. Build list of files implementing feature requirements
@@ -107,25 +108,28 @@ Extract:
 - Search for `@fdd-change:fdd-{project}-{feature}-change-` across the codebase scope defined by the adapter.
 - Collect all files containing these tags.
 
-**Result**: Complete list of files implementing this feature
+**Result**: Complete list of files implementing this feature (or “change map skipped” if no CHANGES provided)
 
 ### 3. Validate Requirements Implementation
 
 **For each requirement in DESIGN.md Section F marked as IMPLEMENTED**:
 
-**Check requirement status in CHANGES.md**:
+**If CHANGES are available**:
 - Find which change(s) implement this requirement (via **Implements**: field)
 - Verify change status is COMPLETED
 - If any implementing change is NOT_STARTED or IN_PROGRESS → requirement is NOT implemented
 
+**If CHANGES are absent**:
+- Document “CHANGES absent; requirement implementation traced via DESIGN.md and code inspection only”.
+
 **Verify code exists**:
-- Check that files specified in change tasks exist
-- Check that @fdd-change tags exist in code
+- Check that files specified in change tasks exist (when CHANGES exist)
+- Check that @fdd-change tags exist in code (when CHANGES exist)
 - Verify code is not placeholder/stub (no TODO/FIXME/unimplemented!)
 
 **Validation**:
-- ✅ Requirement ID found in CHANGES.md **Implements**: field
-- ✅ All implementing changes have status COMPLETED
+- ✅ Requirement ID found in CHANGES.md **Implements**: field (if CHANGES exist)
+- ✅ All implementing changes have status COMPLETED (if CHANGES exist)
 - ✅ Code files exist and contain implementation
 - ✅ No TODO/FIXME in implementation code
 - ✅ No unimplemented!() in business logic
