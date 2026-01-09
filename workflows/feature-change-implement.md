@@ -130,19 +130,21 @@ After all tasks done:
 
 ## Validation
 
-Run: `feature-change-validate`
+After implementing all changes, run: `feature-code-validate`
+
+**Note**: Validation is now done at feature level (not per-change)
 
 Expected:
-- Code compiles/runs
-- Tests pass
-- Matches requirements
+- All feature code compiles/runs
+- All tests pass (including test scenarios from DESIGN.md)
+- All requirements implemented
+- No TODO/FIXME in business logic
 
 ---
 
 ## Next Steps
 
-**If validation passes**: 
-- Next change: `feature-change-implement` (if more changes)
-- All done: `feature-qa` workflow
-
-**If validation fails**: Fix code, re-validate
+**After implementing all changes**: 
+- Run `feature-code-validate` to validate entire feature
+- If validation passes: mark feature as COMPLETE in FEATURES.md
+- If validation fails: Fix code, re-validate

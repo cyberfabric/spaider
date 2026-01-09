@@ -128,34 +128,6 @@ I will NOT skip any steps.
     - [ ] YES - I will report all issues found
     - [ ] NO - ALWAYS adjust my mindset
 
-### Model Suitability Verification
-11. ⚠️ **Have I verified my model suitability?**
-    - [ ] **Verify Model Identity Source (NO guessing allowed)**:
-        - **Allowed evidence sources** (pick exactly one):
-          - **System / runtime metadata** explicitly states model name or class
-          - **User confirmation** explicitly states exact model name (or class) used in this run
-        - **Forbidden**:
-          - Guessing based on "I feel like" / style / speed
-          - Assuming provider/model family (e.g. "I am Claude") without evidence
-        - **If I cannot prove identity/class**:
-          - STOP immediately
-          - Ask user: "What exact model (name) is running here?"
-          - Do NOT execute validation/checking workflows until clarified
-    - [ ] **Identify My Model Class (based on the verified source above)**:
-        - **Reasoning**: o1 / o3, DeepSeek-R1, Claude 4.5 Opus (Frontier reasoning)
-        - **Flagship**: GPT-5.2, Gemini 3 Pro, Llama 4 Maverick 405B (High capability)
-        - **Fast/Lite**: o4-mini, Gemini 3 Flash, Claude 3.5 Haiku, Llama 4 8B (Speed optimised)
-    - [ ] **Validate Against Task Rule**:
-        - **Checking/Validation**: MUST use **Top Frontier / Reasoning** (Strictness is key). *Speed models FORBIDDEN.*
-        - **Writing/Design**: **Reasoning** preferred (for coherence), but **Flagship** allowed.
-        - **Coding**: **Fast/Flagship** preferred (Speed is key). *Reasoning models often overkill.*
-        - **Scanning/Analysis**: **Fast/Lite** (or Flagship) with **Large Context ≥ 128k tokens** preferred.
-    - [ ] **Result**:
-        - [ ] YES - My model class fits the task rule.
-        - [ ] NO - ALWAYS Warn User: "⚠️ Model Mismatch: I am a [My Class] model, but this [Task Type] task requires [Required Class]."
-        - [ ] UNKNOWN - ALWAYS stop and ask user to confirm model; do not proceed.
-
-**If ANY answer is NO → STOP, fix the issue, restart readiness check**
 
 ---
 

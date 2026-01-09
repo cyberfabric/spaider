@@ -56,12 +56,12 @@ FDD helps teams build software by:
 **Layer 5: Feature Changes** (Developer/QA, Project Manager)
 - Atomic implementation changes with tasks
 - Specs validated against feature design
-- Workflows: `feature-changes`, `feature-changes-validate`
-- ✅ Validated before proceeding
+- Workflows: `feature-changes`, `feature-code-validate`
+- Validated before proceeding
 
 **Layer 6: Implementation** (Developer/QA, Project Manager)
 - Code validated against spec automatically
-- Workflows: `feature-change-implement`, `feature-change-validate`
+- Workflows: `feature-change-implement`, `feature-code-validate`
 
 **Key principles**: 
 - Each layer validated before proceeding to next
@@ -80,11 +80,11 @@ FDD is built on the **AGENTS.md approach** - a standardized file that serves as 
 2. `{adapter-directory}/FDD-Adapter/AGENTS.md` - Project-specific adapter (your tech stack, conventions, workflows)
 
 **Key benefits**:
-- ✅ AI agents load complete context instantly (no searching)
-- ✅ Workflows become executable (agents follow step-by-step)
-- ✅ Version controlled (track methodology changes via git)
-- ✅ Composable (core + project extensions, no duplication)
-- ✅ Human + AI harmony (README for humans, AGENTS.md for AI)
+- AI agents load complete context instantly (no searching)
+- Workflows become executable (agents follow step-by-step)
+- Version controlled (track methodology changes via git)
+- Composable (core + project extensions, no duplication)
+- Human + AI harmony (README for humans, AGENTS.md for AI)
 
 When an AI agent encounters FDD, it reads `FDD-Adapter/AGENTS.md` → which references `FDD/AGENTS.md` → complete understanding of methodology + project conventions + workflows.
 
@@ -92,7 +92,7 @@ When an AI agent encounters FDD, it reads `FDD-Adapter/AGENTS.md` → which refe
 
 ## Key Strengths
 
-### 1. 🎯 Interactive Workflows - Your AI Pair Programmer
+### 1. Interactive Workflows - Your AI Pair Programmer
 
 FDD provides **10 operation workflows** that guide you step-by-step through the entire development process. Each workflow **works in two modes**: CREATE (generate new) and UPDATE (edit existing), making them fully independent and iterative.
 
@@ -155,16 +155,16 @@ Follow @guidelines/FDD/workflows/feature.md
 Workflow shows current content and asks for specific changes - no need to start from scratch.
 
 **Why This Is Revolutionary**:
-- ✅ **Truly iterative** - Update artifacts as project evolves
-- ✅ **No data loss** - UPDATE mode preserves unchanged content
-- ✅ **Independent workflows** - Run any workflow anytime
-- ✅ **No memorization** - Workflows guide you every time
-- ✅ **No mistakes** - Each step validated before proceeding
-- ✅ **Consistent results** - Same structure every time
-- ✅ **AI-friendly** - AI agents follow workflows naturally
-- ✅ **Human-readable** - Anyone can execute manually if needed
+- **Truly iterative** - Update artifacts as project evolves
+- **No data loss** - UPDATE mode preserves unchanged content
+- **Independent workflows** - Run any workflow anytime
+- **No memorization** - Workflows guide you every time
+- **No mistakes** - Each step validated before proceeding
+- **Consistent results** - Same structure every time
+- **AI-friendly** - AI agents follow workflows naturally
+- **Human-readable** - Anyone can execute manually if needed
 
-### 2. 🔧 Adapter System - Works With Any Tech Stack
+### 2. Adapter System - Works With Any Tech Stack
 
 FDD core is **100% technology-agnostic**. Your project adapter makes it specific to YOUR stack.
 
@@ -202,12 +202,12 @@ Deployment: Serverless
 ```
 
 **Why This Matters**:
-- ✅ **Use your existing stack** - No forced technology choices
-- ✅ **Migrate gradually** - Add FDD to existing projects
-- ✅ **Team flexibility** - Different teams, different stacks, same methodology
-- ✅ **Future-proof** - New tech? Just create new adapter
+- **Use your existing stack** - No forced technology choices
+- **Migrate gradually** - Add FDD to existing projects
+- **Team flexibility** - Different teams, different stacks, same methodology
+- **Future-proof** - New tech? Just create new adapter
 
-### 3. 📋 Workflow-Driven Development - Everything Has a Process
+### 3. Workflow-Driven Development - Everything Has a Process
 
 In FDD, **every action is a workflow**. Development becomes predictable and repeatable.
 
@@ -239,9 +239,7 @@ Feature Management:
 ├─ design-validate.md       → Validate DESIGN.md (≥90/100)
 ├─ features-validate.md     → Validate FEATURES.md manifest
 ├─ feature-validate.md      → Validate feature DESIGN.md (100/100)
-├─ feature-changes-validate.md → Validate CHANGES.md structure
-├─ feature-change-validate.md  → Validate specific change
-└─ feature-qa.md            → Complete feature QA report
+└─ feature-code-validate.md → Validate entire feature code against design
 ```
 
 **Key Principle**: All operation workflows are **independent and iterative** - run them anytime to create new or update existing artifacts.
@@ -262,7 +260,7 @@ Day 2: Create business context & design
        → Auto-creates ADR-0001 (Initial Architecture)
        
        Run: design-validate.md
-       → 5 minutes, score 95/100 ✅
+       → 5 minutes, score 95/100 
        → Auto-validates ADR.md
 
 Day 3: Plan features
@@ -270,7 +268,7 @@ Day 3: Plan features
        → CREATE mode, 5 minutes, FEATURES.md generated
        
        Run: features-validate.md
-       → 5 minutes, manifest validated ✅
+       → 5 minutes, manifest validated 
 
 Week 1-2: Develop features (iterative)
           Run: feature.md workflow
@@ -278,7 +276,7 @@ Week 1-2: Develop features (iterative)
           → UPDATE: Edit flows/algorithms, 15-30 min
           
           Run: feature-validate.md
-          → 100/100 score required ✅
+          → 100/100 score required 
           
           Run: feature-changes.md workflow
           → CREATE: Implementation plan
@@ -286,6 +284,9 @@ Week 1-2: Develop features (iterative)
           
           Run: feature-change-implement.md
           → Code implementation
+          
+          Run: feature-code-validate.md
+          → Validate complete feature code
 
 Ongoing: Update artifacts as project evolves
          → Update adapter: adapter.md (UPDATE mode)
@@ -295,32 +296,32 @@ Ongoing: Update artifacts as project evolves
 ```
 
 **Why Workflows Matter**:
-- ✅ **Nothing forgotten** - Checklists ensure completeness
-- ✅ **Clear handoffs** - Team knows exactly what to do next
-- ✅ **Progress tracking** - Always know where you are
-- ✅ **Onboarding speed** - New members follow workflows
-- ✅ **Quality gates** - Validation before proceeding
+- **Nothing forgotten** - Checklists ensure completeness
+- **Clear handoffs** - Team knows exactly what to do next
+- **Progress tracking** - Always know where you are
+- **Onboarding speed** - New members follow workflows
+- **Quality gates** - Validation before proceeding
 
-### 4. � FDD vs OpenSpec - Design-First vs Change-First
+### 4. FDD vs OpenSpec - Design-First vs Change-First
 
 **Honest comparison**: Both are valuable methodologies, but they solve different problems.
 
 | Aspect | OpenSpec | FDD |
 |--------|----------|-----|
 | **Primary Focus** | Change management | Design-first development |
-| **What it defines** | ✅ How to track changes<br>✅ Delta specifications<br>✅ Change history | ✅ What to build (architecture)<br>✅ How it works (actor flows)<br>✅ Why decisions were made |
-| **Starting point** | ❌ Assumes you know what to build<br>Start with change proposal | ✅ Start with business context<br>Define overall design first |
-| **Design artifacts** | ❌ No overall design structure<br>❌ No business context document<br>❌ No feature planning | ✅ BUSINESS.md (business context)<br>✅ DESIGN.md (architecture)<br>✅ ADR.md (decision records)<br>✅ FEATURES.md (feature manifest) |
-| **Actor flows** | ❌ Not part of methodology<br>Write in change proposals | ✅ Section B of every feature<br>✅ Reviewable by non-programmers<br>✅ Uses FDL (plain English) |
-| **Domain model** | ❌ No standardized location<br>Define per change | ✅ Defined once in Overall Design<br>✅ Referenced by all features<br>✅ Technology-agnostic (GTS, JSON Schema, etc.) |
-| **API contracts** | ❌ No standardized location<br>Define per change | ✅ Defined once in Overall Design<br>✅ Referenced by all features<br>✅ Format-agnostic (OpenAPI, GraphQL, etc.) |
-| **Cross-feature validation** | ❌ No mechanism<br>Manual coordination needed | ✅ Built-in validation<br>✅ Detects type redefinitions<br>✅ Validates dependencies |
-| **Stakeholder review** | ⚠️ Technical proposals<br>Requires technical knowledge | ✅ Plain English actor flows<br>✅ Business-reviewable designs<br>✅ FDL algorithms |
-| **Change tracking** | ✅ Excellent atomic tracking<br>✅ Clear change history<br>✅ Delta specifications | ✅ CHANGES.md per feature<br>✅ Task checklists<br>✅ Status tracking |
-| **Implementation** | ✅ One change at a time<br>✅ Clear tasks per change | ✅ CHANGES.md guides implementation<br>✅ Validated against feature design |
-| **AI integration** | ⚠️ AI can implement changes<br>But must know what to build | ✅ AI follows complete methodology<br>✅ AGENTS.md provides full context<br>✅ Workflows guide every step |
-| **Learning curve** | ✅ Simple to start<br>Just create changes | ⚠️ Requires understanding methodology<br>But workflows guide you |
-| **Best for** | ✅ Tracking implementation changes<br>✅ Delta documentation<br>✅ Audit trails | ✅ Design-first projects<br>✅ Team collaboration<br>✅ Stakeholder involvement<br>✅ Complex systems |
+| **What it defines** | How to track changes<br>How to track changes<br>Change history | What to build (architecture)<br>How it works (actor flows)<br>Why decisions were made |
+| **Starting point** | Assumes you know what to build<br>Start with change proposal | Start with business context<br>Define overall design first |
+| **Design artifacts** | No overall design structure<br>No business context document<br>No feature planning | BUSINESS.md (business context)<br>DESIGN.md (architecture)<br>ADR.md (decision records)<br>FEATURES.md (feature manifest) |
+| **Actor flows** | Not part of methodology<br>Write in change proposals | Section B of every feature<br>Reviewable by non-programmers<br>Uses FDL (plain English) |
+| **Domain model** | No standardized location<br>Define per change | Defined once in Overall Design<br>Referenced by all features<br>Technology-agnostic (GTS, JSON Schema, etc.) |
+| **API contracts** | No standardized location<br>Define per change | Defined once in Overall Design<br>Referenced by all features<br>Format-agnostic (OpenAPI, GraphQL, etc.) |
+| **Cross-feature validation** | No mechanism<br>Manual coordination needed | Built-in validation<br>Detects type redefinitions<br>Validates dependencies |
+| **Stakeholder review** | Technical proposals<br>Requires technical knowledge | Plain English actor flows<br>Business-reviewable designs<br>FDL algorithms |
+| **Change tracking** | Excellent atomic tracking<br>Clear change history<br>Delta specifications | CHANGES.md per feature<br>Task checklists<br>Status tracking |
+| **Implementation** | One change at a time<br>Clear tasks per change | CHANGES.md guides implementation<br>Validated against feature design |
+| **AI integration** | AI can implement changes<br>But must know what to build | AI follows complete methodology<br>AGENTS.md provides full context<br>Workflows guide every step |
+| **Learning curve** | Simple to start<br>Just create changes | Requires understanding methodology<br>But workflows guide you |
+| **Best for** | Tracking implementation changes<br>Delta documentation<br>Audit trails | Design-first projects<br>Team collaboration<br>Stakeholder involvement<br>Complex systems |
 
 **When to use what**:
 
@@ -345,7 +346,7 @@ Ongoing: Update artifacts as project evolves
 
 **Key insight**: FDD includes change tracking via CHANGES.md. You get design artifacts + change tracking in one methodology. OpenSpec is optional if you need more sophisticated change management.
 
-### 5. 📝 FDL (FDD Description Language) - Logic Without Code
+### 5. FDL (FDD Description Language) - Logic Without Code
 
 FDD uses **FDL** - plain English pseudocode for describing algorithms, actor flows, and state machines. It's readable by anyone (stakeholders, QA, developers), language-agnostic (works for any tech stack), and AI-friendly (clear instructions for code generation).
 
@@ -364,10 +365,10 @@ FDD uses **FDL** - plain English pseudocode for describing algorithms, actor flo
 
 | Code in DESIGN.md | FDL in DESIGN.md |
 |-------------------|------------------|
-| ❌ Only programmers can review | ✅ Anyone can review |
-| ❌ Couples design to language | ✅ Language-agnostic |
-| ❌ Syntax distracts from logic | ✅ Pure logic focus |
-| ❌ Outdates when refactored | ✅ Stable across refactors |
+| Only programmers can review | Anyone can review |
+| Couples design to language | Language-agnostic |
+| Syntax distracts from logic | Pure logic focus |
+| Outdates when refactored | Stable across refactors |
 
 **Used in**: Actor Flows (Section B - primary), Algorithms (Section C), State Machines (Section D, optional). See `requirements/FDL.md` for complete syntax.
 
@@ -400,10 +401,10 @@ Keywords (ALL CAPS):
 **Why No Code in Designs**:
 
 FDD **strictly prohibits code** in DESIGN.md files:
-- ❌ No `if (x > 5) { ... }` syntax
-- ❌ No function definitions
-- ❌ No framework-specific patterns
-- ✅ Only FDL plain English
+- No `if (x > 5) { ... }` syntax
+- No function definitions
+- No framework-specific patterns
+- Only FDL plain English
 
 **This is enforced by validation** - designs with code fail validation.
 
@@ -433,7 +434,7 @@ Bug caught before coding
 
 **See Full FDL Specification**: `requirements/FDL.md`
 
-### 6. 🏗️ Structured Project Organization - Rules and Validation
+### 6. Structured Project Organization - Rules and Validation
 
 FDD enforces **consistent structure and validation** across your entire project.
 
@@ -476,45 +477,45 @@ architecture/
 **Validation Rules Enforced**:
 
 **Business Context Validation** (workflow business-validate):
-- ✅ All sections present (A, B, C, D)
-- ✅ Vision and purpose clearly defined
-- ✅ All actors identified
-- ✅ Core capabilities documented
+- All sections present (A, B, C, D)
+- Vision and purpose clearly defined
+- All actors identified
+- Core capabilities documented
 
 **Overall Design Validation** (workflow design-validate):
-- ✅ All sections present (A, B, C)
-- ✅ Architecture style documented
-- ✅ Domain model documented (in chosen DML format)
-- ✅ API contracts documented (in chosen format)
-- ✅ No contradictions in architecture
-- ✅ Score ≥90/100 before proceeding
+- All sections present (A, B, C)
+- Architecture style documented
+- Domain model documented (in chosen DML format)
+- API contracts documented (in chosen format)
+- No contradictions in architecture
+- Score ≥90/100 before proceeding
 
 **Feature Design Validation** (workflow feature-validate):
-- ✅ All sections present (A-G)
-- ✅ Section B (Actor Flows) is PRIMARY and complete
-- ✅ Algorithms in FDL only (no code)
-- ✅ No type redefinitions (must reference Overall Design)
-- ✅ All dependencies declared
-- ✅ Implementation changes planned
-- ✅ Score 100/100 + 100% completeness
+- All sections present (A-G)
+- Section B (Actor Flows) is PRIMARY and complete
+- Algorithms in FDL only (no code)
+- No type redefinitions (must reference Overall Design)
+- All dependencies declared
+- Implementation changes planned
+- Score 100/100 + 100% completeness
 
 **Documentation Rules**:
-- ✅ **FDL only in designs** - No code in DESIGN.md files
-- ✅ **Single source of truth** - Types defined once in Overall Design
-- ✅ **Cross-references validated** - All references must exist
-- ✅ **Status tracking** - Feature status always accurate
-- ✅ **Dependency checking** - No circular dependencies allowed
+- FDL only in designs - No code in DESIGN.md files
+- Single source of truth - Types defined once in Overall Design
+- Cross-references validated - All references must exist
+- Status tracking - Feature status always accurate
+- Dependency checking - No circular dependencies allowed
 
 **Why Structure and Validation Matter**:
-- ✅ **Consistency** - Every feature follows same pattern
-- ✅ **Quality gates** - Can't proceed with incomplete designs
-- ✅ **Team coordination** - Everyone knows where to find things
-- ✅ **Maintenance ease** - Structure is predictable
-- ✅ **AI-friendly** - Clear structure helps AI navigate and generate
+- Consistency - Every feature follows same pattern
+- Quality gates - Can't proceed with incomplete designs
+- Team coordination - Everyone knows where to find things
+- Maintenance ease - Structure is predictable
+- AI-friendly - Clear structure helps AI navigate and generate
 
 **Example Validation Failure**:
 ```
-❌ Feature Design Validation Failed
+Feature Design Validation Failed
 
 Issues Found:
 1. Section B (Actor Flows) incomplete - missing "User Logout" flow
@@ -534,49 +535,49 @@ Completeness: 85% (minimum: 100%)
 ### What You Get With FDD
 
 **For Single Expert / Architect**:
-- 🤖 **AI does 80% of the work**: Design → validation → implementation automated
-- 📋 **Living documentation**: Designs stay up-to-date with code (enforced by validation)
-- 🔍 **Full traceability**: From business requirement → design → code change
-- ⚡ **Faster delivery**: AI handles boilerplate, you focus on business logic
-- 🎯 **Catch issues early**: Validation happens before coding
+- AI does 80% of the work: Design → validation → implementation automated
+- Living documentation: Designs stay up-to-date with code (enforced by validation)
+- Full traceability: From business requirement → design → code change
+- Faster delivery: AI handles boilerplate, you focus on business logic
+- Catch issues early: Validation happens before coding
 
 **For Teams**:
-- 👥 **Stakeholders can review**: Actor flows in plain English, no code knowledge needed
-- 🔄 **Clear handoffs**: Feature designs are complete specs, not ambiguous tickets
-- 📊 **Progress tracking**: FEATURES.md shows exactly what's done/in-progress/pending
-- 🛡️ **Consistency**: Workflows enforce same standards across all features
-- 📚 **Onboarding**: New team members read designs, not reverse-engineer code
+- Stakeholders can review: Actor flows in plain English, no code knowledge needed
+- Clear handoffs: Feature designs are complete specs, not ambiguous tickets
+- Progress tracking: FEATURES.md shows exactly what's done/in-progress/pending
+- Consistency: Workflows enforce same standards across all features
+- Onboarding: New team members read designs, not reverse-engineer code
 
 **For Business**:
-- 💰 **Lower costs**: Less rework, fewer bugs, faster development
-- 📈 **Predictability**: Features have complete designs before implementation
-- 🔒 **Risk reduction**: Validation catches architectural issues early
-- 📖 **Audit trail**: Every change is documented and traceable
+- Lower costs: Less rework, fewer bugs, faster development
+- Predictability: Features have complete designs before implementation
+- Risk reduction: Validation catches architectural issues early
+- Audit trail: Every change is documented and traceable
 
 ### What Happens Without FDD
 
 **The typical scenario**:
-1. 📝 Developer starts coding from vague requirements
-2. 🤔 Discovers edge cases during implementation
-3. 🔄 Goes back to architect/PM for clarification
-4. ⏰ Delays accumulate, scope creeps
-5. 🐛 Bugs discovered after deployment (logic wasn't reviewed)
-6. 📉 Technical debt grows (no overall design document)
-7. 🔥 Refactoring becomes risky (no source of truth)
+1. Developer starts coding from vague requirements
+2. Discovers edge cases during implementation
+3. Goes back to architect/PM for clarification
+4. Delays accumulate, scope creeps
+5. Bugs discovered after deployment (logic wasn't reviewed)
+6. Technical debt grows (no overall design document)
+7. Refactoring becomes risky (no source of truth)
 
 **Specific problems FDD prevents**:
 
 | Without FDD | With FDD |
 |-------------|----------|
-| ❌ Requirements in scattered Jira tickets | ✅ Complete Overall Design in one place |
-| ❌ Stakeholders can't review logic | ✅ Actor flows reviewable by non-programmers |
-| ❌ Type definitions duplicated across features | ✅ Domain model in Overall Design, referenced everywhere |
-| ❌ API changes break other features | ✅ API contracts defined upfront, validated |
-| ❌ "Documentation" outdated or missing | ✅ Designs validated against code, stay current |
-| ❌ Developer interprets requirements differently | ✅ Feature Design is unambiguous spec |
-| ❌ AI assistant generates inconsistent code | ✅ AI follows workflows, enforces patterns |
-| ❌ Can't track feature dependencies | ✅ FEATURES.md shows dependency graph |
-| ❌ Rework after stakeholder review | ✅ Stakeholders review design before coding |
+| Requirements in scattered Jira tickets | Complete Overall Design in one place |
+| Stakeholders can't review logic | Actor flows reviewable by non-programmers |
+| Type definitions duplicated across features | Domain model in Overall Design, referenced everywhere |
+| API changes break other features | API contracts defined upfront, validated |
+| "Documentation" outdated or missing | Designs validated against code, stay current |
+| Developer interprets requirements differently | Feature Design is unambiguous spec |
+| AI assistant generates inconsistent code | AI follows workflows, enforces patterns |
+| Can't track feature dependencies | FEATURES.md shows dependency graph |
+| Rework after stakeholder review | Stakeholders review design before coding |
 
 ---
 
@@ -650,7 +651,7 @@ feature-login/
 ### 1. Quick Overview (5 minutes)
 
 **Read these files**:
-1. `README.md` (this file) - Overview
+1. `README.md` (this file) - Overview, getting started, team workflow
 2. `QUICKSTART.md` - 5-minute quick start guide with examples
 3. `FDL.md` - Learn plain English algorithm syntax
 4. `workflows/README.md` - Understand workflow system
@@ -669,7 +670,7 @@ cp -r /path/to/FDD guidelines/FDD
 git submodule add <fdd-repo-url> guidelines/FDD
 ```
 
-### 3. Create Project Adapter (5-10 minutes) 🤖
+### 3. Create Project Adapter (5-10 minutes) 
 
 **Follow workflow**: `workflows/adapter.md`
 
@@ -690,7 +691,7 @@ This interactive workflow will:
 
 For manual setup, see: **`ADAPTER_GUIDE.md`**
 
-### 4. Configure AI Agent (2 minutes, optional) 🤖
+### 4. Configure AI Agent (2 minutes, optional) 
 
 **Follow workflow**: `workflows/adapter-agents.md`
 
@@ -703,13 +704,13 @@ This optional workflow sets up your AI agent (Windsurf, Cursor, Cline, Aider) to
 - Aider: `.aider.conf.yml` (YAML config)
 
 All configs:
-- ✅ Tell agent to read FDD adapter first
-- ✅ Provide FDD workflow references
-- ✅ Follow agent-specific format
+- Tell agent to read FDD adapter first
+- Provide FDD workflow references
+- Follow agent-specific format
 
 **Result**: Agent reads `{adapter-directory}/FDD-Adapter/AGENTS.md` automatically
 
-### 5. Create Business Context & Design (2-4 hours) 🤖
+### 5. Create Business Context & Design (2-4 hours) 
 
 **AI agent workflows**: 
 ```
@@ -719,7 +720,7 @@ Follow @guidelines/FDD/workflows/design.md
 
 These workflows guide you through creating BUSINESS.md and DESIGN.md with interactive questions.
 
-### 6. Start First Feature (1-2 hours) 🤖
+### 6. Start First Feature (1-2 hours) 
 
 **AI agent workflows**:
 ```
@@ -790,18 +791,18 @@ FDD tasks vary greatly. Each operation class below lists strict, **validated** m
 ### AI Limitations
 
 AI assistants can:
-- ✅ Initialize structures
-- ✅ Generate design templates
-- ✅ Validate against checklists
-- ✅ Implement changes from CHANGES.md
-- ✅ Write tests
+- Initialize structures
+- Generate design templates
+- Validate against checklists
+- Implement changes from CHANGES.md
+- Write tests
 
 Humans must:
-- ❌ Define business requirements
-- ❌ Make architectural decisions
-- ❌ Review actor flows
-- ❌ Approve designs
-- ❌ Final code review
+- Define business requirements
+- Make architectural decisions
+- Review actor flows
+- Approve designs
+- Final code review
 
 ---
 
@@ -840,10 +841,8 @@ For teams, work can be distributed: one person owns overall design and architect
     ├── feature.md                              # Create/update feature design
     ├── feature-validate.md                     # Validate feature design
     ├── feature-changes.md                      # Create/update CHANGES.md
-    ├── feature-changes-validate.md             # Validate CHANGES.md
-    ├── feature-change-implement.md             # Implement changes
-    ├── feature-change-validate.md              # Validate specific change
-    └── feature-qa.md                           # Complete feature QA
+    ├── feature-code-validate.md                # Validate entire feature code against design
+ 
 
 {adapter-directory}/FDD-Adapter/                # Your project adapter (created by workflow)
 ├── AGENTS.md                                   # AI instructions (project-specific)

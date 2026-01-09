@@ -168,7 +168,7 @@ Implements each change according to tasks in CHANGES.md.
 
 Follow workflows:
 1. **feature-changes-validate.md** - Validate CHANGES.md structure
-2. **feature-qa.md** - Complete feature QA (runs all validations + tests)
+2. **feature-code-validate.md** - Validate entire feature code vs design (final gate)
 
 ---
 
@@ -419,13 +419,12 @@ feature.md                             # Create OR update feature DESIGN.md
 feature-changes.md                     # Create OR update CHANGES.md
 feature-change-implement.md            # Implement changes
 
-# Feature Validation
-features-validate.md                   # Validate FEATURES.md
-feature-validate.md                    # Validate feature DESIGN.md (100/100)
-feature-changes-validate.md            # Validate CHANGES.md
-feature-change-validate.md             # Validate specific change
-feature-qa.md                          # Complete feature QA
-```
+ # Feature Validation
+ features-validate.md                   # Validate FEATURES.md
+ feature-validate.md                    # Validate feature DESIGN.md (100/100)
+ feature-changes-validate.md            # Validate CHANGES.md
+ feature-code-validate.md               # Validate entire feature code vs design
+ ```
 
 ---
 

@@ -151,17 +151,12 @@ This guide helps you select the correct FDD workflow based on:
 - **Use when**: Ready to code a change from CHANGES.md
 - **Implements**: Tasks for one change, updates checkboxes
 - **Updates**: Change status (⏳ → 🔄 → ✅)
-- **Next**: `feature-change-validate`
+- **Next**: `feature-code-validate`
 
-**feature-change-validate.md** - Validate change implementation
-- **Use when**: Change code complete
-- **Validates**: Code compiles, tests pass, requirements met
-- **Next**: `feature-change-implement` (next change) or `feature-qa`
-
-**feature-qa.md** - Feature quality assurance
-- **Use when**: All changes implemented
-- **Validates**: End-to-end feature functionality, integration
-- **Next**: Archive CHANGES.md or continue features
+**feature-code-validate.md** - Validate feature code
+- **Use when**: At least one change is IN_PROGRESS
+- **Validates**: Code compiles, tests pass, requirements and test scenarios implemented
+- **Next**: Update FEATURES.md: Mark feature status as COMPLETE
 
 ---
 
@@ -192,11 +187,10 @@ START
 │  └─> feature-changes.md → feature-changes-validate.md
 │
 ├─ CHANGES.md validated, ready to code?
-│  └─> feature-change-implement.md → feature-change-validate.md
-│     (repeat for each change)
+│  └─> feature-change-implement.md (repeat for each change)
 │
-├─ All changes done, need QA?
-│  └─> feature-qa.md
+├─ All changes done, validate code?
+│  └─> feature-code-validate.md
 │
 └─ Need to update existing doc?
    └─> Use same workflow in UPDATE mode
@@ -221,9 +215,9 @@ feature → feature-validate (for each feature)
   ↓
 feature-changes → feature-changes-validate
   ↓
-feature-change-implement → feature-change-validate (for each change)
-  ↓
-feature-qa
+ feature-change-implement (for each change)
+   ↓
+ feature-code-validate
 ```
 
 ### Legacy project integration
@@ -247,9 +241,9 @@ feature → feature-validate
   ↓
 feature-changes → feature-changes-validate
   ↓
-feature-change-implement → feature-change-validate (repeat)
-  ↓
-feature-qa
+ feature-change-implement (repeat)
+   ↓
+ feature-code-validate
 ```
 
 ### Update existing design
@@ -307,8 +301,7 @@ feature (UPDATE mode) → feature-validate
 
 **Implementation**:
 - feature-changes.md, feature-changes-validate.md
-- feature-change-implement.md, feature-change-validate.md
-- feature-qa.md
+- feature-change-implement.md, feature-code-validate.md
 
 ### By Type
 
@@ -320,12 +313,12 @@ feature (UPDATE mode) → feature-validate
 **Validation** (Check workflows):
 - adapter-validate.md, business-validate.md, design-validate.md
 - adr-validate.md, features-validate.md, feature-validate.md
-- feature-changes-validate.md, feature-change-validate.md
+- feature-changes-validate.md, feature-code-validate.md
 
 **Special Purpose**:
 - adapter-from-sources.md (legacy integration)
 - adapter-agents.md (IDE configuration)
-- feature-qa.md (quality assurance)
+- feature-code-validate.md (feature completion validation)
 
 ---
 
@@ -355,10 +348,10 @@ feature (UPDATE mode) → feature-validate
 → `feature-changes.md` → `feature-changes-validate.md`
 
 **Implement a change**
-→ `feature-change-implement.md` → `feature-change-validate.md`
+→ `feature-change-implement.md` (repeat for each change)
 
-**Test feature end-to-end**
-→ `feature-qa.md`
+**Validate feature code**
+→ `feature-code-validate.md`
 
 **Update existing document**
 → Use same workflow in UPDATE mode

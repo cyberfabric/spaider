@@ -54,9 +54,7 @@ These workflows are **IDE and agent-agnostic** - they describe the FDD methodolo
 **feature-changes-validate.md** - Validate implementation plan
 
 **feature-change-implement.md** - Implement specific change
-**feature-change-validate.md** - Validate change implementation
-
-**feature-qa.md** - Feature quality assurance
+**feature-code-validate.md** - Validate feature code implementation
 
 ---
 

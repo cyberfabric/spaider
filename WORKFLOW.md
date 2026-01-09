@@ -181,7 +181,7 @@
 - `feature-changes` - Create/update CHANGES.md (implementation plan with granular changes)
 - `feature-changes-validate` - Validate CHANGES.md (vs feature DESIGN.md, vs structure)
 - `feature-change-implement` - Implement specific change from CHANGES.md (task by task)
-- `feature-change-validate` - Validate code (vs adapter requirements, vs feature requirements, run tests)
+- `feature-code-validate` - Validate entire feature code against design (final gate)
 
 **Requirements**:
 - Each change ALWAYS do implement 1-N requirements from feature DESIGN.md
@@ -206,8 +206,7 @@
 - Quality metrics
 
 **Workflows**:
-- `feature-qa` - Complete feature validation (runs feature-validate, feature-changes-validate, all feature-change-validate)
-- `feature-change-validate` - Individual change validation (shared with Developer)
+- `feature-code-validate` - Validate entire feature code against feature design
 
 **Requirements**:
 - All test scenarios from feature DESIGN.md ALWAYS do be validated
@@ -306,7 +305,7 @@
 
 **Workflows**:
 - `feature-change-implement` (Developer)
-- `feature-change-validate` (Developer + QA)
+- `feature-code-validate` (Developer + QA)
 
 **Purpose**: Implement and validate changes
 
@@ -319,11 +318,11 @@
 **Artifacts**: Quality reports
 
 **Workflows**:
-- `feature-qa` (QA)
+- `feature-code-validate`
 
 **Purpose**: End-to-end feature validation
 
-**Prerequisite**: All changes implemented
+**Prerequisite**: Some changes implemented (at least one change IN_PROGRESS or COMPLETED)
 
 ---
 
@@ -420,18 +419,18 @@
     - Tag all code with change identifier
     - Prerequisite: CHANGES.md validated
     
-18. `feature-change-validate` - Type: Validation
-    - Prerequisite: Change implemented
-    - Validates: Code vs requirements, tests pass, change tags present
+18. `feature-code-validate` - Type: Validation
+    - Prerequisite: Some changes implemented (at least one change IN_PROGRESS or COMPLETED)
+    - Validates: Requirements + test scenarios implemented, build/lint/tests pass
 
 ---
 
 ### QA Workflows (1)
 
-19. `feature-qa` - Type: Validation
-    - Complete feature validation (orchestrates multiple validations)
-    - Prerequisite: All changes implemented
-    - Runs: feature-validate, feature-changes-validate, all feature-change-validate
+19. `feature-code-validate` - Type: Validation
+    - Complete feature code validation (final gate)
+    - Prerequisite: Some changes implemented (at least one change IN_PROGRESS or COMPLETED)
+    - Validates: Requirements + test scenarios implemented, build/lint/tests pass
 
 ---
 
@@ -452,10 +451,9 @@ adapter
 → feature-validate 
 → feature-changes 
 → feature-changes-validate 
-→ feature-change-implement (for each change)
-→ feature-change-validate (for each change)
-→ feature-qa 
-→ Next feature or complete
+ → feature-change-implement (for each change)
+ → feature-code-validate
+ → Next feature or complete
 ```
 
 ### Add Feature to Existing Project
@@ -468,9 +466,8 @@ adapter
 → feature-validate 
 → feature-changes 
 → feature-changes-validate 
-→ feature-change-implement (for each change)
-→ feature-change-validate (for each change)
-→ feature-qa
+ → feature-change-implement (for each change)
+ → feature-code-validate
 ```
 
 ### Fix Design Issue During Implementation
@@ -537,17 +534,14 @@ features-validate (checks DESIGN.md)
     ↓
 feature-validate (checks DESIGN.md + FEATURES.md)
     ↓
-feature-changes-validate (checks feature DESIGN.md)
+ feature-changes-validate (checks feature DESIGN.md)
     ↓
-feature-change-validate (checks CHANGES.md + adapter + tests)
-    ↓
-feature-qa (orchestrates all validations)
+ feature-code-validate (validates entire feature code vs feature design)
 ```
 
 **Rule**: Every artifact MUST be validated before dependent artifacts can be created
 
 ---
-
 ## References
 
 **For workflow execution**: See `requirements/workflow-execution.md`

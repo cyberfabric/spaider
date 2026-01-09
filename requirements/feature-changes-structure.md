@@ -168,16 +168,24 @@
 - File: `{test file path}`
 - Validates: {what is validated}
 
+**Testing Scenario Implementation** (MANDATORY):
+- All testing scenarios from feature DESIGN.md Section F MUST be implemented
+- Each test MUST reference its testing scenario ID for traceability
+- Format: `// @fdd-test:fdd-{project}-feature-{feature-slug}-test-{scenario-name}`
+- Tests MUST NOT be ignored without documented justification
+- Tests MUST validate actual behavior (not placeholders)
+
 ### Validation Criteria
 
 **Code validation** (MUST pass):
 - All tasks completed
-- All tests pass
+- All tests pass (including tests for all testing scenarios from DESIGN.md Section F)
 - Code follows adapter conventions
 - No linter errors
 - Documentation updated
 - Implements all referenced requirements
 - **Code tagged**: All modified/new code has `@fdd-change:fdd-{project}-{feature}-change-{slug}` tags (full format only)
+- **Testing scenarios implemented**: All testing scenarios from feature DESIGN.md Section F have corresponding tests
 
 ---
 ```
@@ -333,6 +341,8 @@ mod schema_v1_tests {
    - Integration tests for API/DB changes
    - E2E tests for user scenarios
    - All tests reference feature DESIGN.md Section F scenarios
+   - **MANDATORY**: All testing scenarios from feature DESIGN.md Section F have implemented tests
+   - Each test includes scenario ID comment for traceability: `// @fdd-test:{scenario-id}`
 
 ### Consistency Validation
 
@@ -526,7 +536,6 @@ Define domain model for analytics events including event types, properties, and 
 ---
 
 {Similar structure for Change 3}
-```
 
 ---
 
@@ -536,7 +545,7 @@ Define domain model for analytics events including event types, properties, and 
 - `feature-changes` - Create/edit implementation plan
 - `feature-changes-validate` - Validate plan structure and completeness
 - `feature-change-implement` - Implement specific change task-by-task
-- `feature-change-validate` - Validate implemented change against requirements
+- `feature-code-validate` - Validate entire feature code against feature design (replaces feature-change-validate)
 
 **Prerequisites**:
 - Feature DESIGN.md validated (100/100 + 100%)
@@ -613,9 +622,8 @@ architecture/features/feature-{slug}/archive/YYYY-MM-DD-CHANGES.md
 
 **Used by workflows**:
 - `feature-changes` - Creates/edits CHANGES.md
-- `feature-changes-validate` - Validates CHANGES.md
+- `feature-code-validate` - Validates entire feature code against design
 - `feature-change-implement` - Implements change
-- `feature-change-validate` - Validates implementation
 
 **Related requirements**:
 - `feature-design-structure.md` - Feature DESIGN.md structure
