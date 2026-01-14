@@ -39,6 +39,8 @@
 
 ## Navigation Rules
 
+ALWAYS open and follow `skills/SKILLS.md`
+
 ALWAYS open and follow `workflows/AGENTS.md` WHEN receiving any task request
 
 ALWAYS open and follow `requirements/extension.md` WHEN you see **Extends**: {file}

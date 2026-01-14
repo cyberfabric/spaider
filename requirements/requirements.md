@@ -132,11 +132,21 @@ This file defines requirements that are shared across multiple `*-structure.md` 
 **Applies to**: Any artifact doc section where a heading is followed by an `**ID**:` line.
 
 **MUST**:
-- Place the `**ID**:` line immediately after the heading (on the next line)
+- Insert exactly one blank line between the heading and the `**ID**:` line
 - Use `**ID**: \`fdd-...\`` format
 
 **MUST NOT**:
-- Insert blank lines between the heading and the `**ID**:` line
+- Place the `**ID**:` line immediately after the heading (no blank line)
+
+### Section Heading Format (Artifacts)
+
+**Applies to**: Artifact docs that use lettered top-level sections (A, B, C, ...).
+
+**MUST**:
+- Use `## {LETTER}. {Title}` for top-level sections (e.g., `## A. Vision`)
+
+**MUST NOT**:
+- Use the `## Section {LETTER}: {Title}` format (e.g., `## Section A: Vision`)
 
 ### Validation Scoring (Structure Requirements)
 
@@ -244,7 +254,12 @@ This file defines requirements that are shared across multiple `*-structure.md` 
 ### ID Placement (Artifacts)
 
 **Check**:
-- [ ] All `**ID**:` lines appear immediately after their headings (no blank lines)
+- [ ] All `**ID**:` lines appear after exactly one blank line following their headings
+
+### Section Heading Format (Artifacts)
+
+**Check**:
+- [ ] No occurrences of `## Section {LETTER}:` in artifact docs
 
 ### Validation Scoring (Structure Requirements)
 

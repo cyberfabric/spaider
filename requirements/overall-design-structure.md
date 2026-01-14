@@ -81,7 +81,7 @@
   - `-req-` - Requirement indicator
   - `{short-name}` - Short descriptive name in kebab-case (2-4 words)
 - **Example**: `fdd-payment-system-req-multi-tenant`, `fdd-analytics-req-real-time-data`
-- **Usage**: Each requirement must have `**ID**: {id}` before requirement statement
+- **Usage**: If a requirement heading is followed by an `**ID**:` line, it MUST be separated by exactly one blank line, and `**ID**:` MUST be the first non-empty line after the heading
 - **Format in document**: `**ID**: fdd-project-req-name`
 - **Note**: Can coexist with legacy REQ-N numbering, but FDD format is preferred
 
@@ -92,7 +92,7 @@
   - `-usecase-` - Use case indicator
   - `{usecase-name}` - Use case name in kebab-case (2-4 words)
 - **Example**: `fdd-payment-system-usecase-process-payment`, `fdd-analytics-usecase-generate-report`
-- **Usage**: Each use case must have `**ID**: {id}` before use case description
+- **Usage**: If a use case heading is followed by an `**ID**:` line, it MUST be separated by exactly one blank line, and `**ID**:` MUST be the first non-empty line after the heading
 - **Format in document**: `**ID**: fdd-project-usecase-name`
 
 **Principle ID Format**: `fdd-{project-name}-principle-{principle-name}`
@@ -102,7 +102,7 @@
   - `-principle-` - Principle indicator
   - `{principle-name}` - Principle name in kebab-case (2-4 words)
 - **Example**: `fdd-payment-system-principle-security-first`, `fdd-analytics-principle-plugin-based`
-- **Usage**: Each principle must have `**ID**: {id}` as first line after principle heading
+- **Usage**: If a principle heading is followed by an `**ID**:` line, it MUST be separated by exactly one blank line, and `**ID**:` MUST be the first non-empty line after the heading
 - **Format in document**: `**ID**: \`fdd-project-principle-name\`` (after #### Principle Name)
 
 **Non-Functional Requirement ID Format**: `fdd-{project-name}-nfr-{nfr-name}`
@@ -112,7 +112,7 @@
   - `-nfr-` - Non-functional requirement indicator
   - `{nfr-name}` - NFR category name in kebab-case (1-3 words)
 - **Example**: `fdd-payment-system-nfr-performance`, `fdd-analytics-nfr-scalability`, `fdd-cli-nfr-security`
-- **Usage**: Each NFR category must have `**ID**: {id}` as first line after NFR heading
+- **Usage**: If an NFR heading is followed by an `**ID**:` line, it MUST be separated by exactly one blank line, and `**ID**:` MUST be the first non-empty line after the heading
 - **Format in document**: `**ID**: \`fdd-project-nfr-name\`` (in Section C.5)
 
 **Constraint ID Format**: `fdd-{project-name}-constraint-{constraint-name}`
@@ -122,7 +122,7 @@
   - `-constraint-` - Constraint indicator
   - `{constraint-name}` - Constraint name in kebab-case (2-4 words)
 - **Example**: `fdd-payment-system-constraint-api-dependency`, `fdd-analytics-constraint-data-retention`
-- **Usage**: Each constraint must have `**ID**: {id}` as first line after constraint heading
+- **Usage**: If a constraint heading is followed by an `**ID**:` line, it MUST be separated by exactly one blank line, and `**ID**:` MUST be the first non-empty line after the heading
 - **Format in document**: `**ID**: \`fdd-project-constraint-name\`` (in Section B.4)
 
 **ADR ID Format**: `fdd-{project-name}-adr-{decision-name}`
@@ -132,7 +132,7 @@
   - `-adr-` - Architecture Decision Record indicator
   - `{decision-name}` - Decision name in kebab-case (2-4 words describing the decision)
 - **Example**: `fdd-acronis-mcp-adr-python-django`, `fdd-payment-system-adr-event-sourcing`
-- **Usage**: Each ADR in ADR.md must have `**ID**: {id}` as first line after ADR heading
+- **Usage**: If an ADR heading is followed by an `**ID**:` line, it MUST be separated by exactly one blank line, and `**ID**:` MUST be the first non-empty line after the heading
 - **Format in document**: `**ID**: \`fdd-project-adr-decision-name\`` (in ADR.md)
 - **Legacy format**: ADR-XXXX is acceptable during migration, but text-based FDD format preferred for clarity
 

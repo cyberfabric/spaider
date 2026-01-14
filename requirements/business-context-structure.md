@@ -58,7 +58,7 @@
 
 **Example**:
 ```markdown
-## Section A: VISION
+## A. VISION
 
 **Purpose**: Comprehensive framework for creating, managing, and displaying data visualizations
 
@@ -87,7 +87,7 @@
 **Structure**:
 - Group by **Human Actors** and **System Actors**
 - Each actor is a #### heading
-- Actor ID immediately after heading
+- Actor ID after exactly one blank line following heading
 - Role description only (no capabilities)
 
 **Actor ID Format**: `fdd-{project-name}-actor-{actor-name}`
@@ -106,40 +106,44 @@
 **Format per actor**:
 ```markdown
 #### Actor Name
+
 **ID**: `fdd-project-actor-name`  
 **Role**: Description of what this actor does
 ```
 
 **Required content per actor**:
 - **Actor Name**: Clear, descriptive name (#### heading)
-- **ID**: Unique identifier (must be first line after heading, wrapped in backticks)
+- **ID**: Unique identifier (must be the first non-empty line after heading, wrapped in backticks)
 - **Role**: What this actor does (1-2 sentences)
 - **NO Capabilities**: Capabilities are in Section C
 
 **Content requirements**:
 - Each actor must have unique ID
-- ID appears immediately after actor name heading
+- ID appears after exactly one blank line following actor name heading
 - Role description only (no capabilities list)
 - Plain English, no technical jargon
 - Distinguish between human and system actors
 
 **Example**:
 ```markdown
-## Section B: Actors
+## B. Actors
 
 **Human Actors**:
 
 #### Platform Administrator
+
 **ID**: `fdd-analytics-actor-platform-admin`  
 **Role**: Manages platform infrastructure and configuration
 
 #### Dashboard Designer
+
 **ID**: `fdd-analytics-actor-dashboard-designer`  
 **Role**: Creates dashboards and visualizations
 
 **System Actors**:
 
 #### UI Application
+
 **ID**: `fdd-analytics-actor-ui-app`  
 **Role**: Frontend application for Analytics module
 ```
@@ -152,7 +156,7 @@
 
 **Structure**:
 - Each capability is a #### heading
-- Capability ID immediately after heading
+- Capability ID after exactly one blank line following heading
 - Bulleted list of features
 - **Actors** line listing actor IDs (required)
 
@@ -171,6 +175,7 @@
 **Format per capability**:
 ```markdown
 #### Capability Name
+
 **ID**: `fdd-project-capability-name`
 - Feature 1
 - Feature 2
@@ -181,7 +186,7 @@
 
 **Required content per capability**:
 - **Capability Name**: Clear name describing the capability (#### heading)
-- **ID**: Unique identifier (must be first line after capability heading)
+- **ID**: Unique identifier (must be the first non-empty line after capability heading)
 - **Description**: What the capability does (bullet list of features)
 - **Actors**: List of actor IDs that use this capability (required)
   - Format: `**Actors**: \`fdd-project-actor-name1\`, \`fdd-project-actor-name2\``
@@ -195,9 +200,10 @@
 
 **Example**:
 ```markdown
-## Section C: Capabilities
+## C. Capabilities
 
 #### Data Visualization
+
 **ID**: `fdd-analytics-capability-data-visualization`
 - Rich chart types (line, bar, pie, scatter, heatmap)
 - Interactive tables with sorting and filtering
@@ -206,6 +212,7 @@
 **Actors**: `fdd-analytics-actor-dashboard-designer`, `fdd-analytics-actor-business-analyst`, `fdd-analytics-actor-end-user`
 
 #### Dashboard Management
+
 **ID**: `fdd-analytics-capability-dashboard-mgmt`
 - Grid-based responsive layouts
 - Drag-and-drop widget positioning
@@ -223,7 +230,7 @@
 
 **Required content**:
 - Each use case has a #### heading with descriptive name
-- Use case ID immediately after heading
+- Use case ID after exactly one blank line following heading
 - Actor(s) performing the use case
 - Preconditions required
 - Flow of steps (numbered list)
@@ -244,6 +251,7 @@
 **Format per use case**:
 ```markdown
 #### UC-XXX: Use Case Name
+
 **ID**: `fdd-project-usecase-name`
 
 **Actor**: `fdd-project-actor-id1`, `fdd-project-actor-id2`

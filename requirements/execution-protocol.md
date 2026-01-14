@@ -1,6 +1,6 @@
 # FDD Workflow Execution Protocol
 
-**Version**: 1.1  
+**Version**: 1.2  
 **Purpose**: MANDATORY execution protocol for ALL workflows  
 **Scope**: EVERY workflow execution without exceptions
 
@@ -42,7 +42,14 @@ I will NOT skip any steps.
 **Verification**: Can you list 3 key requirements from workflow-execution.md?
 - If NO → Go back and re-read
 
-### Step 3: Load Workflow Requirements
+### Step 3: Load Skills System + Toolchain Preflight
+
+**ALWAYS open and follow**:
+1. [ ] `skills/SKILLS.md` - Skill discovery + toolchain preflight
+
+Agent MUST execute `skills/SKILLS.md` Toolchain Preflight exactly as defined there.
+
+### Step 4: Load Workflow Requirements
 
 **ALWAYS open and follow**:
 1. [ ] `workflows/{workflow-name}.md` - Specific workflow file
@@ -51,13 +58,23 @@ I will NOT skip any steps.
 4. [ ] Note all validation criteria (for validation workflows)
 5. [ ] Verify ALL prerequisites are satisfied
 
+ **Workflow-Specific Skill Usage (MANDATORY)**:
+ - [ ] Follow `skills/SKILLS.md` Skill Discovery Protocol when skill selection is needed.
+ - [ ] Validation workflows: if a relevant skill is selected, execute it before reporting PASS/FAIL.
+ - [ ] Operation workflows: if a relevant skill is selected, execute it before making irreversible changes.
+
+ **Skill Integrity (MANDATORY)**:
+ - [ ] If a skill/validator fails, the agent MUST treat the validator output as authoritative.
+ - [ ] The agent MUST NOT modify any skill (including validators) to make a failing validation pass.
+ - [ ] The agent MAY modify a skill only when the user explicitly requests changes to the skill itself.
+
 **If ANY prerequisite fails**:
 - STOP immediately
 - Report failed prerequisite
 - Suggest how to fix
 - Do NOT proceed
 
-### Step 4: Load Artifact Requirements
+### Step 5: Load Artifact Requirements
 
 **ALWAYS open and follow**:
 1. [ ] `requirements/{artifact}-structure.md` - Structure requirements
@@ -73,7 +90,7 @@ I will NOT skip any steps.
 - Extract coverage criteria
 - Note point values for each
 
-### Step 5: Load Parent Artifacts (if applicable)
+### Step 6: Load Parent Artifacts (if applicable)
 
 **If workflow references parent artifacts**:
 1. [ ] Read each parent artifact completely
@@ -88,48 +105,55 @@ I will NOT skip any steps.
 **Agent ALWAYS answers YES to ALL questions before proceeding**:
 
 ### Knowledge Verification
-1. ⚠️ **Have I read workflow-execution.md?**
+1. ⚠️ **Have I read skills/SKILLS.md?**
    - [ ] YES - I read it completely
    - [ ] NO - ALWAYS open and follow it now, cannot proceed
 
-2. ⚠️ **Have I read workflow-execution-{type}.md?**
+2. ⚠️ **Have I completed the Toolchain Preflight from skills/SKILLS.md?**
+   - [ ] YES - Completed per skills/SKILLS.md
+   - [ ] NO - ALWAYS run it now, cannot proceed
+
+3. ⚠️ **Have I read workflow-execution.md?**
+   - [ ] YES - I read it completely
+   - [ ] NO - ALWAYS open and follow it now, cannot proceed
+
+4. ⚠️ **Have I read workflow-execution-{type}.md?**
    - [ ] YES - I read the type-specific file
    - [ ] NO - ALWAYS open and follow it now, cannot proceed
 
-3. ⚠️ **Have I read the specific workflow file?**
-   - [ ] YES - I read {workflow-name}.md
+5. ⚠️ **Have I read the specific workflow file and applied skills rules?**
+   - [ ] YES - I applied workflow-specific skill usage rules from this protocol
    - [ ] NO - ALWAYS open and follow it now, cannot proceed
 
-4. ⚠️ **Have I read the artifact structure requirements?**
+6. ⚠️ **Have I read the artifact structure requirements?**
    - [ ] YES - I read {artifact}-structure.md
    - [ ] NO - ALWAYS open and follow it now, cannot proceed
 
 ### Comprehension Verification
-5. ⚠️ **Do I understand "Maximum Attention to Detail" requirement?**
+7. ⚠️ **Do I understand "Maximum Attention to Detail" requirement?**
    - [ ] YES - I will check EVERY criterion individually
    - [ ] NO - ALWAYS re-read workflow-execution-validations.md lines 9-29
 
-6. ⚠️ **Do I have a complete list of validation criteria?**
+8. ⚠️ **Do I have a complete list of validation criteria?**
    - [ ] YES - I extracted EVERY criterion from requirements
    - [ ] NO - ALWAYS re-read requirements file
 
-7. ⚠️ **Am I ready to check each item individually, not in groups?**
+9. ⚠️ **Am I ready to check each item individually, not in groups?**
    - [ ] YES - I will verify each criterion separately
    - [ ] NO - ALWAYS re-read "Maximum Attention" section
 
 ### Preparation Verification
-8. ⚠️ **Do I have a plan for systematic verification?**
+10. ⚠️ **Do I have a plan for systematic verification?**
    - [ ] YES - I will use grep, read line-by-line, check each ID
    - [ ] NO - ALWAYS create verification plan
 
-9. ⚠️ **Do I know what tools to use for verification?**
+11. ⚠️ **Do I know what tools to use for verification?**
    - [ ] YES - grep for IDs, read_file for content, line-by-line check
    - [ ] NO - ALWAYS review tool usage
 
-10. ⚠️ **Am I prepared to report EVERY issue, no matter how small?**
+12. ⚠️ **Am I prepared to report EVERY issue, no matter how small?**
     - [ ] YES - I will report all issues found
     - [ ] NO - ALWAYS adjust my mindset
-
 
 ---
 
@@ -229,6 +253,8 @@ I will NOT skip any steps.
 ## Execution Protocol Compliance
 
 **Phase 1: Protocol Initialization**
+✅ Read skills/SKILLS.md
+✅ Verified toolchain (python, uv, uvx)
 ✅ Read workflow-execution.md
 ✅ Read workflow-execution-validations.md
 ✅ Read {workflow-name}.md
@@ -236,7 +262,7 @@ I will NOT skip any steps.
 ✅ Extracted all validation criteria
 
 **Phase 2: Readiness Check**
-✅ Passed all 11 readiness questions
+✅ Passed all 12 readiness questions
 ✅ Understood "Maximum Attention to Detail"
 ✅ Created complete validation checklist
 

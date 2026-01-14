@@ -66,7 +66,7 @@
   - `-flow-` - Flow indicator
   - `{flow-name}` - Flow name in kebab-case (2-4 words)
 - **Example**: `fdd-payment-system-feature-user-auth-flow-login`, `fdd-analytics-feature-dashboard-flow-create-widget`
-- **Usage**: Each flow must have `**ID**: {id}` before flow title/description
+- **Usage**: Each flow must have an `**ID**:` line after exactly one blank line following the flow heading
 - **Format in document**: `**ID**: fdd-project-feature-slug-flow-name`
 
 **ID status tracking (mandatory)**:
@@ -109,7 +109,7 @@
   - `-algo-` - Algorithm indicator
   - `{algo-name}` - Algorithm name in kebab-case (2-4 words)
 - **Example**: `fdd-payment-system-feature-user-auth-algo-validate-token`, `fdd-analytics-feature-dashboard-algo-aggregate-data`
-- **Usage**: Each algorithm must have `**ID**: {id}` before algorithm title
+- **Usage**: Each algorithm must have an `**ID**:` line after exactly one blank line following the algorithm heading
 - **Format in document**: `**ID**: fdd-project-feature-slug-algo-name`
 
 **ID status tracking (mandatory)**:
@@ -151,7 +151,7 @@
   - `-state-` - State machine indicator
   - `{entity-name}` - Entity/object name in kebab-case (1-3 words)
 - **Example**: `fdd-payment-system-feature-order-processing-state-order`, `fdd-analytics-feature-dashboard-state-widget`
-- **Usage**: Each state machine must have `**ID**: {id}` before state machine definition
+- **Usage**: Each state machine must have an `**ID**:` line after exactly one blank line following the state machine heading
 - **Format in document**: `**ID**: fdd-project-feature-slug-state-entity`
 
 **ID status tracking (mandatory)**:
@@ -214,7 +214,7 @@
   - `-req-` - Requirement indicator
   - `{short-name}` - Short descriptive name in kebab-case (2-4 words)
 - **Example**: `fdd-payment-system-feature-user-auth-req-login-flow`
-- **Usage**: Each requirement must have `**ID**: {id}` before requirement title
+- **Usage**: Each requirement must have an `**ID**:` line after exactly one blank line following the requirement heading
 - **Format in document**: `**ID**: fdd-project-feature-slug-req-name`
 
 **Testing Scenario ID Format**: `fdd-{project-name}-feature-{feature-slug}-test-{scenario-name}`
@@ -226,7 +226,7 @@
   - `-test-` - Testing scenario indicator
   - `{scenario-name}` - Scenario name in kebab-case (2-4 words)
 - **Example**: `fdd-payment-system-feature-user-auth-test-valid-login`, `fdd-analytics-feature-dashboard-test-create-widget-success`
-- **Usage**: Each testing scenario must have `**ID**: {id}` before scenario description
+- **Usage**: Each testing scenario must have an `**ID**:` line after exactly one blank line following the testing scenario heading
 - **Format in document**: `**ID**: fdd-project-feature-slug-test-scenario`
 
 **ID status tracking (mandatory)**:
@@ -310,7 +310,6 @@
    - Sections A, B, C, D, E, F (6 sections required)
    - Section G (Additional Context) is optional
    - Correct section order (A → B → C → D → E → F → [G])
-   - Each section has proper heading (`## A.`, `## B.`, etc.)
    - No duplicate sections
 
 ### Content Validation
@@ -328,7 +327,7 @@
    - No prohibited keywords (**WHEN** in flows, **THEN**, **SET**, etc.)
    - **Flow ID Format Validation**:
      - All flows have unique IDs with `**ID**: fdd-{project-name}-feature-{feature-slug}-flow-{flow-name}` format
-     - Each flow has `**ID**: {id}` label before flow title
+     - Each flow has an `**ID**:` line after exactly one blank line following the flow heading
 
 3. **Section C (Algorithms)**
    - ≥100 lines (standard features)
@@ -337,7 +336,7 @@
    - Only valid FDL keywords used
    - **Algorithm ID Format Validation**:
      - All algorithms have unique IDs with `**ID**: fdd-{project-name}-feature-{feature-slug}-algo-{algo-name}` format
-     - Each algorithm has `**ID**: {id}` label before algorithm title
+     - Each algorithm has an `**ID**:` line after exactly one blank line following the algorithm heading
 
 4. **Section D (States)**
    - Uses FDL syntax if applicable
@@ -360,10 +359,10 @@
    - **Requirement ID Format Validation**:
      - All requirement IDs match format with `**ID**: fdd-{project-name}-feature-{feature-slug}-req-{short-name}`
      - All IDs are unique within Section F
-     - Each requirement has `**ID**: {id}` label before title
+     - Each requirement has an `**ID**:` line after exactly one blank line following the requirement heading
    - **Testing Scenario ID Format Validation**:
      - All testing scenarios have unique IDs with `**ID**: fdd-{project-name}-feature-{feature-slug}-test-{scenario-name}` format
-     - Each testing scenario has `**ID**: {id}` label before scenario description
+     - Each testing scenario has an `**ID**:` line after exactly one blank line following the testing scenario heading
      - Test code must reference these IDs for traceability
 
 7. **Section G (Additional Context)** - Optional
