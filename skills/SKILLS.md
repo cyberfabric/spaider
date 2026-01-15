@@ -1,8 +1,14 @@
 # Skills System Specification
 
-**Version**: 1.0  
+**Version**: 1.1  
 **Purpose**: Define how agents discover, select, and use Claude-compatible skills in this repository  
 **Scope**: All agent work in this repository (all FDD workflows and non-FDD tasks)
+
+**Path base**: All paths in this document are relative to the FDD repository root (the directory containing `AGENTS.md`).
+
+**How to locate the path base in a monorepo**: The FDD repository root is the directory that contains `AGENTS.md` and is the parent directory of `skills/` (this file is `skills/SKILLS.md`).
+
+**Skill root directory**: `skills/`
 
 ---
 
@@ -19,6 +25,7 @@
 **MUST NOT**:
 - Load multiple full SKILL bodies into context during discovery.
 - Invent skill behavior that is not defined in the skill’s `SKILL.md`.
+- Enumerate skills from any other repository root (e.g., monorepo root) instead of the path base defined above.
 
 ---
 
@@ -41,7 +48,13 @@
 
 ## Skill Discovery Protocol (MANDATORY)
 
-When executing an FDD workflow, agent MUST follow `requirements/execution-protocol.md` for workflow-driven skill usage.
+ Agent MUST apply Skill Discovery Protocol for:
+ - FDD workflow execution (per `requirements/execution-protocol.md`)
+ - Non-workflow requests involving FDD artifacts or FDD ID traceability
+
+ Non-workflow requests that trigger Skill Discovery include:
+ - Reading/searching/editing FDD artifacts (BUSINESS.md, DESIGN.md, ADR.md, FEATURES.md, feature DESIGN.md, feature CHANGES.md)
+ - Answering questions like "where is {id} defined" / "where is {id} used" (FDD IDs, ADR IDs, qualified IDs)
 
 ### Step 1: Enumerate skills
 
@@ -70,11 +83,44 @@ Agent MUST prefer skills that:
 - Mention the user’s required operations (validate, generate, search, edit)
 - Declare compatibility constraints that match the environment
 
+### Skill Selection Report (MANDATORY)
+
+Before proceeding with any task work (including non-skill tooling), agent MUST output a Skill Selection Report that includes:
+- `trigger`: which Skill Discovery trigger matched
+- `candidates`: list of candidate skill `name` values with a brief selection rationale based on `description` keywords
+- `primary`: selected primary skill `name`
+- `supporting`: optional list of supporting skill `name` values (max 2)
+
+The report MUST be based only on SKILL YAML frontmatter (`name`, `description`).
+
+If agent cannot select a primary skill:
+- STOP.
+- Do NOT proceed with ad-hoc approaches.
+- Ask the user to fix skill navigation (add a missing skill, or improve skill `description` keywords / discovery triggers).
+
 ### Step 4: Activate
 
 After selecting a skill, agent MUST:
 - Open the selected skill’s `SKILL.md` body
 - Follow its instructions exactly
+
+### Skill Lock (MANDATORY)
+
+Once the agent outputs the Skill Selection Report and selects a `primary` skill, the agent MUST enter **Skill Lock**.
+
+While in Skill Lock, the agent MUST NOT do any task work (including any non-skill tooling) until the primary skill is activated and followed.
+
+**Allowed actions while in Skill Lock**:
+- Open and read the selected primary skill `SKILL.md` body.
+- Perform the `Toolchain Preflight` checks required by `skills/SKILLS.md` and/or the selected skill.
+- Ask only the minimum clarifying question(s) required to execute the selected skill.
+
+**Forbidden actions while in Skill Lock**:
+- Running ad-hoc searches (e.g. grep/ripgrep-style searches) when the skill provides an authoritative command.
+- Using generic repo tooling to perform the task when the selected skill defines how to perform it.
+
+**Violation handling**:
+- If the agent performs any forbidden action while in Skill Lock, the agent MUST declare the output invalid, discard it, and restart from `Skill Discovery Protocol` Step 1.
 
 If the skill references files under:
 - `references/` → open only the referenced file(s)

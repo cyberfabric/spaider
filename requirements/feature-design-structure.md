@@ -40,14 +40,17 @@
 **Required subsections**:
 1. **Overview**: What this feature does
 2. **Purpose**: Why it exists, what problem it solves
-3. **Actors**: Who interacts with this feature (must match Overall Design actors)
+3. **Actors**: Who interacts with this feature (may be empty for structural/init features)
 4. **References**: Links to Overall Design sections and dependencies
 
 **Content requirements**:
 - Clear feature scope definition
 - References to Overall Design (architecture/DESIGN.md)
 - List of dependencies on other features (if any)
-- Actor names must match Overall Design Section A exactly
+- Actor IDs MAY be omitted for structural/init features.
+- If actor IDs are present, they MUST be written as FDD actor IDs wrapped in backticks:
+  - `fdd-{project}-actor-{slug}`
+- Actor IDs MUST match actor IDs defined in BUSINESS.md.
 
 ---
 
@@ -76,6 +79,15 @@
 
 **Phase (mandatory in FDL)**:
 - Phase MUST be specified on every FDL step line using the `ph-{N}` token.
+
+**Instruction IDs (mandatory in FDL)**:
+- Every FDL step line MUST include a stable instruction ID token at the end of the line:
+  - `inst-{short-id}` (kebab-case)
+- Required step-line format:
+  ```markdown
+  1. [ ] - `ph-1` - {instruction} - `inst-some-job`
+  ```
+- Instruction IDs MUST be unique within a single algorithm.
 
 **Content requirements**:
 - Written in FDL (see `FDL.md` for syntax)
@@ -119,6 +131,15 @@
 
 **Phase (mandatory in FDL)**:
 - Phase MUST be specified on every FDL step line using the `ph-{N}` token.
+
+**Instruction IDs (mandatory in FDL)**:
+- Every FDL step line MUST include a stable instruction ID token at the end of the line:
+  - `inst-{short-id}` (kebab-case)
+- Required step-line format:
+  ```markdown
+  1. [ ] - `ph-1` - {instruction} - `inst-some-job`
+  ```
+- Instruction IDs MUST be unique within a single flow.
 
 **Code tagging for algorithms (mandatory)**:
 - When tagging code that implements an algorithm, the algorithm tag MUST include the phase postfix:
@@ -164,6 +185,15 @@
 - Each state machine must have unique ID
 - State definitions with **WHEN** keyword (only valid in state machines)
 - State transitions clearly documented
+
+**Instruction IDs (mandatory in FDL)**:
+- Every FDL step line MUST include a stable instruction ID token at the end of the line:
+  - `inst-{short-id}` (kebab-case)
+- Required step-line format:
+  ```markdown
+  1. [ ] - `ph-1` - {instruction} - `inst-some-job`
+  ```
+- Instruction IDs MUST be unique within a single state machine.
 - **FDL Keywords for States**:
   - ✅ Allowed: **WHEN** (states only), **FROM**, **TO**, **IF**, **ELSE**
   - State machine format: numbered list with bold **WHEN** transitions
@@ -241,9 +271,14 @@
 - Testing scenario steps MUST be written in FDL syntax ONLY (see `FDL.md`).
 - Every FDL step line in a testing scenario MUST follow the required FDL step-line format (including the `-` separators):
   ```markdown
-  1. [ ] - `ph-1` - {instruction}
+  1. [ ] - `ph-1` - {instruction} - `inst-some-job`
   ```
   - This applies to every step line, including control-flow keyword lines (e.g., **IF**, **FOR EACH**, **TRY**, **CATCH**, **RETURN**).
+
+**Instruction IDs (mandatory in FDL)**:
+- Every FDL step line in a testing scenario MUST include a stable instruction ID token at the end of the line:
+  - `inst-{short-id}` (kebab-case)
+- Instruction IDs MUST be unique within a single testing scenario.
 
 **Required content per requirement**:
 - **ID**: Requirement ID in format above (for traceability)
@@ -318,7 +353,7 @@
    - ≤500 lines
    - All required subsections present
    - References to Overall Design included
-   - Actor names match Overall Design
+   - Actor IDs match BUSINESS.md
 
 2. **Section B (Actor Flows)**
    - ≥50 lines (standard features)
@@ -328,6 +363,8 @@
    - **Flow ID Format Validation**:
      - All flows have unique IDs with `**ID**: fdd-{project-name}-feature-{feature-slug}-flow-{flow-name}` format
      - Each flow has an `**ID**:` line after exactly one blank line following the flow heading
+   - **FDL Step Instruction IDs (mandatory)**:
+     - Every FDL step line MUST include a local instruction ID token at the end of the line: `inst-{short-id}`
 
 3. **Section C (Algorithms)**
    - ≥100 lines (standard features)
@@ -337,6 +374,8 @@
    - **Algorithm ID Format Validation**:
      - All algorithms have unique IDs with `**ID**: fdd-{project-name}-feature-{feature-slug}-algo-{algo-name}` format
      - Each algorithm has an `**ID**:` line after exactly one blank line following the algorithm heading
+   - **FDL Step Instruction IDs (mandatory)**:
+     - Every FDL step line MUST include a local instruction ID token at the end of the line: `inst-{short-id}`
 
 4. **Section D (States)**
    - Uses FDL syntax if applicable
@@ -344,6 +383,8 @@
    - **State Machine ID Format Validation**:
      - All state machines have unique IDs with `**ID**: fdd-{project-name}-feature-{feature-slug}-state-{entity-name}` format
      - Each state machine has `**ID**: {id}` label before state machine definition
+   - **FDL Step Instruction IDs (mandatory)**:
+     - Every FDL step line MUST include a local instruction ID token at the end of the line: `inst-{short-id}`
 
 5. **Section E (Technical Details)**
    - ≥200 lines recommended
@@ -354,7 +395,7 @@
    - ≥1 requirement present
    - Each requirement has all required fields
    - Testing Scenarios use FDL syntax ONLY (not Gherkin)
-   - Testing Scenarios: every step line follows the FDL step-line format (checkbox + `ph-{N}` + `-` separators)
+   - Testing Scenarios: every step line follows the FDL step-line format (checkbox + `ph-{N}` + `-` separators + trailing `inst-{short-id}`)
    - References are valid markdown anchors
    - **Requirement ID Format Validation**:
      - All requirement IDs match format with `**ID**: fdd-{project-name}-feature-{feature-slug}-req-{short-name}`
@@ -451,8 +492,8 @@ Provide a single place to inspect key business metrics and drill down via filter
 
 ### 3. Actors
 
-- `Admin`
-- `Analyst`
+- `fdd-hyperspot-actor-admin`
+- `fdd-hyperspot-actor-analyst`
 
 ### 4. References
 
@@ -464,13 +505,13 @@ Provide a single place to inspect key business metrics and drill down via filter
 
 - [ ] **ID**: fdd-hyperspot-feature-analytics-dashboard-flow-admin-views-dashboard
 
-1. [ ] - `ph-1` - Admin opens dashboard page
-2. [ ] - `ph-1` - System loads available metrics
-3. [ ] - `ph-1` - **FOR EACH** metric:
-   1. [ ] - `ph-1` - System calculates metric value
-   2. [ ] - `ph-1` - System renders a chart
-4. [ ] - `ph-2` - Admin applies filters
-5. [ ] - `ph-2` - System reloads data and rerenders charts
+1. [ ] - `ph-1` - Admin opens dashboard page - `inst-open-dashboard-page`
+2. [ ] - `ph-1` - System loads available metrics - `inst-load-available-metrics`
+3. [ ] - `ph-1` - **FOR EACH** metric: - `inst-for-each-metric`
+   1. [ ] - `ph-1` - System calculates metric value - `inst-calculate-metric-value`
+   2. [ ] - `ph-1` - System renders a chart - `inst-render-chart`
+4. [ ] - `ph-2` - Admin applies filters - `inst-apply-filters`
+5. [ ] - `ph-2` - System reloads data and rerenders charts - `inst-reload-and-rerender`
 
 ## C. Algorithms (FDL)
 
@@ -481,10 +522,10 @@ Provide a single place to inspect key business metrics and drill down via filter
 **Input**: metric_id, date_range
 **Output**: metric_value
 
-1. [ ] - `ph-1` - Load raw events for date_range
-2. [ ] - `ph-1` - **FOR EACH** event:
-   1. [ ] - `ph-1` - Add event contribution to accumulator
-3. [ ] - `ph-1` - **RETURN** accumulator
+1. [ ] - `ph-1` - Load raw events for date_range - `inst-load-raw-events`
+2. [ ] - `ph-1` - **FOR EACH** event: - `inst-for-each-event`
+   1. [ ] - `ph-1` - Add event contribution to accumulator - `inst-add-event-contribution`
+3. [ ] - `ph-1` - **RETURN** accumulator - `inst-return-accumulator`
 
 ## D. States (FDL)
 
@@ -494,9 +535,9 @@ Provide a single place to inspect key business metrics and drill down via filter
 
 **States**: LOADING, READY, ERROR
 
-1. [ ] - `ph-1` - **FROM** LOADING **TO** READY **WHEN** data loaded
-2. [ ] - `ph-1` - **FROM** LOADING **TO** ERROR **WHEN** load failed
-3. [ ] - `ph-2` - **FROM** READY **TO** LOADING **WHEN** filters changed
+1. [ ] - `ph-1` - **FROM** LOADING **TO** READY **WHEN** data loaded - `inst-loading-to-ready`
+2. [ ] - `ph-1` - **FROM** LOADING **TO** ERROR **WHEN** load failed - `inst-loading-to-error`
+3. [ ] - `ph-2` - **FROM** READY **TO** LOADING **WHEN** filters changed - `inst-ready-to-loading`
 
 ## E. Technical Details
 
@@ -527,11 +568,11 @@ Provide a single place to inspect key business metrics and drill down via filter
 - [ ] `ph-2`: Filters apply and rerender
 **Testing Scenarios (FDL)**:
 - [ ] **ID**: fdd-hyperspot-feature-analytics-dashboard-test-dashboard-loads-with-metrics
-  1. [ ] - `ph-1` - Seed raw events for the tenant
-  2. [ ] - `ph-1` - Call dashboard endpoint for date_range
-  3. [ ] - `ph-1` - Verify metrics list is present
-  4. [ ] - `ph-2` - Apply a filter and call endpoint again
-  5. [ ] - `ph-2` - Verify filtered results differ
+  1. [ ] - `ph-1` - Seed raw events for the tenant - `inst-seed-raw-events`
+  2. [ ] - `ph-1` - Call dashboard endpoint for date_range - `inst-call-endpoint`
+  3. [ ] - `ph-1` - Verify metrics list is present - `inst-verify-metrics-present`
+  4. [ ] - `ph-2` - Apply a filter and call endpoint again - `inst-apply-filter-and-recall`
+  5. [ ] - `ph-2` - Verify filtered results differ - `inst-verify-filtered-differs`
 **Acceptance Criteria**:
 - Response contains ≥1 metric
 - Filtered response differs from unfiltered response

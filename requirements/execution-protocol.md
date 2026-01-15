@@ -1,6 +1,6 @@
 # FDD Workflow Execution Protocol
 
-**Version**: 1.2  
+**Version**: 1.3  
 **Purpose**: MANDATORY execution protocol for ALL workflows  
 **Scope**: EVERY workflow execution without exceptions
 
@@ -42,14 +42,7 @@ I will NOT skip any steps.
 **Verification**: Can you list 3 key requirements from workflow-execution.md?
 - If NO → Go back and re-read
 
-### Step 3: Load Skills System + Toolchain Preflight
-
-**ALWAYS open and follow**:
-1. [ ] `skills/SKILLS.md` - Skill discovery + toolchain preflight
-
-Agent MUST execute `skills/SKILLS.md` Toolchain Preflight exactly as defined there.
-
-### Step 4: Load Workflow Requirements
+### Step 3: Load Workflow Requirements
 
 **ALWAYS open and follow**:
 1. [ ] `workflows/{workflow-name}.md` - Specific workflow file
@@ -58,15 +51,31 @@ Agent MUST execute `skills/SKILLS.md` Toolchain Preflight exactly as defined the
 4. [ ] Note all validation criteria (for validation workflows)
 5. [ ] Verify ALL prerequisites are satisfied
 
- **Workflow-Specific Skill Usage (MANDATORY)**:
- - [ ] Follow `skills/SKILLS.md` Skill Discovery Protocol when skill selection is needed.
- - [ ] Validation workflows: if a relevant skill is selected, execute it before reporting PASS/FAIL.
- - [ ] Operation workflows: if a relevant skill is selected, execute it before making irreversible changes.
+### Mandatory Skill Usage (CRITICAL)
 
- **Skill Integrity (MANDATORY)**:
- - [ ] If a skill/validator fails, the agent MUST treat the validator output as authoritative.
- - [ ] The agent MUST NOT modify any skill (including validators) to make a failing validation pass.
- - [ ] The agent MAY modify a skill only when the user explicitly requests changes to the skill itself.
+**Agent MUST use these skills without exceptions**:
+
+**1. FDD Artifact Search & Traceability (`skills/fdd-search`)**:
+- ALWAYS use for searching FDD artifacts (DESIGN.md, BUSINESS.md, FEATURES.md, CHANGES.md, ADR.md)
+- ALWAYS use for ID lookup (actors, capabilities, requirements, flows, algorithms, states, changes)
+- ALWAYS use for traceability scans (where-defined, where-used)
+- ALWAYS use for code traceability (@fdd-* tags)
+- ALWAYS use for cross-referencing IDs across artifacts and code
+
+**Commands**: `list-ids`, `list-items`, `find-id`, `where-defined`, `where-used`, `scan-ids`, `search`
+
+**2. FDD Artifact & Code Validation (`skills/fdd-artifact-validate`)**:
+- ALWAYS use for validating DESIGN.md and CHANGES.md structure and content
+- ALWAYS use for code traceability validation (@fdd-* markers in code)
+- ALWAYS use for systematic artifact validation before manual checks
+- ALWAYS run as Deterministic Gate (fail fast before LLM validation)
+
+**Commands**: `validate --artifact`, `validate --code-root`
+
+**Skill Integrity (MANDATORY)**:
+- [ ] If a skill/validator returns **FAIL**, the agent MUST treat the output as authoritative.
+- [ ] The agent MUST NOT modify skills to make failing validations pass.
+- [ ] The agent MAY modify a skill only when the user explicitly requests changes to the skill itself.
 
 **If ANY prerequisite fails**:
 - STOP immediately
@@ -105,55 +114,81 @@ Agent MUST execute `skills/SKILLS.md` Toolchain Preflight exactly as defined the
 **Agent ALWAYS answers YES to ALL questions before proceeding**:
 
 ### Knowledge Verification
-1. ⚠️ **Have I read skills/SKILLS.md?**
+1. ⚠️ **Have I read workflow-execution.md?**
    - [ ] YES - I read it completely
    - [ ] NO - ALWAYS open and follow it now, cannot proceed
 
-2. ⚠️ **Have I completed the Toolchain Preflight from skills/SKILLS.md?**
-   - [ ] YES - Completed per skills/SKILLS.md
-   - [ ] NO - ALWAYS run it now, cannot proceed
-
-3. ⚠️ **Have I read workflow-execution.md?**
-   - [ ] YES - I read it completely
-   - [ ] NO - ALWAYS open and follow it now, cannot proceed
-
-4. ⚠️ **Have I read workflow-execution-{type}.md?**
+2. ⚠️ **Have I read workflow-execution-{type}.md?**
    - [ ] YES - I read the type-specific file
    - [ ] NO - ALWAYS open and follow it now, cannot proceed
 
-5. ⚠️ **Have I read the specific workflow file and applied skills rules?**
-   - [ ] YES - I applied workflow-specific skill usage rules from this protocol
+3. ⚠️ **Have I read the specific workflow file?**
+   - [ ] YES - I read it completely
    - [ ] NO - ALWAYS open and follow it now, cannot proceed
 
-6. ⚠️ **Have I read the artifact structure requirements?**
+4. ⚠️ **Have I read the artifact structure requirements?**
    - [ ] YES - I read {artifact}-structure.md
    - [ ] NO - ALWAYS open and follow it now, cannot proceed
 
 ### Comprehension Verification
-7. ⚠️ **Do I understand "Maximum Attention to Detail" requirement?**
+5. ⚠️ **Do I understand "Maximum Attention to Detail" requirement?**
    - [ ] YES - I will check EVERY criterion individually
    - [ ] NO - ALWAYS re-read workflow-execution-validations.md lines 9-29
 
-8. ⚠️ **Do I have a complete list of validation criteria?**
+6. ⚠️ **Do I have a complete list of validation criteria?**
    - [ ] YES - I extracted EVERY criterion from requirements
    - [ ] NO - ALWAYS re-read requirements file
 
-9. ⚠️ **Am I ready to check each item individually, not in groups?**
+7. ⚠️ **Am I ready to check each item individually, not in groups?**
    - [ ] YES - I will verify each criterion separately
    - [ ] NO - ALWAYS re-read "Maximum Attention" section
 
 ### Preparation Verification
-10. ⚠️ **Do I have a plan for systematic verification?**
-   - [ ] YES - I will use grep, read line-by-line, check each ID
+8. ⚠️ **Do I have a plan for systematic verification?**
+   - [ ] YES - I will use fdd-search, fdd-artifact-validate, grep, read_file
    - [ ] NO - ALWAYS create verification plan
 
-11. ⚠️ **Do I know what tools to use for verification?**
-   - [ ] YES - grep for IDs, read_file for content, line-by-line check
-   - [ ] NO - ALWAYS review tool usage
+9. ⚠️ **Do I know which mandatory skills to use?**
+   - [ ] YES - fdd-search for artifact/ID lookup, fdd-artifact-validate for validation
+   - [ ] NO - ALWAYS review Mandatory Skill Usage section
 
-12. ⚠️ **Am I prepared to report EVERY issue, no matter how small?**
+10. ⚠️ **Am I prepared to report EVERY issue, no matter how small?**
     - [ ] YES - I will report all issues found
     - [ ] NO - ALWAYS adjust my mindset
+
+11. ⚠️ **Have I run fdd-artifact-validate as Deterministic Gate and did it PASS?**
+    - [ ] YES - Deterministic Gate PASS, safe to proceed to LLM-heavy validation
+    - [ ] NO - ALWAYS run fdd-artifact-validate now; if FAIL → STOP workflow
+
+---
+
+## Phase 2.5: Deterministic Gate (MANDATORY)
+
+**Goal**: Fail fast using deterministic validators before spending time on LLM-heavy/manual validation.
+
+**Deterministic validators include**:
+- `fdd-artifact-validate` skill (artifact structure, ID format, code traceability)
+- Build/lint/test commands that are explicitly required by the workflow or adapter specs
+- File existence/readability checks
+
+**LLM-heavy validation includes**:
+- Manual design conformance reasoning
+- Manual coverage mapping (requirements ↔ code ↔ tests)
+- Manual deep review beyond what deterministic validators report
+
+**MANDATORY rules**:
+1. Run `fdd-artifact-validate` as early as possible for validation workflows.
+2. If `fdd-artifact-validate` returns **FAIL**:
+   - The workflow result is **FAIL**.
+   - STOP immediately.
+   - Do NOT proceed to any LLM-heavy/manual validation.
+   - Output the workflow report as FAIL with the validator output as authoritative evidence.
+3. If the skill/validator returns **PASS**:
+   - The agent MUST continue workflow execution.
+   - The agent MUST NOT stop after skill completion.
+   - The agent MUST proceed to remaining workflow steps (LLM-heavy/manual validation, additional checks, output generation).
+   - Skill execution is part of the workflow, not the entire workflow.
+4. Only after Deterministic Gate **PASS** may the agent perform LLM-heavy/manual validation steps.
 
 ---
 
@@ -253,8 +288,6 @@ Agent MUST execute `skills/SKILLS.md` Toolchain Preflight exactly as defined the
 ## Execution Protocol Compliance
 
 **Phase 1: Protocol Initialization**
-✅ Read skills/SKILLS.md
-✅ Verified toolchain (python, uv, uvx)
 ✅ Read workflow-execution.md
 ✅ Read workflow-execution-validations.md
 ✅ Read {workflow-name}.md
@@ -262,9 +295,11 @@ Agent MUST execute `skills/SKILLS.md` Toolchain Preflight exactly as defined the
 ✅ Extracted all validation criteria
 
 **Phase 2: Readiness Check**
-✅ Passed all 12 readiness questions
+✅ Passed all 11 readiness questions
 ✅ Understood "Maximum Attention to Detail"
 ✅ Created complete validation checklist
+✅ Identified mandatory skills (fdd-search, fdd-artifact-validate)
+✅ Deterministic Gate PASS (fdd-artifact-validate)
 
 **Phase 3: Execution**
 ✅ Checked EVERY criterion individually
@@ -284,25 +319,18 @@ Agent MUST execute `skills/SKILLS.md` Toolchain Preflight exactly as defined the
 
 ## Protocol Violations
 
-### Common Violations
+### Common protocol violations
+1. ❌ **Not reading execution-protocol.md** before starting workflow
+2. ❌ **Not reading workflow-execution.md** before executing workflow
+3. ❌ **Not reading workflow-execution-validations.md** for validation workflows
+4. ❌ **Not completing pre-flight checklist** in workflow files
+5. ❌ **Not running self-test** before reporting validation results
+6. ❌ **Not checking EVERY validation criterion individually**
+7. ❌ **Not using fdd-search for artifact/ID lookups**
+8. ❌ **Not using fdd-artifact-validate as Deterministic Gate**
+9. ❌ **Not cross-referencing EVERY ID**
 
-1. ❌ **Not reading workflow-execution.md before workflow**
-   - Consequence: INVALID execution
-   - Fix: Read it now, restart
-
-2. ❌ **Not reading workflow-execution-validations.md**
-   - Consequence: INVALID execution
-   - Fix: Read it now, restart
-
-3. ❌ **Not completing readiness check**
-   - Consequence: INVALID execution
-   - Fix: Complete all 11 questions
-
-4. ❌ **Not running systematic grep searches**
-   - Consequence: Likely missed issues
-   - Fix: Run grep commands, verify results
-
-5. ❌ **Not completing self-test**
+**One violation = entire workflow execution FAILED**
    - Consequence: INVALID validation
    - Fix: Complete self-test, restart if needed
 

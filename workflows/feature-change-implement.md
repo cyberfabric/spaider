@@ -71,6 +71,31 @@ Follow MUST WHEN instructions for:
 
 **Rule**: Phase MUST be encoded as a postfix on feature-scoped tags. Standalone phase tags MUST NOT be used.
 
+**Instruction-level traceability (mandatory)**:
+- When implementing a specific FDL step (flow/algo/state/test step) you MUST tag the corresponding code block using:
+  - `fdd-{project}-feature-{feature}-[flow|algo|state|test]-{scope-name}:ph-{N}:inst-{local}`
+  - The `{scope}` part MUST be the existing ID from DESIGN/CHANGES (do NOT invent a new scope prefix).
+  - `{local}` is the local FDL instruction ID from the step line (e.g., `inst-load-raw-events`)
+- Preferred format in code comments:
+  - `// fdd-hyperspot-feature-gts-core-algo-calculate-metric-value:ph-1:inst-load-raw-events`
+
+**Open/close tags (mandatory when possible)**:
+**Open/close tags (mandatory for instruction tags)**:
+- For every FDL instruction step (`...:ph-{N}:inst-...`), you MUST use paired begin/end tags that wrap non-empty code:
+  - `// fdd-begin fdd-...:ph-{N}:inst-...`
+  - `// fdd-end   fdd-...:ph-{N}:inst-...`
+- Single-line instruction tags MUST NOT be used.
+
+**Tag placement rules (by implementation location)**:
+- **No empty blocks**: `fdd-begin`/`fdd-end` MUST NOT be adjacent with no effective code between them.
+- **Begin/end pairing**: Every `fdd-begin ...:inst-...` MUST have a matching `fdd-end ...:inst-...`.
+- **In-function logic**: If the step is implemented in the current function body, wrap the exact code that performs the step.
+- **Extractor-based steps (function signature)**: If the step is implemented by framework extractors (e.g., `Path(id)`, `Json(body)`, `OData(query)`), place the step tag on the extractor binding in the function signature, or on the closest line where the extracted value is first transformed/validated.
+- **External middleware / platform / third-party libraries**: If the step is implemented by middleware or external libraries, place the step tag on the integration point:
+  - The relevant `use ...` import(s), and/or
+  - The middleware/Layer registration (router/module registration), whichever is the real attachment point.
+- **Routing-only delegation**: If the feature is routing-only, step tags MUST wrap the routing decision logic and its error branches (e.g., 404/501), not downstream domain logic.
+
 - Change ID: `@fdd-change:fdd-{project}-{feature}-change-{slug}:ph-{N}` (from CHANGES source; phase postfix is mandatory)
 - Flow ID: `@fdd-flow:{flow-id}:ph-{N}` (Section B of DESIGN; phase postfix is mandatory)  
   _Example_: `@fdd-flow:fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1`
@@ -97,6 +122,47 @@ pub struct SchemaV1 {
     pub schema_id: String,
     pub version: String,
 }
+```
+
+```rust
+// fdd-begin fdd-hyperspot-feature-gts-core-algo-calculate-metric-value:ph-1:inst-load-raw-events
+// fdd-req:fdd-hyperspot-feature-gts-core-req-routing:ph-1
+fn load_raw_events(...) {
+    // ...
+}
+// fdd-end fdd-hyperspot-feature-gts-core-algo-calculate-metric-value:ph-1:inst-load-raw-events
+```
+
+```rust
+// fdd-begin fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-return-routing-decision
+match decision {
+    Some(handler) => {
+        // fdd-begin fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-else-if-delegate-missing
+        // fdd-begin fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-return-501-no-delegate
+        let err = Problem::new(StatusCode::NOT_IMPLEMENTED, "Not Implemented", "No delegate registered");
+        // fdd-end fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-return-501-no-delegate
+        // fdd-end fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-else-if-delegate-missing
+        Err(err)
+    }
+    None => {
+        // fdd-begin fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-if-no-match
+        // fdd-begin fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-return-404-unknown-type
+        let err = Problem::new(StatusCode::NOT_FOUND, "Unknown GTS Type", "No feature registered");
+        // fdd-end fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-return-404-unknown-type
+        // fdd-end fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-if-no-match
+        Err(err)
+    }
+}
+// fdd-end fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-return-routing-decision
+```
+
+```rust
+// External middleware / platform library integration point (tag the attachment point).
+// fdd-begin fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-if-jwt-invalid
+// fdd-begin fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-return-401
+use modkit_security::SecurityCtx;
+// fdd-end fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-return-401
+// fdd-end fdd-analytics-feature-gts-core-flow-route-crud-operations:ph-1:inst-if-jwt-invalid
 ```
 
 ```typescript

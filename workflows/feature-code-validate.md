@@ -240,7 +240,67 @@ Extract:
 
 **Score**: 15 points
 
-### 10. Calculate Score
+### 10. Validate Code Logic Consistency with Design
+
+**Purpose**: Verify code logic does not contradict design specifications
+
+**After all technical checks pass (build/lint/tests), perform deep design-code consistency check**:
+
+**For each requirement in DESIGN.md Section F marked IMPLEMENTED**:
+1. Read requirement specification carefully
+2. Locate implementing code via @fdd-req or @fdd-change tags
+3. Analyze code logic and compare with requirement description
+4. Check for contradictions:
+   - ❌ Code does opposite of what design specifies
+   - ❌ Code skips mandatory steps from design
+   - ❌ Code adds behavior not in design that changes semantics
+   - ❌ Code uses different algorithm/approach that violates design constraints
+   - ❌ Error handling contradicts design error specifications
+
+**For each flow in DESIGN.md Section B marked implemented**:
+1. Read flow steps and control logic
+2. Locate flow implementation via @fdd-flow tags
+3. Trace execution path through code
+4. Verify:
+   - ✅ All flow steps executed in correct order
+   - ✅ No steps bypassed that would change behavior
+   - ✅ Conditional logic matches design conditions
+   - ✅ Error paths match design error handling
+
+**For each algorithm in DESIGN.md Section C marked implemented**:
+1. Read algorithm specification and complexity requirements
+2. Locate algorithm implementation via @fdd-algo tags
+3. Analyze implementation logic
+4. Verify:
+   - ✅ Algorithm logic matches design specification
+   - ✅ Performance characteristics match design (O(n), O(1), etc.)
+   - ✅ Edge cases handled as designed
+   - ✅ No logic shortcuts that violate design constraints
+
+**For technical details in DESIGN.md Section E**:
+1. Read endpoint specifications, security requirements, OData parameters
+2. Verify code implementation matches specifications:
+   - ✅ Endpoints match paths/methods from design
+   - ✅ Security checks match design requirements
+   - ✅ Query parameters match OData specifications
+   - ✅ Response formats match design schemas
+   - ✅ Delegation points implemented as designed
+
+**Validation**:
+- ✅ No contradictions found between code logic and design
+- ✅ All requirements implemented as specified (not diverged)
+- ✅ Flows execute exactly as designed
+- ✅ Algorithms match design specifications
+- ✅ Technical implementation matches Section E specs
+
+**Documentation**:
+- List any logic divergences found
+- Categorize: CRITICAL (contradicts design) vs MINOR (style deviation)
+- CRITICAL divergences = validation FAIL
+
+**Score**: 20 points
+
+### 11. Calculate Score
 
 **Scoring breakdown**:
 - Requirements Implementation (30 pts): All requirements marked IMPLEMENTED actually implemented
@@ -250,20 +310,21 @@ Extract:
 - Linter Pass (10 pts): Linter succeeds without errors
 - Test Pass (30 pts): All tests pass, coverage meets threshold
 - Code Quality (15 pts): No TODO/FIXME/unimplemented in business logic
+- Code Logic Consistency (20 pts): Code logic does not contradict design specifications
 - Code Tagging (10 pts): All feature code tagged with @fdd-change
 
-**Total**: 130 points
-**Pass threshold**: ≥110/130 (≈85%)
+**Total**: 150 points
+**Pass threshold**: ≥128/150 (≈85%)
 
-### 10. Output Results to Chat
+### 12. Output Results to Chat
 
 **Format**:
 ```markdown
 ## Validation: Feature Code ({feature-slug})
 
-**Score**: {X}/130  
+**Score**: {X}/150  
 **Status**: PASS | FAIL  
-**Threshold**: ≥110/130
+**Threshold**: ≥128/150
 
 ---
 
@@ -296,6 +357,14 @@ Extract:
 ✅ | ❌ No unimplemented! in business logic: {found count}
 ✅ | ❌ No ignored tests without reason: {found count}
 ✅ | ❌ Error handling complete
+
+**Code Logic Consistency** ({X}/20):
+✅ | ❌ Requirements logic matches design specifications
+✅ | ❌ Flow execution matches design steps
+✅ | ❌ Algorithm implementation matches design specifications
+✅ | ❌ Technical details match Section E specifications
+✅ | ❌ No CRITICAL divergences found
+  - List of divergences: {CRITICAL: [...] | MINOR: [...]}
 
 **Code Tagging** ({X}/10):
 ✅ | ❌ All feature code tagged with (phase is always a postfix, no standalone phase tags):
@@ -337,6 +406,8 @@ Extract:
 ✅ Checked EVERY test scenario individually
 ✅ Ran build, lint, and test commands
 ✅ Checked for TODO/FIXME/unimplemented systematically
+✅ Verified code logic consistency with design specifications
+✅ Analyzed code for contradictions with design
 ✅ Used adapter commands for systematic verification
 ✅ Completed self-test before reporting
 

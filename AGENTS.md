@@ -1,6 +1,6 @@
 # FDD AI Agent Navigation
 
-**Version**: 1.0
+**Version**: 1.1
 
 ---
 
@@ -38,8 +38,6 @@
 ---
 
 ## Navigation Rules
-
-ALWAYS open and follow `skills/SKILLS.md`
 
 ALWAYS open and follow `workflows/AGENTS.md` WHEN receiving any task request
 
@@ -96,8 +94,9 @@ ALWAYS open and follow `requirements/adapter-structure.md` WHEN creating or conf
 4. ❌ **Not completing pre-flight checklist** in workflow files
 5. ❌ **Not running self-test** before reporting validation results
 6. ❌ **Not checking EVERY validation criterion individually**
-7. ❌ **Not using grep for systematic verification**
-8. ❌ **Not cross-referencing EVERY ID**
+7. ❌ **Not using fdd-search for FDD artifact/FDD ID lookups**
+8. ❌ **Not using fdd-artifact-validate as Deterministic Gate**
+9. ❌ **Not cross-referencing EVERY FDD ID**
 
 **One violation = entire workflow execution FAILED**
 

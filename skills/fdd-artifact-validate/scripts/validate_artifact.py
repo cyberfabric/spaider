@@ -12,6 +12,9 @@ def _fdd_root_from_this_file() -> Path:
 
 def detect_requirements(artifact_path: Path) -> Tuple[str, Path]:
     name = artifact_path.name
+
+    if re.match(r"^\d{4}-\d{2}-\d{2}-CHANGES\.md$", name):
+        return "feature-changes", _fdd_root_from_this_file() / "requirements" / "feature-changes-structure.md"
     fdd_root = _fdd_root_from_this_file()
 
     def req(rel: str) -> Path:
@@ -101,7 +104,7 @@ FDD_ANY_ID_RE = re.compile(r"\bfdd-[a-z0-9-]+\b")
 
 
 SECTION_FEATURE_RE = re.compile(r"^##\s+([A-G])\.\s+(.+?)\s*$")
-FDL_STEP_LINE_RE = re.compile(r"^\s*(?:\d+\.|-)\s+\[[ xX]\]\s+-\s+`ph-\d+`\s+-\s+.+$")
+FDL_STEP_LINE_RE = re.compile(r"^\s*(?:\d+\.|-)\s+\[[ xX]\]\s+-\s+`ph-\d+`\s+-\s+.+?\s+-\s+`inst-[a-z0-9-]+`\s*$")
 FEATURE_FLOW_ID_RE = re.compile(r"\bfdd-[a-z0-9-]+-feature-([a-z0-9-]+)-flow-[a-z0-9-]+\b")
 FEATURE_ALGO_ID_RE = re.compile(r"\bfdd-[a-z0-9-]+-feature-([a-z0-9-]+)-algo-[a-z0-9-]+\b")
 FEATURE_STATE_ID_RE = re.compile(r"\bfdd-[a-z0-9-]+-feature-([a-z0-9-]+)-state-[a-z0-9-]+\b")
@@ -116,6 +119,23 @@ CHANGE_STATUS_RE = re.compile(r"^(?:⏳\s+NOT_STARTED|🔄\s+IN_PROGRESS|✅\s+C
 CHANGE_PRIORITY_RE = re.compile(r"^(?:HIGH|MEDIUM|LOW)$")
 PHASE_TOKEN_RE = re.compile(r"\bph-(\d+)\b")
 CHANGE_TASK_LINE_RE = re.compile(r"^\s*-\s+\[[ xX]\]\s+(\d+(?:\.\d+)+)\s+(.+?)\s*$")
+
+
+FDD_TAG_CHANGE_RE = re.compile(r"@fdd-change:(fdd-[a-z0-9-]+):ph-(\d+)")
+FDD_TAG_FLOW_RE = re.compile(r"@fdd-flow:(fdd-[a-z0-9-]+):ph-(\d+)")
+FDD_TAG_ALGO_RE = re.compile(r"@fdd-algo:(fdd-[a-z0-9-]+):ph-(\d+)")
+FDD_TAG_STATE_RE = re.compile(r"@fdd-state:(fdd-[a-z0-9-]+):ph-(\d+)")
+FDD_TAG_REQ_RE = re.compile(r"@fdd-req:(fdd-[a-z0-9-]+):ph-(\d+)")
+FDD_TAG_TEST_RE = re.compile(r"@fdd-test:(fdd-[a-z0-9-]+):ph-(\d+)")
+
+
+SCOPE_ID_BY_KIND_RE: Dict[str, re.Pattern] = {
+    "flow": re.compile(r"\bfdd-[a-z0-9-]+-feature-[a-z0-9-]+-flow-[a-z0-9-]+\b"),
+    "algo": re.compile(r"\bfdd-[a-z0-9-]+-feature-[a-z0-9-]+-algo-[a-z0-9-]+\b"),
+    "state": re.compile(r"\bfdd-[a-z0-9-]+-feature-[a-z0-9-]+-state-[a-z0-9-]+\b"),
+    "req": re.compile(r"\bfdd-[a-z0-9-]+-feature-[a-z0-9-]+-req-[a-z0-9-]+\b"),
+    "test": re.compile(r"\bfdd-[a-z0-9-]+-feature-[a-z0-9-]+-test-[a-z0-9-]+\b"),
+}
 
 
 def _split_by_feature_section_letter(text: str) -> Tuple[List[str], Dict[str, List[str]]]:
@@ -205,6 +225,9 @@ def validate_feature_design(
         ids: set = set()
         phases: set = set()
 
+        current_scope_id: Optional[str] = None
+        scope_inst_seen: set = set()
+
         in_code = False
         for idx, line in enumerate(lines, start=1):
             if line.strip().startswith("```"):
@@ -237,6 +260,11 @@ def validate_feature_design(
                 for fid in _extract_full_ids(line, kind):
                     ids.add(fid)
 
+                if kind == "algo":
+                    scope_ids = _extract_full_ids(line, kind)
+                    current_scope_id = scope_ids[0] if scope_ids else None
+                    scope_inst_seen = set()
+
                 if feature_slug is not None:
                     m_kind = {
                         "flow": FEATURE_FLOW_ID_RE,
@@ -254,9 +282,41 @@ def validate_feature_design(
             if re.match(r"^\s*\d+\.\s+", line):
                 if not FDL_STEP_LINE_RE.match(line):
                     errors.append({"type": "fdl", "message": "Invalid FDL step line format", "section": section_letter, "line": idx, "text": line.strip()})
+                elif kind == "algo" and current_scope_id is not None:
+                    m_inst = re.search(r"`(inst-[a-z0-9-]+)`\s*$", line.strip())
+                    if m_inst:
+                        inst_id = m_inst.group(1)
+                        if inst_id in scope_inst_seen:
+                            errors.append(
+                                {
+                                    "type": "fdl",
+                                    "message": "Duplicate FDL instruction IDs within algorithm",
+                                    "section": section_letter,
+                                    "line": idx,
+                                    "algorithm_id": current_scope_id,
+                                    "inst": inst_id,
+                                }
+                            )
+                        scope_inst_seen.add(inst_id)
             if re.match(r"^\s*-\s+\[[ xX]\]\s+-\s+", line):
                 if not FDL_STEP_LINE_RE.match(line):
                     errors.append({"type": "fdl", "message": "Invalid FDL step line format", "section": section_letter, "line": idx, "text": line.strip()})
+                elif kind == "algo" and current_scope_id is not None:
+                    m_inst = re.search(r"`(inst-[a-z0-9-]+)`\s*$", line.strip())
+                    if m_inst:
+                        inst_id = m_inst.group(1)
+                        if inst_id in scope_inst_seen:
+                            errors.append(
+                                {
+                                    "type": "fdl",
+                                    "message": "Duplicate FDL instruction IDs within algorithm",
+                                    "section": section_letter,
+                                    "line": idx,
+                                    "algorithm_id": current_scope_id,
+                                    "inst": inst_id,
+                                }
+                            )
+                        scope_inst_seen.add(inst_id)
 
         return ids, phases
 
@@ -289,10 +349,16 @@ def validate_feature_design(
                 errors.append({"type": "structure", "message": "Missing required subsection in Section A", "section": "A", "subsection": sub})
 
         actors_block = a_text.split("### 3. Actors", 1)[1] if "### 3. Actors" in a_text else ""
-        actor_names = [re.sub(r"^[-*]\s+", "", l.strip()) for l in actors_block.splitlines() if re.match(r"^\s*[-*]\s+\S+", l)]
-        actor_names = [a.strip("` ") for a in actor_names if a.strip()]
-        if not actor_names:
-            errors.append({"type": "content", "message": "Section A must list at least one actor", "section": "A"})
+        if "### 4. References" in actors_block:
+            actors_block = actors_block.split("### 4. References", 1)[0]
+        actor_lines = [l.strip() for l in actors_block.splitlines() if re.match(r"^\s*[-*]\s+\S+", l)]
+        actor_ids: List[str] = []
+        for l in actor_lines:
+            m = re.search(r"`(fdd-[a-z0-9-]+-actor-[a-z0-9-]+)`", l)
+            if not m:
+                errors.append({"type": "id", "message": "Section A Actors must be FDD actor IDs wrapped in backticks", "section": "A", "text": l.strip()})
+                continue
+            actor_ids.append(m.group(1))
 
         if not skip_fs_checks and artifact_path is not None:
             bp = artifact_path.parents[2] / "BUSINESS.md"
@@ -300,10 +366,11 @@ def validate_feature_design(
             if berr:
                 errors.append({"type": "cross", "message": berr})
             else:
-                business_actor_names = set(re.findall(r"^####\s+(.+?)\s*$", bt or "", re.MULTILINE))
-                unknown_names = sorted([n for n in actor_names if n not in business_actor_names])
-                if business_actor_names and unknown_names:
-                    errors.append({"type": "cross", "message": "Actor names must match BUSINESS.md actor headings", "section": "A", "actors": unknown_names})
+                if actor_ids:
+                    business_actor_ids = set(re.findall(r"`(fdd-[a-z0-9-]+-actor-[a-z0-9-]+)`", bt or ""))
+                    unknown_ids = sorted([a for a in actor_ids if a not in business_actor_ids])
+                    if business_actor_ids and unknown_ids:
+                        errors.append({"type": "cross", "message": "Actor IDs must match BUSINESS.md actor IDs", "section": "A", "actors": unknown_ids})
 
             fp = artifact_path.parents[1] / "FEATURES.md"
             ft, ferr = _load_text(fp)
@@ -922,6 +989,524 @@ def _load_text(path: Path) -> Tuple[Optional[str], Optional[str]]:
     if not path.exists() or not path.is_file():
         return None, f"File not found: {path}"
     return path.read_text(encoding="utf-8"), None
+
+
+def _latest_archived_changes(feature_dir: Path) -> Optional[Path]:
+    ap = feature_dir / "archive"
+    if not ap.exists() or not ap.is_dir():
+        return None
+    candidates = sorted([p for p in ap.iterdir() if p.is_file() and re.match(r"^\d{4}-\d{2}-\d{2}-CHANGES\.md$", p.name)])
+    return candidates[-1] if candidates else None
+
+
+def _iter_code_files(root: Path) -> List[Path]:
+    exts = {".rs", ".py", ".ts", ".tsx", ".js", ".go", ".java", ".cs", ".sql"}
+    files: List[Path] = []
+    for p in root.rglob("*"):
+        if not p.is_file():
+            continue
+        if p.suffix.lower() not in exts:
+            continue
+        files.append(p)
+    return files
+
+
+def _code_tag_hits(text: str) -> Dict[str, List[Tuple[str, str]]]:
+    hits: Dict[str, List[Tuple[str, str]]] = {
+        "change": [],
+        "flow": [],
+        "algo": [],
+        "state": [],
+        "req": [],
+        "test": [],
+    }
+    for rid, ph in FDD_TAG_CHANGE_RE.findall(text):
+        hits["change"].append((rid, ph))
+    for rid, ph in FDD_TAG_FLOW_RE.findall(text):
+        hits["flow"].append((rid, ph))
+    for rid, ph in FDD_TAG_ALGO_RE.findall(text):
+        hits["algo"].append((rid, ph))
+    for rid, ph in FDD_TAG_STATE_RE.findall(text):
+        hits["state"].append((rid, ph))
+    for rid, ph in FDD_TAG_REQ_RE.findall(text):
+        hits["req"].append((rid, ph))
+    for rid, ph in FDD_TAG_TEST_RE.findall(text):
+        hits["test"].append((rid, ph))
+    return hits
+
+
+FDD_BEGIN_LINE_RE = re.compile(r"\bfdd-begin\s+([^\s]+)")
+FDD_END_LINE_RE = re.compile(r"\bfdd-end\s+([^\s]+)")
+UNWRAPPED_INST_TAG_RE = re.compile(r"(fdd-[a-z0-9-]+(?:-[a-z0-9-]+)*:ph-\d+:inst-[a-z0-9-]+)")
+
+
+def _is_effective_code_line(line: str) -> bool:
+    s = line.strip()
+    if not s:
+        return False
+    if s.startswith("//"):
+        return False
+    if s.startswith("#"):
+        return False
+    if s.startswith("--"):
+        return False
+    if s.startswith("/*"):
+        return False
+    if s.startswith("*/"):
+        return False
+    if s.startswith("*"):
+        return False
+    return True
+
+
+def _empty_fdd_tag_blocks_in_text(text: str) -> List[Dict[str, object]]:
+    issues: List[Dict[str, object]] = []
+    lines = text.splitlines()
+
+    stack: List[Tuple[str, int]] = []
+    for i, line in enumerate(lines):
+        mb = FDD_BEGIN_LINE_RE.search(line)
+        if mb:
+            tag = mb.group(1)
+            if ":inst-" in tag:
+                stack.append((tag, i))
+            continue
+
+        me = FDD_END_LINE_RE.search(line)
+        if not me:
+            continue
+        end_tag = me.group(1)
+        if ":inst-" not in end_tag:
+            continue
+        if not stack:
+            issues.append({"type": "end_without_begin", "tag": end_tag, "end_line": i + 1})
+            continue
+        start_tag, start_idx = stack[-1]
+        if start_tag != end_tag:
+            issues.append(
+                {
+                    "type": "end_without_begin",
+                    "tag": end_tag,
+                    "end_line": i + 1,
+                    "expected": start_tag,
+                    "expected_begin_line": start_idx + 1,
+                }
+            )
+            continue
+        stack.pop()
+
+        has_code = any(_is_effective_code_line(lines[j]) for j in range(start_idx + 1, i))
+        if not has_code:
+            issues.append(
+                {
+                    "type": "empty_block",
+                    "tag": start_tag,
+                    "begin_line": start_idx + 1,
+                    "end_line": i + 1,
+                }
+            )
+
+    for tag, start_idx in stack:
+        issues.append({"type": "begin_without_end", "tag": tag, "begin_line": start_idx + 1})
+
+    return issues
+
+
+def _paired_inst_tags_in_text(text: str) -> set:
+    tags: set = set()
+    lines = text.splitlines()
+
+    stack: List[str] = []
+    for line in lines:
+        mb = FDD_BEGIN_LINE_RE.search(line)
+        if mb:
+            tag = mb.group(1)
+            if ":inst-" in tag:
+                stack.append(tag)
+            continue
+
+        me = FDD_END_LINE_RE.search(line)
+        if not me:
+            continue
+        end_tag = me.group(1)
+        if ":inst-" not in end_tag:
+            continue
+        if not stack:
+            continue
+        start_tag = stack[-1]
+        if start_tag != end_tag:
+            continue
+        stack.pop()
+        tags.add(start_tag)
+
+    return tags
+
+
+def _unwrapped_inst_tag_hits_in_text(text: str) -> List[Dict[str, object]]:
+    hits: List[Dict[str, object]] = []
+    for i, line in enumerate(text.splitlines()):
+        if FDD_BEGIN_LINE_RE.search(line) or FDD_END_LINE_RE.search(line):
+            continue
+        for m in UNWRAPPED_INST_TAG_RE.finditer(line):
+            hits.append({"tag": m.group(1), "line": i + 1})
+    return hits
+
+
+def _extract_scope_ids(line: str, kind: str) -> List[str]:
+    pat = SCOPE_ID_BY_KIND_RE.get(kind)
+    if pat is None:
+        return []
+    return pat.findall(line)
+
+
+def _summarize_validation_report(report: Dict[str, object], *, max_errors: int = 50) -> Dict[str, object]:
+    errs = list(report.get("errors", []) or [])
+    ph = list(report.get("placeholder_hits", []) or [])
+    return {
+        "status": report.get("status"),
+        "error_count": len(errs),
+        "placeholder_count": len(ph),
+        "errors": errs[:max_errors],
+        "placeholder_hits": ph[:max_errors],
+    }
+
+
+def _validate_feature_artifacts_for_traceability(
+    *,
+    feature_design_path: Path,
+    feature_changes_path: Optional[Path],
+    skip_fs_checks: bool,
+) -> Tuple[Dict[str, object], Optional[Dict[str, object]]]:
+    dk, dr = detect_requirements(feature_design_path)
+    drep = validate(
+        feature_design_path,
+        dr,
+        dk,
+        skip_fs_checks=skip_fs_checks,
+    )
+    drep["artifact_kind"] = dk
+
+    crep: Optional[Dict[str, object]] = None
+    if feature_changes_path is not None and feature_changes_path.exists() and feature_changes_path.is_file():
+        ck, cr = detect_requirements(feature_changes_path)
+        crep = validate(
+            feature_changes_path,
+            cr,
+            ck,
+            design_path=feature_design_path,
+            skip_fs_checks=skip_fs_checks,
+        )
+        crep["artifact_kind"] = ck
+
+    return drep, crep
+
+
+def validate_codebase_traceability(
+    artifact_dir: Path,
+    *,
+    feature_design_path: Optional[Path] = None,
+    feature_changes_path: Optional[Path] = None,
+    scan_root_override: Optional[Path] = None,
+    skip_fs_checks: bool = False,
+) -> Dict[str, object]:
+    errors: List[Dict[str, object]] = []
+
+    if not artifact_dir.exists() or not artifact_dir.is_dir():
+        return {
+            "required_section_count": 0,
+            "missing_sections": [],
+            "placeholder_hits": [],
+            "status": "FAIL",
+            "errors": [{"type": "file", "message": "Directory not found", "path": str(artifact_dir)}],
+        }
+
+    feature_dir = artifact_dir
+
+    dp = feature_design_path or (feature_dir / "DESIGN.md")
+    if not dp.exists() or not dp.is_file():
+        errors.append({"type": "cross", "message": "Feature DESIGN.md not found for codebase traceability", "path": str(dp)})
+
+    cp = feature_changes_path or (feature_dir / "CHANGES.md")
+    if (not cp.exists() or not cp.is_file()) and not skip_fs_checks:
+        latest = _latest_archived_changes(feature_dir)
+        if latest is not None:
+            cp = latest
+
+    design_text, derr = _load_text(dp)
+    if derr:
+        errors.append({"type": "cross", "message": derr})
+        design_text = ""
+    changes_text: str = ""
+    if cp is not None and cp.exists() and cp.is_file():
+        changes_text, _ = _load_text(cp)
+        changes_text = changes_text or ""
+
+    artifacts_validation: Dict[str, object] = {
+        "feature_design": None,
+        "feature_changes": None,
+    }
+
+    if dp.exists() and dp.is_file():
+        drep, crep = _validate_feature_artifacts_for_traceability(
+            feature_design_path=dp,
+            feature_changes_path=cp if (cp is not None and cp.exists() and cp.is_file()) else None,
+            skip_fs_checks=skip_fs_checks,
+        )
+        artifacts_validation["feature_design"] = _summarize_validation_report(drep)
+        if crep is not None:
+            artifacts_validation["feature_changes"] = _summarize_validation_report(crep)
+
+        if (drep.get("status") != "PASS") or (crep is not None and crep.get("status") != "PASS"):
+            return {
+                "required_section_count": 0,
+                "missing_sections": [],
+                "placeholder_hits": [],
+                "status": "FAIL",
+                "errors": errors,
+                "traceability": {
+                    "feature_dir": str(feature_dir),
+                    "scan_root": str(scan_root_override or feature_dir),
+                    "feature_design": str(dp),
+                    "feature_changes": str(cp) if cp else None,
+                    "scanned_file_count": 0,
+                    "artifact_validation": artifacts_validation,
+                },
+            }
+
+    # Expected IDs to be present in code markers
+    expected_scope_ids: Dict[str, set] = {
+        "flow": set(),
+        "algo": set(),
+        "state": set(),
+        "req": set(),
+        "test": set(),
+        "change": set(),
+    }
+    expected_inst_tags: set = set()
+
+    # DESIGN scopes marked implemented via checkbox
+    for line in (design_text or "").splitlines():
+        if not re.match(r"^\s*[-*]\s+\[x\]\s+\*\*ID\*\*:\s+", line, re.IGNORECASE):
+            continue
+        for fid in _extract_scope_ids(line, "flow"):
+            expected_scope_ids["flow"].add(fid)
+        for aid in _extract_scope_ids(line, "algo"):
+            expected_scope_ids["algo"].add(aid)
+        for sid in _extract_scope_ids(line, "state"):
+            expected_scope_ids["state"].add(sid)
+        for rid in _extract_scope_ids(line, "req"):
+            expected_scope_ids["req"].add(rid)
+        for tid in _extract_scope_ids(line, "test"):
+            expected_scope_ids["test"].add(tid)
+
+    # FDL instruction-level tags from implemented ([x]) step lines.
+    current_scope: Optional[str] = None
+    for line in (design_text or "").splitlines():
+        if "**ID**:" in line and re.match(r"^\s*[-*]\s+\[[ xX]\]\s+\*\*ID\*\*:\s+", line):
+            # Prefer algorithm IDs, then flow/state/test
+            scope_id = None
+            for kind in ("algo", "flow", "state", "test"):
+                ids = _extract_scope_ids(line, kind)
+                if ids:
+                    scope_id = ids[0]
+                    break
+            current_scope = scope_id
+            continue
+
+        if "[x]" not in line and "[X]" not in line:
+            continue
+        if not FDL_STEP_LINE_RE.match(line):
+            continue
+
+        m_ph = re.search(r"`ph-(\d+)`", line)
+        m_inst = re.search(r"`(inst-[a-z0-9-]+)`\s*$", line.strip())
+        if not (m_ph and m_inst and current_scope):
+            continue
+        expected_inst_tags.add(f"{current_scope}:ph-{m_ph.group(1)}:{m_inst.group(1)}")
+
+    # CHANGES completed changes -> expect change tags in code
+    for m in re.finditer(r"^##\s+Change\s+\d+:.*$", changes_text, re.MULTILINE):
+        pass
+    if changes_text:
+        # naive split by change headings
+        blocks = re.split(r"^##\s+Change\s+\d+:.*$", changes_text, flags=re.MULTILINE)
+        headings = re.findall(r"^##\s+Change\s+\d+:.*$", changes_text, flags=re.MULTILINE)
+        for i, head in enumerate(headings):
+            body = blocks[i + 1] if i + 1 < len(blocks) else ""
+            m_id = re.search(r"\*\*ID\*\*:\s*`([^`]+)`", body)
+            m_status = re.search(r"\*\*Status\*\*:\s*(.+)$", body, re.MULTILINE)
+            if not (m_id and m_status):
+                continue
+            if m_status.group(1).strip() != "✅ COMPLETED":
+                continue
+            expected_scope_ids["change"].add(m_id.group(1).strip())
+
+    # Scan code
+    scan_root = scan_root_override or feature_dir
+    scanned_files = _iter_code_files(scan_root)
+    if not scanned_files and scan_root_override is None:
+        # In this repository, code usually lives at module root (sibling of architecture/).
+        p = feature_dir
+        while p != p.parent:
+            if p.name == "architecture":
+                scan_root = p.parent
+                break
+            p = p.parent
+        scanned_files = _iter_code_files(scan_root)
+    found_scope_ids: Dict[str, set] = {k: set() for k in expected_scope_ids.keys()}
+    found_inst_tags: set = set()
+
+    for fp in scanned_files:
+        try:
+            txt = fp.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            continue
+
+        try:
+            rel_fp = fp.relative_to(scan_root).as_posix()
+        except Exception:
+            rel_fp = fp.as_posix()
+
+        hits = _code_tag_hits(txt)
+
+        paired_inst_tags = _paired_inst_tags_in_text(txt)
+        unwrapped_inst_hits = _unwrapped_inst_tag_hits_in_text(txt)
+
+        empty_blocks = _empty_fdd_tag_blocks_in_text(txt)
+        if empty_blocks:
+            for eb in empty_blocks:
+                msg = "Invalid fdd-begin/fdd-end pairing"
+                if eb.get("type") == "empty_block":
+                    msg = "Empty fdd-begin/fdd-end block"
+                elif eb.get("type") == "begin_without_end":
+                    msg = "fdd-begin without matching fdd-end"
+                elif eb.get("type") == "end_without_begin":
+                    msg = "fdd-end without matching fdd-begin"
+                errors.append({"type": "code_tag", "message": msg, "path": rel_fp, **eb})
+        for k in ("change", "flow", "algo", "state", "req", "test"):
+            for rid, _ph in hits[k]:
+                found_scope_ids[k].add(rid)
+
+        found_inst_tags.update(expected_inst_tags.intersection(paired_inst_tags))
+
+        for uh in unwrapped_inst_hits:
+            tag = uh.get("tag")
+            if not tag:
+                continue
+            if tag in expected_inst_tags and tag not in paired_inst_tags:
+                errors.append(
+                    {
+                        "type": "code_tag",
+                        "message": "Instruction tag must be wrapped in fdd-begin/fdd-end",
+                        "path": rel_fp,
+                        "tag": tag,
+                        "line": uh.get("line"),
+                    }
+                )
+
+    missing_scope: Dict[str, List[str]] = {}
+    for k, exp in expected_scope_ids.items():
+        miss = sorted([x for x in exp if x not in found_scope_ids.get(k, set())])
+        if miss:
+            missing_scope[k] = miss
+    missing_inst = sorted([x for x in expected_inst_tags if x not in found_inst_tags])
+
+    passed = (len(errors) == 0) and (len(missing_scope) == 0) and (len(missing_inst) == 0)
+    return {
+        "required_section_count": 0,
+        "missing_sections": [],
+        "placeholder_hits": [],
+        "status": "PASS" if passed else "FAIL",
+        "errors": errors,
+        "traceability": {
+            "feature_dir": str(feature_dir),
+            "scan_root": str(scan_root),
+            "feature_design": str(dp) if dp else None,
+            "feature_changes": str(cp) if cp else None,
+            "scanned_file_count": len(scanned_files),
+            "artifact_validation": artifacts_validation,
+            "expected": {
+                "scopes": {k: sorted(list(v)) for k, v in expected_scope_ids.items()},
+                "instruction_tags": sorted(list(expected_inst_tags)),
+            },
+            "found": {
+                "scopes": {k: sorted(list(v)) for k, v in found_scope_ids.items()},
+                "instruction_tags": sorted(list(found_inst_tags)),
+            },
+            "missing": {
+                "scopes": missing_scope,
+                "instruction_tags": missing_inst,
+            },
+        },
+    }
+
+
+def validate_code_root_traceability(
+    code_root: Path,
+    *,
+    feature_slugs: Optional[List[str]] = None,
+    skip_fs_checks: bool = False,
+) -> Dict[str, object]:
+    errors: List[Dict[str, object]] = []
+
+    if not code_root.exists() or not code_root.is_dir():
+        return {
+            "required_section_count": 0,
+            "missing_sections": [],
+            "placeholder_hits": [],
+            "status": "FAIL",
+            "errors": [{"type": "file", "message": "Directory not found", "path": str(code_root)}],
+        }
+
+    features_dir = code_root / "architecture" / "features"
+    if not features_dir.exists() or not features_dir.is_dir():
+        errors.append(
+            {
+                "type": "file",
+                "message": "Missing architecture/features directory under code root",
+                "expected": str(features_dir),
+            }
+        )
+
+    wanted: Optional[set] = None
+    if feature_slugs:
+        wanted = set()
+        for s in feature_slugs:
+            ss = s.strip()
+            if not ss:
+                continue
+            if ss.startswith("feature-"):
+                ss = ss[len("feature-") :]
+            wanted.add(ss)
+
+    feature_dirs: List[Path] = []
+    if features_dir.exists() and features_dir.is_dir():
+        for fd in sorted([p for p in features_dir.iterdir() if p.is_dir() and p.name.startswith("feature-")]):
+            slug = fd.name[len("feature-") :]
+            if wanted is not None and slug not in wanted:
+                continue
+            feature_dirs.append(fd)
+
+    feature_reports: List[Dict[str, object]] = []
+    for fd in feature_dirs:
+        rep = validate_codebase_traceability(
+            fd,
+            scan_root_override=code_root,
+            skip_fs_checks=skip_fs_checks,
+        )
+        feature_reports.append({"feature_dir": str(fd), "status": rep.get("status"), "traceability": rep.get("traceability")})
+
+    passed = (len(errors) == 0) and all(r.get("status") == "PASS" for r in feature_reports)
+    return {
+        "required_section_count": 0,
+        "missing_sections": [],
+        "placeholder_hits": [],
+        "status": "PASS" if passed else "FAIL",
+        "errors": errors,
+        "code_root": str(code_root),
+        "feature_count": len(feature_dirs),
+        "feature_reports": feature_reports,
+    }
 
 
 def _parse_business_model(text: str) -> Tuple[set, Dict[str, set], set]:
@@ -2040,15 +2625,51 @@ def main(argv: Optional[List[str]] = None) -> int:
         action="store_true",
         help="Skip filesystem-based checks (feature directory existence, DESIGN.md cross-check).",
     )
+    parser.add_argument(
+        "--features",
+        required=False,
+        help="Optional comma-separated list of feature slugs to validate in code-root directory mode (e.g. 'gts-core,init-module').",
+    )
     parser.add_argument("--output", required=False, help="Optional output path for JSON report")
 
     args = parser.parse_args(argv)
 
     artifact_path = Path(args.artifact).resolve()
-    if not artifact_path.exists() or not artifact_path.is_file():
+    if not artifact_path.exists() or (not artifact_path.is_file() and not artifact_path.is_dir()):
         raise SystemExit(f"Artifact not found: {artifact_path}")
 
-    if args.requirements:
+    if artifact_path.is_dir():
+        # Backwards-compatible: feature directory mode (artifact contains DESIGN.md).
+        if (artifact_path / "DESIGN.md").exists():
+            if args.features:
+                raise SystemExit("--features is only supported when --artifact is a code root directory")
+            report = validate_codebase_traceability(
+                artifact_path,
+                feature_design_path=Path(args.design).resolve() if args.design else None,
+                feature_changes_path=None,
+                skip_fs_checks=bool(args.skip_fs_checks),
+            )
+            report["artifact_kind"] = "codebase-trace"
+        else:
+            slugs: Optional[List[str]] = None
+            if args.features:
+                slugs = [x.strip() for x in str(args.features).split(",") if x.strip()]
+            report = validate_code_root_traceability(
+                artifact_path,
+                feature_slugs=slugs,
+                skip_fs_checks=bool(args.skip_fs_checks),
+            )
+            report["artifact_kind"] = "codebase-trace"
+
+        out = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
+        if args.output:
+            Path(args.output).write_text(out, encoding="utf-8")
+        else:
+            print(out, end="")
+
+        return 0 if report["status"] == "PASS" else 2
+
+    elif args.requirements:
         requirements_path = Path(args.requirements).resolve()
         artifact_kind = "custom"
     else:
