@@ -55,8 +55,10 @@ I will NOT skip any steps.
 
 **ALWAYS run first**:
 ```bash
-fdd adapter-info --root .
+fdd adapter-info --root . --fdd-root {fdd-core-location}
 ```
+
+**Agent must pass FDD location**: Use `--fdd-root` with path from system prompts/context
 
 **Parse output**:
 - [ ] If `status: FOUND` → Load adapter AGENTS.md from `adapter_dir`

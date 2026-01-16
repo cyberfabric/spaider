@@ -44,35 +44,81 @@
 3. **Evolution** (during design): Design decisions → update adapter specs
 4. **Refinement** (during implementation): Code patterns → update adapter specs
 
-**Location**: `FDD-Adapter/` at project root (required)
+**Directory Name**: `FDD-Adapter/` is **default**, but user can customize
+- Default name: `FDD-Adapter/` (recommended for consistency)
+- Custom names: `.fdd-adapter/`, `project-adapter/`, etc. (any name works)
+- Name is configured in `.fdd-config.json` via `fddAdapterPath` field
 
-**Correct locations**:
-- `{project-root}/FDD-Adapter/` (recommended, simple path)
-- `{project-root}/guidelines/FDD-Adapter/` (alternative)
-- `{project-root}/spec/FDD-Adapter/` (alternative)
-- `{project-root}/docs/FDD-Adapter/` (alternative)
+**Common locations**:
+- `{project-root}/FDD-Adapter/` (default, recommended)
+- `{project-root}/.fdd-adapter/` (hidden directory style)
+- `{project-root}/guidelines/FDD-Adapter/` (documentation organization)
+- `{project-root}/spec/FDD-Adapter/` (technical specs organization)
+- `{project-root}/docs/FDD-Adapter/` (documentation organization)
+- Custom: any directory name at project root
 
-**Important**: Adapter MUST be discoverable from project root. Avoid deep nesting in subdirectories.
+**Important**: 
+- Adapter MUST be discoverable via `.fdd-config.json`
+- Avoid deep nesting in subdirectories
+- Use consistent naming within your organization
 
 **Bootstrap Structure**:
 ```
-FDD-Adapter/
-├── AGENTS.md              # Minimal: only Extends declaration
-└── specs/                 # Created dynamically during workflows
-    ├── tech-stack.md     # From DESIGN.md + ADRs + discovery
-    ├── patterns.md       # From design decisions + code analysis
-    ├── domain-model.md   # From DESIGN.md Section C.2
-    ├── api-contracts.md  # From DESIGN.md Section C.3
-    ├── conventions.md    # From code style + ADRs
-    ├── build-deploy.md   # From configs + ADRs
-    ├── testing.md        # From test frameworks + ADRs
-    ├── snippets/         # Code examples from implementation
-    └── examples/         # Pattern examples from features
+{project-root}/
+├── .fdd-config.json       # Project configuration (mandatory)
+│                          # Contains: {"fddAdapterPath": "FDD-Adapter"}
+│                          # User can change name to any directory
+└── FDD-Adapter/           # Default name (customizable via config)
+    ├── AGENTS.md          # Minimal: only Extends declaration
+    └── specs/             # Created dynamically during workflows
+        ├── tech-stack.md     # From DESIGN.md + ADRs + discovery
+        ├── patterns.md       # From design decisions + code analysis
+        ├── domain-model.md   # From DESIGN.md Section C.2
+        ├── api-contracts.md  # From DESIGN.md Section C.3
+        ├── conventions.md    # From code style + ADRs
+        ├── build-deploy.md   # From configs + ADRs
+        ├── testing.md        # From test frameworks + ADRs
+        ├── snippets/         # Code examples from implementation
+        └── examples/         # Pattern examples from features
 ```
 
 ---
 
 ## Required Files
+
+### .fdd-config.json
+
+**Location**: `{project-root}/.fdd-config.json`
+
+**Purpose**: Project-level FDD configuration for discoverability
+
+**Mandatory fields**:
+```json
+{
+  "fddAdapterPath": "FDD-Adapter"
+}
+```
+
+**Optional fields**:
+```json
+{
+  "fddAdapterPath": "FDD-Adapter",
+  "fddCorePath": ".fdd"
+}
+```
+
+**Validation**:
+- [ ] File exists at project root
+- [ ] Valid JSON format
+- [ ] `fddAdapterPath` field present
+- [ ] Path points to existing directory with AGENTS.md
+- [ ] Config is used by `fdd adapter-info` for discovery
+
+**Notes**:
+- Config ensures reliable adapter discovery
+- Allows custom adapter locations
+- Required for multi-module projects
+- Speeds up adapter search (no recursive scan)
 
 ### AGENTS.md
 

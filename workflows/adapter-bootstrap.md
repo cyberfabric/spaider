@@ -43,17 +43,24 @@ Extract:
 
 ## Steps
 
-### 1. Choose Adapter Location
+### 1. Choose Adapter Location and Name
 
-Ask user to select adapter directory:
+Ask user to select adapter directory and name:
 
-**Options**:
-1. `/FDD-Adapter/` (recommended for docs-heavy projects)
-2. `spec/FDD-Adapter/` (recommended for technical projects)
-3. `docs/FDD-Adapter/` (alternative)
-4. Custom path
+**Directory name** (customizable):
+- Default: `FDD-Adapter` (recommended for consistency)
+- Custom: `.fdd-adapter`, `project-adapter`, etc. (any name)
 
-**Default**: `/FDD-Adapter/`
+**Location options**:
+1. `{name}/` at project root (recommended, e.g., `/FDD-Adapter/`)
+2. `spec/{name}/` (for technical projects, e.g., `spec/FDD-Adapter/`)
+3. `docs/{name}/` (for documentation-focused projects)
+4. `guidelines/{name}/` (alternative)
+5. Custom parent directory
+
+**Default**: `/FDD-Adapter/` (default name at root)
+
+**Note**: Directory name is stored in `.fdd-config.json` as `fddAdapterPath`
 
 Store as: `ADAPTER_DIR`
 
@@ -93,11 +100,13 @@ Store as: `PROJECT_NAME`
 ═══════════════════════════════════════════════
 Minimal Adapter Bootstrap
 
-Location: {ADAPTER_DIR}/FDD-Adapter/
+Location: {ADAPTER_DIR}/
 Project: {PROJECT_NAME}
 Extends: {RELATIVE_PATH}
+Config path: {relative} (in .fdd-config.json)
 
 Files to create:
+  - .fdd-config.json (project root)
   - AGENTS.md (minimal, no specs)
 
 Note: Specs will be added later through:
@@ -109,13 +118,36 @@ Note: Specs will be added later through:
 Proceed? [Yes] [No] [Change Location]
 ```
 
-### 5. Create Directory
+### 5. Create .fdd-config.json
+
+Calculate relative adapter path from project root:
+```yaml
+If ADAPTER_DIR = "/FDD-Adapter":
+  relative = "FDD-Adapter"
+  
+If ADAPTER_DIR = "spec/FDD-Adapter":
+  relative = "spec/FDD-Adapter"
+  
+If ADAPTER_DIR = "docs/FDD-Adapter":
+  relative = "docs/FDD-Adapter"
+```
+
+Create config at project root:
+```json
+{
+  "fddAdapterPath": "{relative}"
+}
+```
+
+Store as: `{project-root}/.fdd-config.json`
+
+### 6. Create Directory
 
 ```bash
 mkdir -p {ADAPTER_DIR}/FDD-Adapter/
 ```
 
-### 6. Create Minimal AGENTS.md
+### 7. Create Minimal AGENTS.md
 
 ```markdown
 # FDD Adapter: {PROJECT_NAME}
@@ -123,27 +155,32 @@ mkdir -p {ADAPTER_DIR}/FDD-Adapter/
 **Extends**: `{RELATIVE_PATH}`
 ```
 
-### 7. Verify
+### 8. Verify
 
 Check:
+- Config exists: `{project-root}/.fdd-config.json`
+- Config valid JSON
+- Config contains: `"fddAdapterPath": "{relative}"`
 - Directory exists: `{ADAPTER_DIR}/FDD-Adapter/`
 - File exists: `{ADAPTER_DIR}/FDD-Adapter/AGENTS.md`
 - File contains: `**Extends**: {RELATIVE_PATH}`
 
-### 8. Run Validation
+### 9. Run Validation
 
 **Execute**: `adapter-validate` workflow
 
 ```yaml
 Validation will:
-  1. Locate adapter
-  2. Detect Phase 1 (Bootstrap)
-  3. Check 3 requirements:
+  1. Check .fdd-config.json exists and valid
+  2. Locate adapter using config
+  3. Detect Phase 1 (Bootstrap)
+  4. Check 4 requirements:
+     - .fdd-config.json exists ✓
+     - fddAdapterPath points to valid directory ✓
      - AGENTS.md exists ✓
-     - Project name heading ✓
      - Extends declaration ✓
-  4. Score: 100/100
-  5. Output to chat
+  5. Score: 100/100
+  6. Output to chat
 ```
 
 Expected result:

@@ -172,6 +172,9 @@ python3 scripts/fdd.py adapter-info
 
 # Discover adapter from specific project root
 python3 scripts/fdd.py adapter-info --root {project-root}
+
+# Agent usage: pass FDD location for enhanced validation
+python3 scripts/fdd.py adapter-info --root {project-root} --fdd-root {fdd-core-path}
 ```
 
 **Output** (JSON):
@@ -180,6 +183,8 @@ python3 scripts/fdd.py adapter-info --root {project-root}
 - `relative_path`: Relative path from project root
 - `project_name`: Project name from adapter AGENTS.md
 - `specs`: List of available spec files in specs/ directory
+- `has_config`: Whether .fdd-config.json exists
+- `config_hint`: Suggested config content (if config missing)
 
 **Common adapter locations searched**:
 - `FDD-Adapter/`

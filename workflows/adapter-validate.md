@@ -63,18 +63,44 @@ Extract:
 
 ## Steps
 
-### 1. Locate Adapter
+### 1. Validate Project Configuration
 
-Search common locations:
-- `/FDD-Adapter/AGENTS.md`
-- `spec/FDD-Adapter/AGENTS.md`
-- `docs/FDD-Adapter/AGENTS.md`
+**Check .fdd-config.json**:
+```yaml
+File: {project-root}/.fdd-config.json
 
-If not found: STOP, report missing
+Required checks:
+  1. File exists
+  2. Valid JSON format
+  3. Contains "fddAdapterPath" field
+  4. Path value is non-empty string
+
+If missing or invalid:
+  - Report: Configuration file missing or invalid
+  - Suggest: Run adapter-bootstrap workflow
+  - STOP
+```
+
+Store adapter path as: `ADAPTER_REL_PATH`
+
+### 2. Locate Adapter
+
+Use config to locate adapter:
+```yaml
+ADAPTER_DIR = {project-root}/{ADAPTER_REL_PATH}
+
+Validate:
+  - Directory exists
+  - Contains AGENTS.md file
+  
+If not found:
+  - Report: Adapter directory not found at configured path
+  - STOP
+```
 
 Store location as: `ADAPTER_DIR`
 
-### 2. Determine Validation Phase
+### 3. Determine Validation Phase
 
 Check adapter state:
 
@@ -90,20 +116,21 @@ ELSE:
   → Phase 2: Evolved Adapter Validation
 ```
 
-### 3. Execute Phase-Specific Validation
+### 4. Execute Phase-Specific Validation
 
 #### Phase 1: Bootstrap Validation (Minimal)
 
 **Check**:
-1. File exists: `{ADAPTER_DIR}/FDD-Adapter/AGENTS.md` (required)
-2. Contains project name heading (required)
-3. Contains `**Extends**: {path}/FDD/AGENTS.md` (required)
+1. Config exists: `{project-root}/.fdd-config.json` (required)
+2. Config valid and contains `fddAdapterPath` (required)
+3. File exists: `{ADAPTER_DIR}/FDD-Adapter/AGENTS.md` (required)
+4. Contains project name heading (required)
+5. Contains `**Extends**: {path}/FDD/AGENTS.md` (required)
 
-**Scoring**:
-```yaml
-All 3 checks pass: 100/100 ✅
-Any check fails: 0/100 ❌
-```
+**Score**: 100/100 if all 5 checks pass
+
+**Report**: 100/100 
+Any check fails: 0/100 
 
 **Pass threshold**: 100/100
 

@@ -70,7 +70,7 @@ def _fdd_root_from_project_config() -> Optional[Path]:
     return None
 
 
-def _find_adapter_directory(start: Path) -> Optional[Path]:
+def _find_adapter_directory(start: Path, fdd_root: Optional[Path] = None) -> Optional[Path]:
     """
     Find FDD-Adapter directory starting from project root.
     Uses smart recursive search to find adapter in ANY location within project.
@@ -80,21 +80,29 @@ def _find_adapter_directory(start: Path) -> Optional[Path]:
     2. Recursively search for directories with AGENTS.md + specs/
     3. Prefer shallower directories (closer to root)
     4. Skip common non-adapter directories
+    
+    Args:
+        start: Starting path for search
+        fdd_root: Known FDD core location (from agent context)
     """
     project_root = _find_project_root(start)
     if project_root is None:
         return None
     
-    # Check config first - explicit path always wins
+    # PRIORITY 1: Check config first - explicit path always wins
     cfg = _load_project_config(project_root)
     if cfg is not None:
-        adapter_rel = _cfg_get_str(cfg, "fddAdapterPath", "fdd_adapter_path", "adapterPath")
-        if adapter_rel is not None:
+        adapter_rel = cfg.get("fddAdapterPath")
+        if adapter_rel is not None and isinstance(adapter_rel, str):
+            # Config exists and specifies adapter path
             adapter_dir = (project_root / adapter_rel).resolve()
             if (adapter_dir / "AGENTS.md").exists():
                 return adapter_dir
+            # Config path is invalid - DO NOT fallback to recursive search
+            # This is a configuration error that must be fixed
+            return None
     
-    # Recursive search with heuristics
+    # PRIORITY 2: Recursive search (only if no config exists)
     skip_dirs = {
         ".git", "node_modules", "venv", "__pycache__", ".pytest_cache",
         "target", "build", "dist", ".idea", ".vscode", "vendor",
@@ -114,7 +122,19 @@ def _find_adapter_directory(start: Path) -> Optional[Path]:
             # STRONGEST indicator: Extends FDD AGENTS.md
             # Example: **Extends**: `../.fdd/AGENTS.md`
             if "**Extends**:" in content and "AGENTS.md" in content:
-                # This is definitely an adapter extending FDD
+                # If agent provided fdd_root, validate the Extends path
+                if fdd_root is not None:
+                    # Extract Extends path from content
+                    import re
+                    extends_match = re.search(r'\*\*Extends\*\*:\s*`([^`]+)`', content)
+                    if extends_match:
+                        extends_path = extends_match.group(1)
+                        # Resolve relative to adapter directory
+                        resolved = (path / extends_path).resolve()
+                        # Check if it points to fdd_root
+                        if resolved.parent == fdd_root or (fdd_root / "AGENTS.md") == resolved:
+                            return True
+                # Even without fdd_root validation, Extends is strong signal
                 return True
             
             # Look for adapter-specific markers in content
@@ -4145,9 +4165,11 @@ def _cmd_adapter_info(argv: List[str]) -> int:
     """
     p = argparse.ArgumentParser(prog="adapter-info", description="Discover FDD adapter configuration")
     p.add_argument("--root", default=".", help="Project root to search from (default: current directory)")
+    p.add_argument("--fdd-root", default=None, help="FDD core location (if agent knows it)")
     args = p.parse_args(argv)
     
     start_path = Path(args.root).resolve()
+    fdd_root_path = Path(args.fdd_root).resolve() if args.fdd_root else None
     
     # Find project root
     project_root = _find_project_root(start_path)
@@ -4165,14 +4187,35 @@ def _cmd_adapter_info(argv: List[str]) -> int:
         return 1
     
     # Find adapter
-    adapter_dir = _find_adapter_directory(start_path)
+    adapter_dir = _find_adapter_directory(start_path, fdd_root=fdd_root_path)
     if adapter_dir is None:
+        # Check if config exists to provide better error message
+        cfg = _load_project_config(project_root)
+        if cfg is not None:
+            adapter_rel = cfg.get("fddAdapterPath")
+            if adapter_rel is not None and isinstance(adapter_rel, str):
+                # Config exists but path is invalid
+                print(json.dumps(
+                    {
+                        "status": "CONFIG_ERROR",
+                        "message": f"Config specifies adapter path but directory not found or invalid",
+                        "project_root": project_root.as_posix(),
+                        "config_path": adapter_rel,
+                        "expected_location": (project_root / adapter_rel).as_posix(),
+                        "hint": "Check .fdd-config.json fddAdapterPath points to valid directory with AGENTS.md",
+                    },
+                    indent=2,
+                    ensure_ascii=False,
+                ))
+                return 1
+        
+        # No config, no adapter found via recursive search
         print(json.dumps(
             {
                 "status": "NOT_FOUND",
                 "message": "No FDD-Adapter found in project (searched recursively up to 5 levels deep)",
                 "project_root": project_root.as_posix(),
-                "hint": "Adapter directory must contain AGENTS.md and specs/ subdirectory",
+                "hint": "Create .fdd-config.json with fddAdapterPath or run adapter-bootstrap workflow",
             },
             indent=2,
             ensure_ascii=False,
