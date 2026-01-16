@@ -100,7 +100,7 @@ Choose the path that matches your situation.
 **Option A: Git Project (recommended)**
 ```bash
 # In your project root
-git submodule add https://github.com/ainetx/fdd FDD
+git submodule add https://github.com/cyberfabric/fdd FDD
 git submodule update --init --recursive
 ```
 
@@ -108,7 +108,7 @@ git submodule update --init --recursive
 ```bash
 # Clone FDD into your project
 cd your-project
-git clone https://github.com/ainetx/fdd FDD
+git clone https://github.com/cyberfabric/fdd FDD
 ```
 
 **Result**: `/FDD/` folder in your project root
