@@ -73,13 +73,19 @@ def _fdd_root_from_project_config() -> Optional[Path]:
 def _find_adapter_directory(start: Path) -> Optional[Path]:
     """
     Find FDD-Adapter directory starting from project root.
-    Searches common locations: /, spec/, docs/, guidelines/
+    Uses smart recursive search to find adapter in ANY location within project.
+    
+    Heuristic:
+    1. Check explicit config first (fddAdapterPath)
+    2. Recursively search for directories with AGENTS.md + specs/
+    3. Prefer shallower directories (closer to root)
+    4. Skip common non-adapter directories
     """
     project_root = _find_project_root(start)
     if project_root is None:
         return None
     
-    # Check config first
+    # Check config first - explicit path always wins
     cfg = _load_project_config(project_root)
     if cfg is not None:
         adapter_rel = _cfg_get_str(cfg, "fddAdapterPath", "fdd_adapter_path", "adapterPath")
@@ -88,20 +94,84 @@ def _find_adapter_directory(start: Path) -> Optional[Path]:
             if (adapter_dir / "AGENTS.md").exists():
                 return adapter_dir
     
-    # Search common locations
-    common_paths = [
-        "FDD-Adapter",
-        "spec/FDD-Adapter",
-        "docs/FDD-Adapter",
-        "guidelines/FDD-Adapter",
-    ]
+    # Recursive search with heuristics
+    skip_dirs = {
+        ".git", "node_modules", "venv", "__pycache__", ".pytest_cache",
+        "target", "build", "dist", ".idea", ".vscode", "vendor",
+        "coverage", ".tox", ".mypy_cache", ".eggs"
+    }
     
-    for rel_path in common_paths:
-        adapter_dir = project_root / rel_path
-        if (adapter_dir / "AGENTS.md").exists():
-            return adapter_dir
+    def is_adapter_directory(path: Path) -> bool:
+        """Check if directory looks like FDD-Adapter."""
+        agents_file = path / "AGENTS.md"
+        if not agents_file.exists():
+            return False
+        
+        # Check AGENTS.md content
+        try:
+            content = agents_file.read_text(encoding="utf-8")
+            
+            # STRONGEST indicator: Extends FDD AGENTS.md
+            # Example: **Extends**: `../.fdd/AGENTS.md`
+            if "**Extends**:" in content and "AGENTS.md" in content:
+                # This is definitely an adapter extending FDD
+                return True
+            
+            # Look for adapter-specific markers in content
+            adapter_markers = [
+                "# FDD Adapter:",
+                "FDD-Adapter",
+                "fdd-adapter",
+                "## FDD Adapter",
+                "This is an FDD adapter",
+                "adapter for",
+            ]
+            content_lower = content.lower()
+            for marker in adapter_markers:
+                if marker.lower() in content_lower:
+                    # Double-check with specs/ directory if possible
+                    if (path / "specs").is_dir():
+                        return True
+                    # Or check for spec references in content
+                    if "spec" in content_lower or "specifications" in content_lower:
+                        return True
+        except Exception:
+            pass
+        
+        # Fallback: verify it has specs/ directory (strong structural indicator)
+        if (path / "specs").is_dir():
+            return True
+        
+        return False
     
-    return None
+    def search_recursive(root: Path, max_depth: int = 5, current_depth: int = 0) -> Optional[Path]:
+        """Recursively search for adapter directory."""
+        if current_depth > max_depth:
+            return None
+        
+        try:
+            entries = list(root.iterdir())
+        except (PermissionError, OSError):
+            return None
+        
+        # First pass: check current level directories
+        for entry in entries:
+            if not entry.is_dir() or entry.name in skip_dirs:
+                continue
+            if is_adapter_directory(entry):
+                return entry
+        
+        # Second pass: recurse into subdirectories (breadth-first preference)
+        for entry in entries:
+            if not entry.is_dir() or entry.name in skip_dirs:
+                continue
+            result = search_recursive(entry, max_depth, current_depth + 1)
+            if result is not None:
+                return result
+        
+        return None
+    
+    return search_recursive(project_root)
 
 
 def _load_adapter_config(adapter_dir: Path) -> Dict[str, object]:
@@ -4087,6 +4157,7 @@ def _cmd_adapter_info(argv: List[str]) -> int:
                 "status": "NOT_FOUND",
                 "message": "No project root found (no .git or .fdd-config.json)",
                 "searched_from": start_path.as_posix(),
+                "hint": "Create .fdd-config.json in project root to configure FDD",
             },
             indent=2,
             ensure_ascii=False,
@@ -4099,14 +4170,9 @@ def _cmd_adapter_info(argv: List[str]) -> int:
         print(json.dumps(
             {
                 "status": "NOT_FOUND",
-                "message": "No FDD-Adapter found in project",
+                "message": "No FDD-Adapter found in project (searched recursively up to 5 levels deep)",
                 "project_root": project_root.as_posix(),
-                "searched_locations": [
-                    "FDD-Adapter/",
-                    "spec/FDD-Adapter/",
-                    "docs/FDD-Adapter/",
-                    "guidelines/FDD-Adapter/",
-                ],
+                "hint": "Adapter directory must contain AGENTS.md and specs/ subdirectory",
             },
             indent=2,
             ensure_ascii=False,
@@ -4124,6 +4190,12 @@ def _cmd_adapter_info(argv: List[str]) -> int:
     except ValueError:
         relative_path = adapter_dir.as_posix()
     config["relative_path"] = relative_path
+    
+    # Check if .fdd-config.json exists
+    config_file = project_root / ".fdd-config.json"
+    config["has_config"] = config_file.exists()
+    if not config_file.exists():
+        config["config_hint"] = f"Create .fdd-config.json with: {{\"fddAdapterPath\": \"{relative_path}\"}}"
     
     print(json.dumps(config, indent=2, ensure_ascii=False))
     return 0
