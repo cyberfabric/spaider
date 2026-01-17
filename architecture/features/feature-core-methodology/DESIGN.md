@@ -59,15 +59,15 @@ This feature solves the problem of inconsistent design documentation by providin
 
 **Steps**:
 
-1. [ ] - `ph-1` - Architect clones FDD repository or copies methodology files to new project - `inst-clone-repo`
-2. [ ] - `ph-1` - Architect opens root AGENTS.md file - `inst-open-agents`
+1. [x] - `ph-1` - Architect clones FDD repository or copies methodology files to new project - `inst-clone-repo`
+2. [x] - `ph-1` - Architect opens root AGENTS.md file - `inst-open-agents`
 3. [x] - `ph-1` - Architect reads quick start and bootstrap guidance - `inst-read-guidance`
 4. [x] - `ph-1` - Architect identifies need to create FDD adapter for project - `inst-identify-bootstrap`
 5. [x] - `ph-1` - Architect writes prompt to run adapter bootstrap workflow - `inst-trigger-workflow`
-6. [ ] - `ph-1` - AI assistant creates adapter AGENTS.md with "Extends" declaration - `inst-create-adapter`
-7. [ ] - `ph-1` - Architect writes prompt to trigger business context workflow - `inst-trigger-business`
+6. [x] - `ph-1` - AI assistant creates adapter AGENTS.md with "Extends" declaration - `inst-create-adapter`
+7. [x] - `ph-1` - Architect writes prompt to trigger business context workflow - `inst-trigger-business`
 8. [x] - `ph-1` - AI assistant executes business context workflow - `inst-execute-workflow`
-9. [ ] - `ph-1` - Architect reviews and validates business context - `inst-validate-business`
+9. [x] - `ph-1` - Architect reviews and validates business context - `inst-validate-business`
 10. [ ] - `ph-1` - Bootstrap complete in <30 minutes - `inst-complete-bootstrap`
 
 **Success Scenario**: Project has FDD methodology structure with adapter configured
@@ -90,12 +90,12 @@ This feature solves the problem of inconsistent design documentation by providin
 1. [ ] - `ph-1` - Developer receives feature assignment from team lead - `inst-receive-assignment`
 2. [ ] - `ph-1` - Developer writes prompt requesting AI to open root AGENTS.md - `inst-open-agents-workflow`
 3. [x] - `ph-1` - AI assistant navigates to feature-specific workflow - `inst-navigate-feature-workflow`
-4. [ ] - `ph-1` - AI assistant reads workflow prerequisites - `inst-read-prerequisites`
-5. [ ] - `ph-1` - AI assistant checks all prerequisites satisfied - `inst-check-prerequisites`
-6. [ ] - `ph-1` - AI assistant opens feature CHANGES.md - `inst-open-changes`
+4. [x] - `ph-1` - AI assistant reads workflow prerequisites - `inst-read-prerequisites`
+5. [x] - `ph-1` - AI assistant checks all prerequisites satisfied - `inst-check-prerequisites`
+6. [x] - `ph-1` - AI assistant opens feature CHANGES.md - `inst-open-changes`
 7. [x] - `ph-1` - Developer selects which task to implement (via prompt) - `inst-select-task`
 8. [x] - `ph-1` - AI assistant reads task requirements from CHANGES.md - `inst-read-requirements`
-9. [ ] - `ph-1` - AI assistant implements code following adapter conventions - `inst-write-code`
+9. [x] - `ph-1` - AI assistant implements code following adapter conventions - `inst-write-code`
 10. [x] - `ph-1` - AI assistant adds FDD instruction tags to code - `inst-add-tags`
 11. [x] - `ph-1` - AI assistant validates generated artifact automatically - `inst-auto-validate`
 
@@ -152,12 +152,14 @@ This feature solves the problem of inconsistent design documentation by providin
 
 **Steps**:
 
-1. [x] - `ph-1` - User discovers FDD repository or receives FDD project - `inst-discover-fdd`
-2. [x] - `ph-1` - User opens README.md for high-level overview - `inst-open-readme`
-3. [x] - `ph-1` - User opens QUICKSTART.md for hands-on tutorial - `inst-open-quickstart`
-4. [x] - `ph-1` - User follows QUICKSTART copy-paste prompts - `inst-follow-quickstart`
-5. [x] - `ph-1` - User creates first artifact using guided prompts - `inst-create-first-artifact`
-6. [x] - `ph-1` - User validates artifact using fdd skill - `inst-validate-artifact`
+1. [x] - `ph-1` - User discovers FDD repository or methodology documentation - `inst-discover-fdd`
+2. [x] - `ph-1` - User opens README.md to understand project purpose - `inst-open-readme`
+3. [x] - `ph-1` - User opens QUICKSTART.md for step-by-step guidance - `inst-open-quickstart`
+4. [x] - `ph-1` - User checks prerequisites - `inst-check-prereqs`
+5. [x] - `ph-1` - User reads FDD overview - `inst-read-overview`
+6. [x] - `ph-1` - User follows QUICKSTART guide to create first artifact - `inst-follow-quickstart`
+5. [x] - `ph-1` - User creates and validates first artifact successfully - `inst-create-first-artifact`
+6. [x] - `ph-1` - User validates artifact using FDD validation tools - `inst-validate-artifact`
 7. [ ] - `ph-1` - User receives validation feedback - `inst-receive-feedback`
 8. [ ] - `ph-1` - User iterates on artifact based on feedback - `inst-iterate-artifact`
 9. [ ] - `ph-1` - User achieves score ≥90/100 and proceeds - `inst-achieve-score`
@@ -184,16 +186,16 @@ This feature solves the problem of inconsistent design documentation by providin
 
 **Steps**:
 
-1. [ ] - `ph-1` - Parse user request text - `inst-parse-request`
+1. [x] - `ph-1` - Parse user request text - `inst-parse-request`
 2. [ ] - `ph-1` - Extract keywords from request - `inst-extract-keywords`
 3. [ ] - `ph-1` - Initialize workflow candidates list - `inst-init-candidates`
-4. [ ] - `ph-1` - **IF** request contains "adapter" - `inst-check-adapter`
+4. [x] - `ph-1` - **IF** request contains "adapter" - `inst-check-adapter`
    1. [ ] - `ph-1` - **RETURN** path to `workflows/adapter.md` - `inst-return-adapter`
-5. [ ] - `ph-1` - **IF** request contains "business" AND NOT "validate" - `inst-check-business`
+5. [x] - `ph-1` - **IF** request contains "business" AND NOT "validate" - `inst-check-business`
    1. [ ] - `ph-1` - **RETURN** path to `workflows/business.md` - `inst-return-business`
-6. [ ] - `ph-1` - **IF** request contains "design" AND NOT "feature" AND NOT "validate" - `inst-check-design`
+6. [x] - `ph-1` - **IF** request contains "design" AND NOT "feature" AND NOT "validate" - `inst-check-design`
    1. [ ] - `ph-1` - **RETURN** path to `workflows/design.md` - `inst-return-design`
-7. [ ] - `ph-1` - **IF** request contains "feature" AND identifier provided - `inst-check-feature`
+7. [x] - `ph-1` - **IF** request contains "feature" AND identifier provided - `inst-check-feature`
    1. [ ] - `ph-1` - **RETURN** path to `workflows/feature.md` - `inst-return-feature`
 8. [ ] - `ph-1` - **IF** request contains "validate" - `inst-check-validate`
    1. [ ] - `ph-1` - Extract artifact type from request - `inst-extract-artifact-type`

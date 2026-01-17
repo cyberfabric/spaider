@@ -31,9 +31,11 @@ Extract:
 
 ## Prerequisites
 
+<!-- fdd-begin fdd-fdd-feature-core-methodology-flow-developer-implement:ph-1:inst-read-prerequisites -->
 **MUST validate**:
 - [ ] CHANGES.md validated - validate: Score ≥90/100
 - [ ] Adapter exists - validate: Check adapter AGENTS.md (REQUIRED for development)
+<!-- fdd-end   fdd-fdd-feature-core-methodology-flow-developer-implement:ph-1:inst-read-prerequisites -->
 
 **If adapter missing**: STOP, run `adapter` workflow first
 
@@ -209,12 +211,14 @@ def convert_gts_to_json_schema(gts_schema):
 **Action**: Execute test suite
 <!-- fdd-end   fdd-fdd-feature-core-methodology-flow-developer-implement:ph-1:inst-run-tests -->
 
+<!-- fdd-begin fdd-fdd-feature-core-methodology-flow-developer-implement:ph-1:inst-write-code -->
 ### 4. Implement Tasks
 
 **For each task in change**:
 1. Read task specification from CHANGES.md (hierarchical format: `1.1.1`, `1.2.1`, etc.)
 2. Implement according to adapter conventions
 3. Run task validation
+<!-- fdd-end   fdd-fdd-feature-core-methodology-flow-developer-implement:ph-1:inst-write-code -->
 4.<!-- fdd-begin fdd-fdd-feature-core-methodology-flow-developer-implement:ph-1:inst-mark-complete -->
 ## Step 6: Update CHANGES.md
 

@@ -147,13 +147,17 @@ Store as: `{project-root}/.fdd-config.json`
 mkdir -p {ADAPTER_DIR}/FDD-Adapter/
 ```
 
-### 7. Create Minimal AGENTS.md
+<!-- fdd-begin fdd-fdd-feature-core-methodology-flow-architect-bootstrap:ph-1:inst-create-adapter -->
+### 7. Create AGENTS.md
+
+Create `{ADAPTER_DIR}/FDD-Adapter/AGENTS.md`:
 
 ```markdown
 # FDD Adapter: {PROJECT_NAME}
 
 **Extends**: `{RELATIVE_PATH}`
 ```
+<!-- fdd-end   fdd-fdd-feature-core-methodology-flow-architect-bootstrap:ph-1:inst-create-adapter -->
 
 ### 8. Verify
 
