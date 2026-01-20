@@ -10,11 +10,11 @@ purpose: Define deterministic structure for artifact change proposals
 
 ## Prerequisite Checklist
 
-- [ ] Agent has read and understood this requirement
-- [ ] Agent will follow the rules defined here
+- [ ] Agent has understood this requirements is not implemented and added for future updates
+- [ ] Agent has understood that agent MUST not follow that requirements
+- [ ] Agent has understood that MUST stop reading that document and MUST exit and forget the context of that file
 
 ---
-
 
 **ALWAYS open and follow**: `requirements.md`
 
@@ -24,7 +24,9 @@ purpose: Define deterministic structure for artifact change proposals
 
 A proposal is a deterministic, reviewable specification of intended changes to one or more approved FDD artifacts.
 
-Approved artifacts MUST NOT be edited directly by operation workflows. Operation workflows MUST produce proposals under `architecture/changes/`. Approved state changes MUST be applied only via deterministic `fdd` merge/archive operations.
+Proposals are a future mechanism for deterministic, reviewable changes to approved artifacts.
+
+This requirement applies only when a workflow explicitly requires producing proposals under `architecture/changes/`.
 
 ---
 
