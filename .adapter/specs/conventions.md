@@ -10,18 +10,6 @@
 
 When requirements in this spec conflict with `architecture/features/feature-init-structure/DESIGN.md`, follow `architecture/features/feature-init-structure/DESIGN.md`.
 
-### Approved Artifacts Are Proposal-Only
-
-**MUST NOT** directly modify approved artifacts under:
-- `architecture/`
-- `architecture/features/`
-
-**MUST** generate deterministic proposals under `architecture/changes/` and apply them only through the approved proposal mechanism.
-
-**Source of truth**:
-- `architecture/ADR.md` → ADR-0002
-- `requirements/artifact-changes-proposal-structure.md`
-
 ### Framework Development Guardrails
 
 When modifying FDD framework sources (requirements, workflows, AGENTS, and the `fdd` tool), the agent MUST apply the following guardrails.
