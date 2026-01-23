@@ -361,7 +361,7 @@ Ongoing: Update artifacts as project evolves
 
 For a comprehensive comparison of FDD with other AI-assisted development methodologies, see:
 
-**[COMPARISON_FDD_OPENSPEC_SPECKIT_MCAF.md](COMPARISON_FDD_OPENSPEC_SPECKIT_MCAF.md)**
+**[SDD_COMPARISON.md](SDD_COMPARISON.md)**
 
 This document provides:
 - Detailed cross-capability matrix with quantitative scoring
@@ -711,20 +711,19 @@ For manual setup, see: **`ADAPTER_GUIDE.md`**
 
 **Follow workflow**: `workflows/adapter-agents.md`
 
-This optional workflow sets up your AI agent (Windsurf, Cursor, Cline, Aider) to use FDD natively:
-- Detects existing config (UPDATE mode) or creates new (CREATE mode)
-- Creates agent-specific configuration files
-- Windsurf: `.windsurf/rules/` + workflow wrappers
-- Cursor: `.cursorrules` (single file)
-- Cline: `.clinerules` (single file)
-- Aider: `.aider.conf.yml` (YAML config)
+This optional workflow uses the `fdd` skill generators to create/update agent-specific integration files.
 
-All configs:
-- Tell agent to read FDD adapter first
-- Provide FDD workflow references
-- Follow agent-specific format
+**Supported agents**:
+- Windsurf: `--agent windsurf`
+- Cursor: `--agent cursor`
+- Claude Code: `--agent claude`
+- GitHub Copilot: `--agent copilot`
 
-**Result**: Agent reads `{adapter-directory}/AGENTS.md` automatically
+**What it generates**:
+- Workflow proxies (one per FDD workflow): `agent-workflows` (config: `fdd-agent-workflows.json`)
+- Skill outputs pointing to the canonical `skills/fdd/SKILL.md`: `agent-skills` (config: `fdd-agent-skills.json`)
+
+**Result**: Your agent has local files that redirect back to the canonical FDD workflows/skill.
 
 ### 5. Create Business Context & Design (2-4 hours) 
 
@@ -754,7 +753,7 @@ To set up your AI assistant (Windsurf, Cursor, Cline, etc.) to work natively wit
 
 **Use workflow**: `workflows/adapter-agents.md`
 
-This workflow creates agent-specific files (`.windsurf/rules/`, workflow wrappers) so your agent reads the FDD adapter and uses FDD workflows naturally.
+This workflow runs the `fdd` generators (`agent-workflows`, `agent-skills`) to create agent-specific proxy files.
 
 ---
 

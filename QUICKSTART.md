@@ -137,6 +137,23 @@ ALWAYS open and follow `/FDD/AGENTS.md`
 
 ---
 
+### Step 2.5: Generate Agent Integration Files (1 minute, optional)
+
+This creates agent-specific proxy files that redirect back to the canonical FDD workflows and the `fdd` skill.
+
+```bash
+python3 FDD/skills/fdd/scripts/fdd.py agent-workflows --agent windsurf
+python3 FDD/skills/fdd/scripts/fdd.py agent-skills --agent windsurf
+```
+
+**Supported agents**:
+- `windsurf`
+- `cursor`
+- `claude`
+- `copilot`
+
+---
+
 ### Step 3: Start with Business Context (15 minutes)
 
 **What it does**: Describe what you're building (no tech details yet)
