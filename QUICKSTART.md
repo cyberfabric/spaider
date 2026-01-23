@@ -146,6 +146,7 @@ ALWAYS open and follow `/FDD/AGENTS.md`
 This creates agent-specific proxy files that redirect back to the canonical FDD workflows and the `fdd` skill.
 
 ```bash
+python3 FDD/skills/fdd/scripts/fdd.py init
 python3 FDD/skills/fdd/scripts/fdd.py agent-workflows --agent windsurf
 python3 FDD/skills/fdd/scripts/fdd.py agent-skills --agent windsurf
 ```

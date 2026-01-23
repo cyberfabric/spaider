@@ -152,6 +152,77 @@ class TestCLIValidateCommand(unittest.TestCase):
             self.assertIn("artifact_kind", out)
 
 
+class TestCLIInitCommand(unittest.TestCase):
+    def test_init_creates_config_and_adapter_and_allows_agent_workflows(self):
+        with TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir) / "project"
+            project.mkdir()
+
+            fdd_core = project / "FDD"
+            fdd_core.mkdir()
+            (fdd_core / "AGENTS.md").write_text("# FDD Core\n", encoding="utf-8")
+            (fdd_core / "requirements").mkdir()
+            (fdd_core / "workflows").mkdir()
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main([
+                    "init",
+                    "--project-root",
+                    str(project),
+                    "--fdd-root",
+                    str(fdd_core),
+                    "--yes",
+                ])
+            self.assertEqual(exit_code, 0)
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("status"), "PASS")
+            self.assertTrue((project / ".fdd-config.json").exists())
+            self.assertTrue((project / "FDD-Adapter" / "AGENTS.md").exists())
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main([
+                    "agent-workflows",
+                    "--agent",
+                    "windsurf",
+                    "--root",
+                    str(project),
+                    "--fdd-root",
+                    str(fdd_core),
+                    "--dry-run",
+                ])
+            self.assertEqual(exit_code, 0)
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("status"), "PASS")
+
+    def test_init_interactive_defaults(self):
+        with TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir) / "project"
+            project.mkdir()
+
+            fdd_core = project / "FDD"
+            fdd_core.mkdir()
+            (fdd_core / "AGENTS.md").write_text("# FDD Core\n", encoding="utf-8")
+            (fdd_core / "requirements").mkdir()
+            (fdd_core / "workflows").mkdir()
+
+            orig_cwd = os.getcwd()
+            try:
+                os.chdir(project.as_posix())
+                with unittest.mock.patch("builtins.input", side_effect=["", ""]):
+                    stdout = io.StringIO()
+                    with redirect_stdout(stdout), redirect_stderr(io.StringIO()):
+                        exit_code = main(["init", "--fdd-root", str(fdd_core)])
+                self.assertEqual(exit_code, 0)
+                out = json.loads(stdout.getvalue())
+                self.assertEqual(out.get("status"), "PASS")
+                self.assertTrue((project / ".fdd-config.json").exists())
+                self.assertTrue((project / "FDD-Adapter" / "AGENTS.md").exists())
+            finally:
+                os.chdir(orig_cwd)
+
+
 class TestCLISearchCommands(unittest.TestCase):
     """Test search command variations."""
 

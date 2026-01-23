@@ -759,6 +759,181 @@ def _cmd_agent_skills(argv: List[str]) -> int:
     return 0
 
 
+def _default_project_config(fdd_core_path: str, fdd_adapter_path: str) -> dict:
+    return {
+        "fddCorePath": fdd_core_path,
+        "fddAdapterPath": fdd_adapter_path,
+        "codeScanning": {
+            "fileExtensions": [
+                ".py",
+                ".md",
+                ".js",
+                ".ts",
+                ".tsx",
+                ".go",
+                ".rs",
+                ".java",
+                ".cs",
+                ".sql",
+            ],
+            "singleLineComments": ["#", "//", "--"],
+            "multiLineComments": [
+                {"start": "/*", "end": "*/"},
+                {"start": "<!--", "end": "-->"},
+            ],
+            "blockCommentPrefixes": ["*"],
+        },
+    }
+
+
+def _prompt_path(question: str, default: Optional[str]) -> str:
+    prompt = f"{question}"
+    if default is not None and str(default).strip():
+        prompt += f" [{default}]"
+    prompt += ": "
+    try:
+        sys.stderr.write(prompt)
+        sys.stderr.flush()
+        ans = input().strip()
+    except EOFError:
+        ans = ""
+    if ans:
+        return ans
+    return default or ""
+
+
+def _resolve_user_path(raw: str, base: Path) -> Path:
+    p = Path(raw)
+    if not p.is_absolute():
+        p = base / p
+    return p.resolve()
+
+
+def _cmd_init(argv: List[str]) -> int:
+    p = argparse.ArgumentParser(prog="init", description="Initialize FDD config and minimal adapter")
+    p.add_argument("--project-root", default=None, help="Project root directory to create .fdd-config.json in")
+    p.add_argument("--fdd-root", default=None, help="Explicit FDD core root (optional override)")
+    p.add_argument("--adapter-path", default=None, help="Adapter directory path relative to project root (default: FDD-Adapter)")
+    p.add_argument("--project-name", default=None, help="Project name used in adapter AGENTS.md (default: project root folder name)")
+    p.add_argument("--yes", action="store_true", help="Do not prompt; accept defaults")
+    p.add_argument("--dry-run", action="store_true", help="Compute changes without writing files")
+    p.add_argument("--force", action="store_true", help="Overwrite existing files")
+    args = p.parse_args(argv)
+
+    cwd = Path.cwd().resolve()
+    fdd_root = Path(args.fdd_root).resolve() if args.fdd_root else None
+    if fdd_root is None:
+        fdd_root = (Path(__file__).resolve().parents[4])
+        if not ((fdd_root / "AGENTS.md").exists() and (fdd_root / "workflows").is_dir()):
+            fdd_root = Path(__file__).resolve().parents[6]
+
+    default_project_root = fdd_root.parent.resolve()
+    if args.project_root is None and not args.yes:
+        raw_root = _prompt_path("Where should I create .fdd-config.json?", default_project_root.as_posix())
+        project_root = _resolve_user_path(raw_root, cwd)
+    else:
+        raw_root = args.project_root or default_project_root.as_posix()
+        project_root = _resolve_user_path(raw_root, cwd)
+
+    default_adapter_path = "FDD-Adapter"
+    if args.adapter_path is None and not args.yes:
+        adapter_rel = _prompt_path("Where should I create the FDD adapter directory (relative to project root)?", default_adapter_path)
+    else:
+        adapter_rel = args.adapter_path or default_adapter_path
+    adapter_rel = adapter_rel.strip() or default_adapter_path
+
+    adapter_dir = (project_root / adapter_rel).resolve()
+    config_path = (project_root / ".fdd-config.json").resolve()
+    core_rel = _safe_relpath_from_dir(fdd_root, project_root)
+    extends_target = (fdd_root / "AGENTS.md").resolve()
+    extends_rel = _safe_relpath_from_dir(extends_target, adapter_dir)
+
+    project_name = str(args.project_name).strip() if args.project_name else project_root.name
+    desired_agents = "\n".join([
+        f"# FDD Adapter: {project_name}",
+        "",
+        f"**Extends**: `{extends_rel}`",
+        "",
+    ])
+
+    desired_cfg = _default_project_config(core_rel, adapter_rel)
+
+    actions: Dict[str, str] = {}
+    errors: List[Dict[str, str]] = []
+
+    config_existed_before = config_path.exists()
+    if config_existed_before and not config_path.is_file():
+        errors.append({"path": config_path.as_posix(), "error": "CONFIG_PATH_NOT_A_FILE"})
+    elif config_existed_before and not args.force:
+        existing = _load_json_file(config_path)
+        if not isinstance(existing, dict):
+            errors.append({"path": config_path.as_posix(), "error": "CONFIG_INVALID_JSON"})
+        else:
+            existing_core = existing.get("fddCorePath")
+            existing_adapter = existing.get("fddAdapterPath")
+            if existing_core is None or existing_adapter is None:
+                errors.append({"path": config_path.as_posix(), "error": "CONFIG_INCOMPLETE"})
+            elif existing_core != core_rel or existing_adapter != adapter_rel:
+                errors.append({"path": config_path.as_posix(), "error": "CONFIG_CONFLICT"})
+            else:
+                actions["config"] = "unchanged"
+    else:
+        if config_existed_before and args.force:
+            existing = _load_json_file(config_path)
+            if isinstance(existing, dict):
+                merged = dict(existing)
+                merged["fddCorePath"] = core_rel
+                merged["fddAdapterPath"] = adapter_rel
+                desired_cfg = merged
+        if not args.dry_run:
+            project_root.mkdir(parents=True, exist_ok=True)
+            _write_json_file(config_path, desired_cfg)
+        actions["config"] = "updated" if config_existed_before else "created"
+
+    agents_path = (adapter_dir / "AGENTS.md").resolve()
+    agents_existed_before = agents_path.exists()
+    if agents_existed_before and not agents_path.is_file():
+        errors.append({"path": agents_path.as_posix(), "error": "ADAPTER_AGENTS_NOT_A_FILE"})
+    elif agents_existed_before and not args.force:
+        try:
+            old = agents_path.read_text(encoding="utf-8")
+        except Exception:
+            old = ""
+        if old == desired_agents:
+            actions["adapter_agents"] = "unchanged"
+        else:
+            errors.append({"path": agents_path.as_posix(), "error": "ADAPTER_AGENTS_CONFLICT"})
+    else:
+        if not args.dry_run:
+            adapter_dir.mkdir(parents=True, exist_ok=True)
+            agents_path.write_text(desired_agents, encoding="utf-8")
+        actions["adapter_agents"] = "updated" if agents_existed_before else "created"
+
+    if errors:
+        print(json.dumps({
+            "status": "ERROR",
+            "message": "Init failed",
+            "project_root": project_root.as_posix(),
+            "fdd_root": fdd_root.as_posix(),
+            "config_path": config_path.as_posix(),
+            "adapter_dir": adapter_dir.as_posix(),
+            "dry_run": bool(args.dry_run),
+            "errors": errors,
+        }, indent=2, ensure_ascii=False))
+        return 1
+
+    print(json.dumps({
+        "status": "PASS",
+        "project_root": project_root.as_posix(),
+        "fdd_root": fdd_root.as_posix(),
+        "config_path": config_path.as_posix(),
+        "adapter_dir": adapter_dir.as_posix(),
+        "dry_run": bool(args.dry_run),
+        "actions": actions,
+    }, indent=2, ensure_ascii=False))
+    return 0
+
+
 # =============================================================================
 def _cmd_validate(argv: List[str]) -> int:
     """
@@ -1402,6 +1577,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Define all available commands
     validation_commands = ["validate"]
     search_commands = [
+        "init",
         "list-sections", "list-ids", "list-items",
         "read-section", "get-item", "find-id",
         "search", "scan-ids",
@@ -1432,6 +1608,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Dispatch to appropriate command handler
     if cmd == "validate":
         return _cmd_validate(rest)
+    elif cmd == "init":
+        return _cmd_init(rest)
     elif cmd == "list-sections":
         return _cmd_list_sections(rest)
     elif cmd == "list-ids":

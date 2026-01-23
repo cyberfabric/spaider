@@ -43,6 +43,30 @@ python3 scripts/fdd.py <subcommand> [options]
 
 This tool can generate agent/IDE integration files that point back to existing FDD workflows and this skill.
 
+### Initialize a Project (Bootstrap)
+
+Create a minimal project configuration and adapter scaffold so other commands (like `agent-workflows`) can locate your project root.
+
+```bash
+python3 scripts/fdd.py init
+```
+
+**Behavior**:
+- Interactively asks where to create `.fdd-config.json` (default: parent directory of the detected FDD core folder)
+- Interactively asks where to create the adapter directory (default: `FDD-Adapter` under project root)
+- Writes `.fdd-config.json` with `fddCorePath` and `fddAdapterPath`
+- Creates an adapter `AGENTS.md` that **Extends** the FDD core `AGENTS.md`
+
+**Non-interactive**:
+```bash
+python3 scripts/fdd.py init --yes
+python3 scripts/fdd.py init --project-root . --adapter-path FDD-Adapter --yes
+```
+
+**Safety flags**:
+- `--dry-run`: compute changes without writing files
+- `--force`: overwrite/merge existing `.fdd-config.json` and adapter `AGENTS.md`
+
 **Supported agents (built-in defaults)**:
 - `windsurf`
 - `cursor`
