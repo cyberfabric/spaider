@@ -36,6 +36,8 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 
 **ALWAYS open and follow**: `../requirements/features-manifest-structure.md`
 
+**ALWAYS open and follow**: `../templates/FEATURES.template.md` WHEN generating content
+
 Extract:
 - Required structure (feature list format)
 - Feature ID format

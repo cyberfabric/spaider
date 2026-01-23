@@ -10,7 +10,7 @@ purpose: Create or update Architecture Decision Records
 
 **Type**: Operation  
 **Role**: Architect  
-**Artifact**: `architecture/ADR.md`
+**Artifact**: `architecture/ADR/` (directory)
 
 ---
 
@@ -28,13 +28,13 @@ This workflow guides the execution of the specified task.
 
 ---
 
-
-
 ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing this workflow
 
 ## Requirements
 
 **ALWAYS open and follow**: `../requirements/adr-structure.md`
+
+**ALWAYS open and follow**: `../templates/ADR.template.md` WHEN generating content
 
 Extract:
 - MADR format structure
@@ -58,9 +58,9 @@ Extract:
 
 ### 1. Detect Mode
 
-Check if `architecture/ADR.md` exists:
-- **If exists**: UPDATE mode - Add new ADR or edit existing ADR
-- **If NOT exists**: CREATE mode - Create new file with ADR-0001
+Check if `architecture/ADR/` exists and contains ADR files:
+- **If architecture/ADR/ has no ADR files**: CREATE mode - Create `architecture/ADR/general/0001-<adr-fdd-id>.md`
+- **If architecture/ADR/ contains ADR files**: UPDATE mode - Add a new ADR file or edit an existing ADR file
 
 ### 2. Read Design Context
 
@@ -75,14 +75,14 @@ Extract:
 
 ### 3. Mode-Specific Actions
 
-**CREATE Mode** (ADR.md does NOT exist):
-- Will create new file
+**CREATE Mode** (no ADR files exist):
+- Will create directory `architecture/ADR/general/` if needed
 - First ADR will be ADR-0001 (Initial Architecture)
 - Proceed to Step 4 for ADR-0001 creation
 
-**UPDATE Mode** (ADR.md exists):
-- Read existing ADRs
-- Find highest ADR number (ADR-NNNN)
+**UPDATE Mode** (ADR files exist):
+- Read existing ADR files under `architecture/ADR/`
+- Find highest ADR number (ADR-NNNN) across all files
 - Ask user: Add new ADR or edit existing ADR?
 
 **If Add New ADR**:
@@ -90,9 +90,9 @@ Extract:
 - Proceed to Step 4 for new ADR creation
 
 **If Edit Existing ADR**:
-- Show list of existing ADRs with numbers and titles
-- Ask: Which ADR to edit? (ADR-NNNN)
-- Read selected ADR content
+- Show list of existing ADRs with numbers, titles, and file paths
+- Ask: Which ADR to edit? (select by ADR-NNNN)
+- Read selected ADR file content
 - Proceed to Step 4 in EDIT mode
 
 ### 4. Interactive ADR Creation/Editing
@@ -249,7 +249,7 @@ Extract:
 ### 8. Summary and Confirmation
 
 Show:
-- **CREATE**: File path: `architecture/ADR.md` (new file)
+- **CREATE**: File path: `architecture/ADR/general/0001-<adr-fdd-id>.md` (new file)
 - **ADD**: ADR number: ADR-{NNNN} (new entry)
 - **EDIT**: ADR number: ADR-{NNNN} (updating existing)
 - Title: {ADR_TITLE}
@@ -261,21 +261,18 @@ Ask: Proceed? [yes/no/modify]
 
 ### 9. Create or Update File
 
-**CREATE Mode** (ADR.md does NOT exist):
-- Create new file with document header
-- Add ADR-0001 entry
+**CREATE Mode** (no ADR files exist):
+- Create `architecture/ADR/general/` directory if needed
+- Create `architecture/ADR/general/0001-<adr-fdd-id>.md`
 
-**ADD Mode** (append new ADR):
-- Read existing ADR.md
-- Append new ADR with `---` separator
-- Maintain chronological order
-- Verify ADR number unique
+**ADD Mode** (create new ADR file):
+- Determine ADR number = highest + 1
+- Ask user for category (default: `general`)
+- Create `architecture/ADR/{category}/{NNNN}-<adr-fdd-id>.md`
 
-**EDIT Mode** (update existing ADR):
-- Read existing ADR.md
-- Find and replace the ADR being edited
-- Preserve all other ADRs unchanged
-- Maintain chronological order
+**EDIT Mode** (update existing ADR file):
+- Read the selected ADR file
+- Update the content in-place
 
 After operation:
 - Verify file exists

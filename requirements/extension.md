@@ -67,8 +67,10 @@ Merged Result (base + modifications)
 
 **Base**: `FDD/AGENTS.md`
 ```markdown
-# FDD AI Agent Navigation
-
+See [BUSINESS.md](BUSINESS.md)
+See [ADR](ADR/)
+See [api.json](../../../docs/api/api.json)
+```
 ALWAYS open and follow `.adapter/specs/conventions.md` WHEN modifying FDD files
 ```
 
@@ -78,8 +80,7 @@ ALWAYS open and follow `.adapter/specs/conventions.md` WHEN modifying FDD files
 
 **Extends**: `../FDD/AGENTS.md`
 
-ALWAYS open and follow `{adapter-directory}/domain-model.gts` WHEN executing workflows: design.md, design-validate.md, adr.md, adr-validate.md
-
+ALWAYS open and follow `{adapter-directory}/domain-model.gts` WHEN executing workflows: design/, design-validate/, adr/, adr-validate/
 ALWAYS open and follow `{adapter-directory}/api-contracts.yaml` WHEN executing workflows: design.md, design-validate.md, adr.md, adr-validate.md
 ```
 

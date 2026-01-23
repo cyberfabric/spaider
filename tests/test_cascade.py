@@ -8,6 +8,7 @@ from skills.fdd.scripts.fdd.validation.cascade import (
     ARTIFACT_DEPENDENCIES,
     find_artifact_path,
     resolve_dependencies,
+    validate_all_artifacts,
     validate_with_dependencies,
 )
 
@@ -130,13 +131,13 @@ class TestFindArtifactPath(unittest.TestCase):
             self.assertIsNone(result)
 
     def test_find_adr_exists(self):
-        """Find ADR.md in architecture/."""
+        """Find ADR directory in architecture/."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             arch = tmp_path / "architecture"
             arch.mkdir()
-            adr = arch / "ADR.md"
-            adr.write_text("# ADR")
+            adr = arch / "ADR"
+            adr.mkdir()
             artifact = tmp_path / "some" / "path" / "artifact.md"
             artifact.parent.mkdir(parents=True)
             artifact.write_text("# Artifact")
@@ -145,7 +146,7 @@ class TestFindArtifactPath(unittest.TestCase):
             self.assertEqual(result, adr)
 
     def test_find_adr_not_exists(self):
-        """Return None if ADR.md not found."""
+        """Return None if ADR directory not found."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             artifact = tmp_path / "artifact.md"
@@ -184,9 +185,9 @@ class TestResolveDependencies(unittest.TestCase):
             tmp_path = Path(tmp)
             arch = tmp_path / "architecture"
             arch.mkdir()
-            adr = arch / "ADR.md"
+            adr = arch / "ADR"
             business = arch / "BUSINESS.md"
-            adr.write_text("# ADR")
+            adr.mkdir()
             business.write_text("# Business")
             
             result = resolve_dependencies("adr", adr)
@@ -201,10 +202,10 @@ class TestResolveDependencies(unittest.TestCase):
             arch.mkdir()
             design = arch / "DESIGN.md"
             business = arch / "BUSINESS.md"
-            adr = arch / "ADR.md"
+            adr = arch / "ADR"
             design.write_text("# Design")
             business.write_text("# Business")
-            adr.write_text("# ADR")
+            adr.mkdir()
             
             result = resolve_dependencies("overall-design", design)
             self.assertIn("business-context", result)
@@ -286,9 +287,36 @@ None yet.
             business = arch / "BUSINESS.md"
             business.write_text("# Empty Business")
             
-            # Create ADR that depends on business
-            adr = arch / "ADR.md"
-            adr.write_text("""---
+            # Create ADR directory (depends on business-context)
+            adr = arch / "ADR"
+            adr.mkdir()
+            (adr / "general").mkdir()
+            (adr / "general" / "0001-fdd-test-adr-x.md").write_text("""# ADR-0001: X
+
+**Date**: 2025-01-01
+
+**Status**: Accepted
+
+**ADR ID**: `fdd-test-adr-x`
+
+## Context and Problem Statement
+
+X
+
+## Considered Options
+
+- A
+
+## Decision Outcome
+
+Chosen option: \"A\", because test.
+
+## Related Design Elements
+
+- `fdd-test-actor-user`
+""", encoding="utf-8")
+
+            adr_text = """---
 fdd: true
 type: adr
 name: Test ADR
@@ -302,19 +330,200 @@ purpose: Test
 
 Test overview.
 
-## ADR Index
+## Context and Problem Statement
 
 None.
 
 ## Superseded ADRs
 
 None.
-""")
+"""
             
             report = validate_with_dependencies(adr, skip_fs_checks=True)
             # ADR validation should fail due to failing business dependency
             self.assertIn("dependency_validation", report)
             self.assertIn("business-context", report["dependency_validation"])
+
+
+class TestCrossArtifactIdentifierStatuses(unittest.TestCase):
+    def test_cross_artifact_status_rules_report_errors(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            arch = root / "architecture"
+            features_dir = arch / "features"
+            feature_a_dir = features_dir / "feature-a"
+            feature_a_dir.mkdir(parents=True)
+
+            # BUSINESS.md: one capability marked IMPLEMENTED and linked to feature-a.
+            (arch / "BUSINESS.md").write_text(
+                "\n".join(
+                    [
+                        "# Business Context",
+                        "",
+                        "## A. Feature Context",
+                        "",
+                        "**Purpose**: Test",
+                        "",
+                        "**Target Users**:",
+                        "- User",
+                        "",
+                        "**Key Problems Solved**:",
+                        "- Problem",
+                        "",
+                        "**Success Criteria**:",
+                        "- Success",
+                        "",
+                        "## B. Actors",
+                        "",
+                        "### Human Actors",
+                        "",
+                        "#### User",
+                        "",
+                        "**ID**: `fdd-test-actor-user`",
+                        "<!-- fdd-id-content -->",
+                        "**Role**: User",
+                        "<!-- fdd-id-content -->",
+                        "",
+                        "### System Actors",
+                        "",
+                        "#### System",
+                        "",
+                        "**ID**: `fdd-test-actor-system`",
+                        "<!-- fdd-id-content -->",
+                        "**Role**: System",
+                        "<!-- fdd-id-content -->",
+                        "",
+                        "## C. Capabilities",
+                        "",
+                        "#### Capability A",
+                        "",
+                        "**ID**: `fdd-test-capability-a`",
+                        "<!-- fdd-id-content -->",
+                        "**Status**: IMPLEMENTED",
+                        "- Does something",
+                        "- **Actors**: `fdd-test-actor-user`",
+                        "- **Features**:",
+                        "  - [Feature A](feature-a/)",
+                        "<!-- fdd-id-content -->",
+                        "",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            # DESIGN.md: one requirement marked IMPLEMENTED.
+            (arch / "DESIGN.md").write_text(
+                "\n".join(
+                    [
+                        "# Technical Design",
+                        "",
+                        "## A. Overview",
+                        "",
+                        "Text.",
+                        "",
+                        "## B. Requirements",
+                        "",
+                        "#### FR-001: Example",
+                        "",
+                        "**ID**: `fdd-test-req-a`",
+                        "<!-- fdd-id-content -->",
+                        "**Status**: IMPLEMENTED",
+                        "",
+                        "**Capabilities**: `fdd-test-capability-a`",
+                        "**Actors**: `fdd-test-actor-user`",
+                        "",
+                        "Some text.",
+                        "<!-- fdd-id-content -->",
+                        "",
+                        "## C. Architecture",
+                        "",
+                        "Text.",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            # ADR/: minimal valid ADR entry for cross-artifact validation.
+            adr_dir = arch / "ADR" / "general"
+            adr_dir.mkdir(parents=True)
+            (adr_dir / "0001-fdd-test-adr-a.md").write_text(
+                "\n".join(
+                    [
+                        "# ADR-0001: A",
+                        "",
+                        "**Date**: 2026-01-01",
+                        "",
+                        "**Status**: Accepted",
+                        "",
+                        "**ADR ID**: `fdd-test-adr-a`",
+                        "",
+                        "## Context and Problem Statement",
+                        "",
+                        "X",
+                        "",
+                        "## Considered Options",
+                        "",
+                        "- A",
+                        "",
+                        "## Decision Outcome",
+                        "",
+                        "Chosen option: \"A\", because test.",
+                        "",
+                        "## Related Design Elements",
+                        "",
+                        "- `fdd-test-req-a`",
+                        "",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            # FEATURES.md: feature-a exists but is NOT_STARTED, yet covers the implemented requirement.
+            (features_dir / "FEATURES.md").write_text(
+                "\n".join(
+                    [
+                        "# Features: Test",
+                        "",
+                        "**Status Overview**: 1 features total (0 completed, 0 in progress, 0 design ready, 0 in design, 1 not started)",
+                        "",
+                        "**Meaning**:",
+                        "- ⏳ NOT_STARTED",
+                        "- 📝 IN_DESIGN",
+                        "- 📘 DESIGN_READY",
+                        "- 🔄 IN_DEVELOPMENT",
+                        "- ✅ IMPLEMENTED",
+                        "",
+                        "### 1. [fdd-test-feature-a](feature-a/) ⏳ LOW",
+                        "",
+                        "- **Purpose**: P",
+                        "- **Status**: NOT_STARTED",
+                        "- **Depends On**: None",
+                        "- **Blocks**: None",
+                        "- **Scope**:",
+                        "  - s",
+                        "- **Requirements Covered**:",
+                        "  - fdd-test-req-a",
+                        "- **Phases**:",
+                        "  - `ph-1`: ⏳ NOT_STARTED — init",
+                        "",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            rep = validate_all_artifacts(root, skip_fs_checks=False)
+            self.assertEqual(rep.get("status"), "FAIL")
+            av = rep.get("artifact_validation")
+            self.assertIsInstance(av, dict)
+            self.assertIn("cross-artifact-status", av)
+            cross = av["cross-artifact-status"]
+            errs = cross.get("errors", [])
+            self.assertTrue(any("Capability status is IMPLEMENTED" in e.get("message", "") for e in errs))
+            self.assertTrue(any("DESIGN requirement status is IMPLEMENTED" in e.get("message", "") for e in errs))
 
 
 if __name__ == "__main__":

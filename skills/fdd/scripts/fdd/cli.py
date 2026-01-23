@@ -57,6 +57,708 @@ from .utils.search import (
 from . import constants
 
 
+def _safe_relpath(path: Path, base: Path) -> str:
+    try:
+        return path.relative_to(base).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _safe_relpath_from_dir(target: Path, from_dir: Path) -> str:
+    try:
+        rel = os.path.relpath(target.as_posix(), from_dir.as_posix())
+    except Exception:
+        return target.as_posix()
+    return rel.replace(os.sep, "/")
+
+
+def _load_json_file(path: Path) -> Optional[dict]:
+    if not path.is_file():
+        return None
+    try:
+        raw = path.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+def _write_json_file(path: Path, data: dict) -> None:
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def _windsurf_default_agent_workflows_config() -> dict:
+    return {
+        "version": 1,
+        "agents": {
+            "windsurf": {
+                "workflow_dir": ".windsurf/workflows",
+                "workflow_command_prefix": "fdd-",
+                "workflow_filename_format": "{command}.md",
+                "template": [
+                    "# /{command}",
+                    "",
+                    "ALWAYS open and follow `{target_workflow_path}`",
+                ],
+            }
+            ,
+            "cursor": {
+                "workflow_dir": ".cursor/commands",
+                "workflow_command_prefix": "fdd-",
+                "workflow_filename_format": "{command}.md",
+                "template": [
+                    "# /{command}",
+                    "",
+                    "ALWAYS open and follow `{target_workflow_path}`",
+                ],
+            },
+            "claude": {
+                "workflow_dir": ".claude/commands",
+                "workflow_command_prefix": "fdd-",
+                "workflow_filename_format": "{command}.md",
+                "template": [
+                    "---",
+                    "description: Proxy to FDD workflow {workflow_name}",
+                    "---",
+                    "",
+                    "ALWAYS open and follow `{target_workflow_path}`",
+                ],
+            },
+            "copilot": {
+                "workflow_dir": ".github/prompts",
+                "workflow_command_prefix": "fdd-",
+                "workflow_filename_format": "{command}.prompt.md",
+                "template": [
+                    "---",
+                    "name: {command}",
+                    "description: Proxy to FDD workflow {workflow_name}",
+                    "---",
+                    "",
+                    "ALWAYS open and follow `{target_workflow_path}`",
+                ],
+            },
+        },
+    }
+
+
+def _windsurf_default_agent_skills_config() -> dict:
+    return {
+        "version": 1,
+        "agents": {
+            "windsurf": {
+                "skill_name": "fdd",
+                "outputs": [
+                    {
+                        "path": ".windsurf/skills/fdd/SKILL.md",
+                        "template": [
+                            "---",
+                            "name: {skill_name}",
+                            "description: Proxy to FDD core skill instructions",
+                            "---",
+                            "",
+                            "ALWAYS open and follow `{target_skill_path}`",
+                        ],
+                    }
+                ],
+            }
+            ,
+            "cursor": {
+                "outputs": [
+                    {
+                        "path": ".cursor/rules/fdd.mdc",
+                        "template": [
+                            "---",
+                            "description: Proxy to FDD core skill instructions",
+                            "alwaysApply: true",
+                            "---",
+                            "",
+                            "ALWAYS open and follow `{target_skill_path}`",
+                        ],
+                    },
+                    {
+                        "path": ".cursor/commands/fdd.md",
+                        "template": [
+                            "# /fdd",
+                            "",
+                            "ALWAYS open and follow `{target_skill_path}`",
+                        ],
+                    },
+                ],
+            },
+            "claude": {
+                "outputs": [
+                    {
+                        "path": ".claude/commands/fdd.md",
+                        "template": [
+                            "---",
+                            "description: Proxy to FDD core skill instructions",
+                            "---",
+                            "",
+                            "ALWAYS open and follow `{target_skill_path}`",
+                        ],
+                    }
+                ],
+            },
+            "copilot": {
+                "outputs": [
+                    {
+                        "path": ".github/copilot-instructions.md",
+                        "template": [
+                            "# FDD",
+                            "",
+                            "ALWAYS open and follow `{target_skill_path}`",
+                        ],
+                    },
+                    {
+                        "path": ".github/prompts/fdd-skill.prompt.md",
+                        "template": [
+                            "---",
+                            "name: fdd-skill",
+                            "description: Proxy to FDD core skill instructions",
+                            "---",
+                            "",
+                            "ALWAYS open and follow `{target_skill_path}`",
+                        ],
+                    },
+                ],
+            },
+        },
+    }
+
+
+def _render_template(lines: List[str], variables: Dict[str, str]) -> str:
+    out: List[str] = []
+    for line in lines:
+        try:
+            out.append(line.format(**variables))
+        except KeyError as e:
+            raise SystemExit(f"Missing template variable: {e}")
+    return "\n".join(out).rstrip() + "\n"
+
+
+def _looks_like_generated_proxy(text: str, target_workflow_rel: str) -> bool:
+    # Heuristic: file contains ALWAYS open and follow with the expected target path.
+    # This avoids hardcoding tool-specific markers in generated files.
+    needle = f"ALWAYS open and follow `{target_workflow_rel}`"
+    return needle in text
+
+
+def _list_fdd_workflows(fdd_root: Path) -> List[str]:
+    workflows_dir = fdd_root / "workflows"
+    if not workflows_dir.is_dir():
+        raise SystemExit(f"FDD workflows dir not found: {workflows_dir}")
+
+    names: List[str] = []
+    for pth in sorted(workflows_dir.glob("*.md")):
+        if pth.name in ("AGENTS.md", "README.md"):
+            continue
+        try:
+            head = "\n".join(pth.read_text(encoding="utf-8").splitlines()[:30])
+        except Exception:
+            continue
+        if "type: workflow" not in head:
+            continue
+        names.append(pth.stem)
+    return names
+
+
+def _cmd_agent_workflows(argv: List[str]) -> int:
+    p = argparse.ArgumentParser(prog="agent-workflows", description="Generate/update agent-specific workflow proxy files")
+    p.add_argument("--agent", required=True, help="Agent/IDE key (e.g., windsurf)")
+    p.add_argument("--root", default=".", help="Project root directory (default: current directory)")
+    p.add_argument("--fdd-root", default=None, help="Explicit FDD core root (optional override)")
+    p.add_argument("--config", default=None, help="Path to agent workflows config JSON (default: project root)")
+    p.add_argument("--dry-run", action="store_true", help="Compute changes without writing files")
+    args = p.parse_args(argv)
+
+    agent = str(args.agent).strip()
+    if not agent:
+        raise SystemExit("--agent must be non-empty")
+
+    start_path = Path(args.root).resolve()
+    project_root = find_project_root(start_path)
+    if project_root is None:
+        print(json.dumps({
+            "status": "NOT_FOUND",
+            "message": "No project root found (no .git or .fdd-config.json)",
+            "searched_from": start_path.as_posix(),
+        }, indent=2, ensure_ascii=False))
+        return 1
+
+    fdd_root = Path(args.fdd_root).resolve() if args.fdd_root else None
+    if fdd_root is None:
+        fdd_root = (Path(__file__).resolve().parents[4])
+        if not ((fdd_root / "AGENTS.md").exists() and (fdd_root / "workflows").is_dir()):
+            fdd_root = Path(__file__).resolve().parents[6]
+
+    cfg_path = Path(args.config).resolve() if args.config else (project_root / "fdd-agent-workflows.json")
+    cfg = _load_json_file(cfg_path)
+
+    recognized = agent in {"windsurf", "cursor", "claude", "copilot"}
+    if cfg is None:
+        cfg = _windsurf_default_agent_workflows_config() if recognized else {"version": 1, "agents": {agent: {}}}
+        if not args.dry_run:
+            _write_json_file(cfg_path, cfg)
+
+    agents_cfg = cfg.get("agents") if isinstance(cfg, dict) else None
+    if isinstance(cfg, dict) and isinstance(agents_cfg, dict) and agent not in agents_cfg:
+        if recognized:
+            defaults = _windsurf_default_agent_workflows_config()
+            default_agents = defaults.get("agents") if isinstance(defaults, dict) else None
+            if isinstance(default_agents, dict) and isinstance(default_agents.get(agent), dict):
+                agents_cfg[agent] = default_agents[agent]
+        else:
+            agents_cfg[agent] = {}
+        cfg["agents"] = agents_cfg
+        if not args.dry_run:
+            _write_json_file(cfg_path, cfg)
+
+    if isinstance(cfg, dict) and isinstance(agents_cfg, dict) and agent in agents_cfg and not recognized:
+        agent_cfg_candidate = agents_cfg.get(agent)
+        if not isinstance(agent_cfg_candidate, dict) or not agent_cfg_candidate:
+            print(json.dumps({
+                "status": "CONFIG_INCOMPLETE",
+                "message": "Unknown agent config must be filled in",
+                "config_path": cfg_path.as_posix(),
+                "agent": agent,
+            }, indent=2, ensure_ascii=False))
+            return 2
+
+    if not isinstance(agents_cfg, dict) or agent not in agents_cfg or not isinstance(agents_cfg.get(agent), dict):
+        print(json.dumps({
+            "status": "CONFIG_ERROR",
+            "message": "Agent config missing or invalid",
+            "config_path": cfg_path.as_posix(),
+            "agent": agent,
+        }, indent=2, ensure_ascii=False))
+        return 1
+
+    agent_cfg: dict = agents_cfg[agent]
+    workflow_dir_rel = agent_cfg.get("workflow_dir")
+    filename_fmt = agent_cfg.get("workflow_filename_format", "{command}.md")
+    prefix = agent_cfg.get("workflow_command_prefix", "fdd-")
+    template = agent_cfg.get("template")
+
+    if not isinstance(workflow_dir_rel, str) or not workflow_dir_rel.strip():
+        print(json.dumps({
+            "status": "CONFIG_INCOMPLETE",
+            "message": "Agent config missing workflow_dir",
+            "config_path": cfg_path.as_posix(),
+            "agent": agent,
+        }, indent=2, ensure_ascii=False))
+        return 2
+    if not isinstance(filename_fmt, str) or not filename_fmt.strip():
+        print(json.dumps({
+            "status": "CONFIG_INCOMPLETE",
+            "message": "Agent config missing workflow_filename_format",
+            "config_path": cfg_path.as_posix(),
+            "agent": agent,
+        }, indent=2, ensure_ascii=False))
+        return 2
+    if not isinstance(prefix, str):
+        prefix = "fdd-"
+    if not isinstance(template, list) or not all(isinstance(x, str) for x in template):
+        print(json.dumps({
+            "status": "CONFIG_INCOMPLETE",
+            "message": "Agent config missing template (must be array of strings)",
+            "config_path": cfg_path.as_posix(),
+            "agent": agent,
+        }, indent=2, ensure_ascii=False))
+        return 2
+
+    workflow_dir = (project_root / workflow_dir_rel).resolve()
+    fdd_workflow_names = _list_fdd_workflows(fdd_root)
+
+    desired: Dict[str, Dict[str, str]] = {}
+    for wf_name in fdd_workflow_names:
+        command = f"{prefix}{wf_name}"
+        filename = filename_fmt.format(command=command, workflow_name=wf_name)
+        desired_path = (workflow_dir / filename).resolve()
+        target_workflow_path = (fdd_root / "workflows" / f"{wf_name}.md").resolve()
+        target_rel = _safe_relpath(target_workflow_path, project_root)
+        content = _render_template(
+            template,
+            {
+                "command": command,
+                "workflow_name": wf_name,
+                "target_workflow_path": target_rel,
+            },
+        )
+        desired[desired_path.as_posix()] = {
+            "command": command,
+            "workflow_name": wf_name,
+            "target_workflow_path": target_rel,
+            "content": content,
+        }
+
+    created: List[str] = []
+    updated: List[str] = []
+    renamed: List[Tuple[str, str]] = []
+    rename_conflicts: List[Tuple[str, str]] = []
+    deleted: List[str] = []
+
+    existing_files: List[Path] = []
+    if workflow_dir.is_dir():
+        existing_files = list(workflow_dir.glob("*.md"))
+
+    # Rename misnamed proxy files that target an existing workflow.
+    desired_by_target: Dict[str, str] = {meta["target_workflow_path"]: p for p, meta in desired.items()}
+    for pth in existing_files:
+        if pth.as_posix() in desired:
+            continue
+        # Only consider renaming files that look like agent-workflow proxies.
+        if not pth.name.startswith(prefix):
+            try:
+                head = "\n".join(pth.read_text(encoding="utf-8").splitlines()[:5])
+            except Exception:
+                continue
+            if not head.lstrip().startswith("# /"):
+                continue
+        try:
+            txt = pth.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        if "ALWAYS open and follow `" not in txt:
+            continue
+        m = re.search(r"ALWAYS open and follow `([^`]+)`", txt)
+        if not m:
+            continue
+        target_rel = m.group(1)
+        dst = desired_by_target.get(target_rel)
+        if not dst:
+            continue
+        if pth.as_posix() == dst:
+            continue
+        if Path(dst).exists():
+            rename_conflicts.append((pth.as_posix(), dst))
+            continue
+        if not args.dry_run:
+            workflow_dir.mkdir(parents=True, exist_ok=True)
+            Path(dst).parent.mkdir(parents=True, exist_ok=True)
+            pth.replace(Path(dst))
+        renamed.append((pth.as_posix(), dst))
+
+    # Refresh listing after potential renames.
+    existing_files = list(workflow_dir.glob("*.md")) if workflow_dir.is_dir() else []
+
+    # Create/update desired files.
+    for p_str, meta in desired.items():
+        pth = Path(p_str)
+        if not pth.exists():
+            created.append(p_str)
+            if not args.dry_run:
+                pth.parent.mkdir(parents=True, exist_ok=True)
+                pth.write_text(meta["content"], encoding="utf-8")
+            continue
+        try:
+            old = pth.read_text(encoding="utf-8")
+        except Exception:
+            old = ""
+        if old != meta["content"]:
+            updated.append(p_str)
+            if not args.dry_run:
+                pth.write_text(meta["content"], encoding="utf-8")
+
+    # Delete stale generated proxies (prefix-based + heuristic match), if they are not desired.
+    desired_paths = set(desired.keys())
+    for pth in existing_files:
+        p_str = pth.as_posix()
+        if p_str in desired_paths:
+            continue
+        if not pth.name.startswith(prefix) and not pth.name.startswith("fdd-"):
+            continue
+        try:
+            txt = pth.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        m = re.search(r"ALWAYS open and follow `([^`]+)`", txt)
+        if not m:
+            continue
+        target_rel = m.group(1)
+        # Only delete if it points to a workflow under fdd_root/workflows/ that no longer exists.
+        # If it's pointing elsewhere, leave it alone.
+        if "/workflows/" not in target_rel:
+            continue
+        expected = (project_root / target_rel).resolve() if not target_rel.startswith("/") else Path(target_rel)
+        # If expected is inside fdd_root/workflows, treat as managed candidate.
+        try:
+            expected.relative_to(fdd_root / "workflows")
+        except ValueError:
+            continue
+        if expected.exists():
+            continue
+        deleted.append(p_str)
+        if not args.dry_run:
+            try:
+                pth.unlink()
+            except Exception:
+                pass
+
+    print(json.dumps({
+        "status": "PASS",
+        "agent": agent,
+        "project_root": project_root.as_posix(),
+        "fdd_root": fdd_root.as_posix(),
+        "config_path": cfg_path.as_posix(),
+        "workflow_dir": _safe_relpath(workflow_dir, project_root),
+        "dry_run": bool(args.dry_run),
+        "counts": {
+            "workflows": len(fdd_workflow_names),
+            "created": len(created),
+            "updated": len(updated),
+            "renamed": len(renamed),
+            "rename_conflicts": len(rename_conflicts),
+            "deleted": len(deleted),
+        },
+        "created": created,
+        "updated": updated,
+        "renamed": renamed,
+        "rename_conflicts": rename_conflicts,
+        "deleted": deleted,
+    }, indent=2, ensure_ascii=False))
+    return 0
+
+
+def _cmd_agent_skills(argv: List[str]) -> int:
+    p = argparse.ArgumentParser(prog="agent-skills", description="Generate/update agent-specific skill outputs")
+    p.add_argument("--agent", required=True, help="Agent/IDE key (e.g., windsurf)")
+    p.add_argument("--root", default=".", help="Project root directory (default: current directory)")
+    p.add_argument("--config", default=None, help="Path to agent skills config JSON (default: project root)")
+    p.add_argument("--dry-run", action="store_true", help="Compute changes without writing files")
+    args = p.parse_args(argv)
+
+    agent = str(args.agent).strip()
+    if not agent:
+        raise SystemExit("--agent must be non-empty")
+
+    start_path = Path(args.root).resolve()
+    project_root = find_project_root(start_path)
+    if project_root is None:
+        print(json.dumps({
+            "status": "NOT_FOUND",
+            "message": "No project root found (no .git or .fdd-config.json)",
+            "searched_from": start_path.as_posix(),
+        }, indent=2, ensure_ascii=False))
+        return 1
+
+    cfg_path = Path(args.config).resolve() if args.config else (project_root / "fdd-agent-skills.json")
+    cfg = _load_json_file(cfg_path)
+
+    recognized = agent in {"windsurf", "cursor", "claude", "copilot"}
+    if cfg is None:
+        cfg = _windsurf_default_agent_skills_config() if recognized else {"version": 1, "agents": {agent: {}}}
+        if not args.dry_run:
+            _write_json_file(cfg_path, cfg)
+
+    agents_cfg = cfg.get("agents") if isinstance(cfg, dict) else None
+    if isinstance(cfg, dict) and isinstance(agents_cfg, dict) and agent not in agents_cfg:
+        if recognized:
+            defaults = _windsurf_default_agent_skills_config()
+            default_agents = defaults.get("agents") if isinstance(defaults, dict) else None
+            if isinstance(default_agents, dict) and isinstance(default_agents.get(agent), dict):
+                agents_cfg[agent] = default_agents[agent]
+        else:
+            agents_cfg[agent] = {}
+        cfg["agents"] = agents_cfg
+        if not args.dry_run:
+            _write_json_file(cfg_path, cfg)
+
+    if isinstance(cfg, dict) and isinstance(agents_cfg, dict) and agent in agents_cfg and not recognized:
+        agent_cfg_candidate = agents_cfg.get(agent)
+        if not isinstance(agent_cfg_candidate, dict) or not agent_cfg_candidate:
+            print(json.dumps({
+                "status": "CONFIG_INCOMPLETE",
+                "message": "Unknown agent config must be filled in",
+                "config_path": cfg_path.as_posix(),
+                "agent": agent,
+            }, indent=2, ensure_ascii=False))
+            return 2
+
+    if not isinstance(agents_cfg, dict) or agent not in agents_cfg or not isinstance(agents_cfg.get(agent), dict):
+        print(json.dumps({
+            "status": "CONFIG_ERROR",
+            "message": "Agent config missing or invalid",
+            "config_path": cfg_path.as_posix(),
+            "agent": agent,
+        }, indent=2, ensure_ascii=False))
+        return 1
+
+    agent_cfg: dict = agents_cfg[agent]
+    outputs = agent_cfg.get("outputs")
+    if outputs is not None:
+        if not isinstance(outputs, list) or not all(isinstance(x, dict) for x in outputs):
+            print(json.dumps({
+                "status": "CONFIG_INCOMPLETE",
+                "message": "Agent config outputs must be an array of objects",
+                "config_path": cfg_path.as_posix(),
+                "agent": agent,
+            }, indent=2, ensure_ascii=False))
+            return 2
+
+        created: List[str] = []
+        updated: List[str] = []
+        out_items: List[Dict[str, str]] = []
+
+        target_skill_abs = (project_root / "skills" / "fdd" / "SKILL.md").resolve()
+        skill_name = agent_cfg.get("skill_name")
+        if not isinstance(skill_name, str) or not skill_name.strip():
+            skill_name = "fdd"
+
+        for idx, out_cfg in enumerate(outputs):
+            rel_path = out_cfg.get("path")
+            template = out_cfg.get("template")
+            if not isinstance(rel_path, str) or not rel_path.strip():
+                print(json.dumps({
+                    "status": "CONFIG_INCOMPLETE",
+                    "message": f"outputs[{idx}] missing path",
+                    "config_path": cfg_path.as_posix(),
+                    "agent": agent,
+                }, indent=2, ensure_ascii=False))
+                return 2
+            if not isinstance(template, list) or not all(isinstance(x, str) for x in template):
+                print(json.dumps({
+                    "status": "CONFIG_INCOMPLETE",
+                    "message": f"outputs[{idx}] missing template (must be array of strings)",
+                    "config_path": cfg_path.as_posix(),
+                    "agent": agent,
+                }, indent=2, ensure_ascii=False))
+                return 2
+
+            out_path = (project_root / rel_path).resolve()
+            out_dir = out_path.parent
+            target_skill_rel = _safe_relpath_from_dir(target_skill_abs, out_dir)
+            content = _render_template(
+                template,
+                {
+                    "agent": agent,
+                    "skill_name": str(skill_name),
+                    "target_skill_path": target_skill_rel,
+                },
+            )
+
+            if not out_path.exists():
+                created.append(out_path.as_posix())
+                if not args.dry_run:
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                    out_path.write_text(content, encoding="utf-8")
+                out_items.append({"path": _safe_relpath(out_path, project_root), "action": "created"})
+            else:
+                try:
+                    old = out_path.read_text(encoding="utf-8")
+                except Exception:
+                    old = ""
+                if old != content:
+                    updated.append(out_path.as_posix())
+                    if not args.dry_run:
+                        out_path.write_text(content, encoding="utf-8")
+                    out_items.append({"path": _safe_relpath(out_path, project_root), "action": "updated"})
+                else:
+                    out_items.append({"path": _safe_relpath(out_path, project_root), "action": "unchanged"})
+
+        print(json.dumps({
+            "status": "PASS",
+            "agent": agent,
+            "project_root": project_root.as_posix(),
+            "config_path": cfg_path.as_posix(),
+            "dry_run": bool(args.dry_run),
+            "counts": {
+                "outputs": len(outputs),
+                "created": len(created),
+                "updated": len(updated),
+            },
+            "outputs": out_items,
+            "created": created,
+            "updated": updated,
+        }, indent=2, ensure_ascii=False))
+        return 0
+
+    # Legacy (windsurf) schema: a single skill folder with an entry file.
+    skills_dir_rel = agent_cfg.get("skills_dir")
+    skill_name = agent_cfg.get("skill_name")
+    entry_filename = agent_cfg.get("entry_filename", "SKILL.md")
+    template = agent_cfg.get("template")
+
+    if not isinstance(skills_dir_rel, str) or not skills_dir_rel.strip():
+        print(json.dumps({
+            "status": "CONFIG_INCOMPLETE",
+            "message": "Agent config missing skills_dir",
+            "config_path": cfg_path.as_posix(),
+            "agent": agent,
+        }, indent=2, ensure_ascii=False))
+        return 2
+    if not isinstance(skill_name, str) or not skill_name.strip():
+        print(json.dumps({
+            "status": "CONFIG_INCOMPLETE",
+            "message": "Agent config missing skill_name",
+            "config_path": cfg_path.as_posix(),
+            "agent": agent,
+        }, indent=2, ensure_ascii=False))
+        return 2
+    if not isinstance(entry_filename, str) or not entry_filename.strip():
+        entry_filename = "SKILL.md"
+    if not isinstance(template, list) or not all(isinstance(x, str) for x in template):
+        print(json.dumps({
+            "status": "CONFIG_INCOMPLETE",
+            "message": "Agent config missing template (must be array of strings)",
+            "config_path": cfg_path.as_posix(),
+            "agent": agent,
+        }, indent=2, ensure_ascii=False))
+        return 2
+
+    skills_dir = (project_root / skills_dir_rel).resolve()
+    skill_dir = (skills_dir / skill_name).resolve()
+    entry_path = (skill_dir / entry_filename).resolve()
+
+    target_skill_abs = (project_root / "skills" / "fdd" / "SKILL.md").resolve()
+    target_skill_rel = _safe_relpath_from_dir(target_skill_abs, skill_dir)
+
+    content = _render_template(
+        template,
+        {
+            "skill_name": skill_name,
+            "target_skill_path": target_skill_rel,
+        },
+    )
+
+    created: List[str] = []
+    updated: List[str] = []
+
+    if not entry_path.exists():
+        created.append(entry_path.as_posix())
+        if not args.dry_run:
+            entry_path.parent.mkdir(parents=True, exist_ok=True)
+            entry_path.write_text(content, encoding="utf-8")
+    else:
+        try:
+            old = entry_path.read_text(encoding="utf-8")
+        except Exception:
+            old = ""
+        if old != content:
+            updated.append(entry_path.as_posix())
+            if not args.dry_run:
+                entry_path.write_text(content, encoding="utf-8")
+
+    print(json.dumps({
+        "status": "PASS",
+        "agent": agent,
+        "project_root": project_root.as_posix(),
+        "config_path": cfg_path.as_posix(),
+        "dry_run": bool(args.dry_run),
+        "skill": {
+            "name": skill_name,
+            "dir": _safe_relpath(skill_dir, project_root),
+            "entry": _safe_relpath(entry_path, project_root),
+        },
+        "counts": {
+            "created": len(created),
+            "updated": len(updated),
+        },
+        "created": created,
+        "updated": updated,
+    }, indent=2, ensure_ascii=False))
+    return 0
+
+
 # =============================================================================
 def _cmd_validate(argv: List[str]) -> int:
     """
@@ -67,7 +769,7 @@ def _cmd_validate(argv: List[str]) -> int:
     p.add_argument("--requirements", default=None, help="Path to requirements file (optional, auto-detected)")
     p.add_argument("--design", default=None, help="Path to DESIGN.md for cross-references")
     p.add_argument("--business", default=None, help="Path to BUSINESS.md for cross-references")
-    p.add_argument("--adr", default=None, help="Path to ADR.md for cross-references")
+    p.add_argument("--adr", default=None, help="Path to architecture/ADR/ for cross-references")
     p.add_argument("--skip-fs-checks", action="store_true", help="Skip filesystem checks")
     p.add_argument("--skip-code-traceability", action="store_true", help="Skip code traceability validation (only validate artifacts)")
     p.add_argument("--output", default=None, help="Write report to file instead of stdout")
@@ -158,7 +860,7 @@ def _cmd_validate(argv: List[str]) -> int:
             raise SystemExit(f"Requirements file not found: {requirements_path}")
         
         artifact_kind, _ = detect_requirements(artifact_path) if artifact_path.name in (
-            "BUSINESS.md", "ADR.md", "FEATURES.md", "CHANGES.md", "DESIGN.md"
+            "BUSINESS.md", "ADR", "FEATURES.md", "CHANGES.md", "DESIGN.md"
         ) else ("custom", None)
         
         report = validate(
@@ -251,12 +953,45 @@ def _cmd_list_items(argv: List[str]) -> int:
     args = p.parse_args(argv)
 
     artifact_path = Path(args.artifact).resolve()
+    kind = detect_artifact_kind(artifact_path)
+
+    if kind == "adr" and artifact_path.exists() and artifact_path.is_dir():
+        from .utils.helpers import scan_adr_directory
+
+        adrs, issues = scan_adr_directory(artifact_path)
+        items: List[Dict[str, object]] = []
+        for a in adrs:
+            it: Dict[str, object] = {"type": "adr", "id": str(a.get("ref")), "line": 0}
+            if args.lod == "summary":
+                it.update(
+                    {
+                        "title": a.get("title"),
+                        "date": a.get("date"),
+                        "status": a.get("status"),
+                        "adr_id": a.get("id"),
+                        "path": a.get("path"),
+                    }
+                )
+            items.append(it)
+
+        if args.pattern:
+            if args.regex:
+                rx = re.compile(str(args.pattern))
+                items = [it for it in items if rx.search(str(it.get("id", ""))) is not None]
+            else:
+                items = [it for it in items if str(args.pattern) in str(it.get("id", ""))]
+        if args.type:
+            items = [it for it in items if str(it.get("type")) == str(args.type)]
+
+        items = sorted(items, key=lambda it: str(it.get("id", "")))
+        print(json.dumps({"kind": kind, "count": len(items), "items": items, "issues": issues}, indent=None, ensure_ascii=False))
+        return 0
+
     text, err = load_text(artifact_path)
     if err:
         print(json.dumps({"status": "ERROR", "message": err}, indent=None, ensure_ascii=False))
         return 1
     lines = text.splitlines()
-    kind = detect_artifact_kind(artifact_path)
 
     active_lines = lines
     base_offset = 0
@@ -658,6 +1393,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         "search", "scan-ids",
         "where-defined", "where-used",
         "adapter-info",
+        "agent-workflows",
+        "agent-skills",
     ]
     all_commands = validation_commands + search_commands
 
@@ -703,6 +1440,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         return _cmd_where_used(rest)
     elif cmd == "adapter-info":
         return _cmd_adapter_info(rest)
+    elif cmd == "agent-workflows":
+        return _cmd_agent_workflows(rest)
+    elif cmd == "agent-skills":
+        return _cmd_agent_skills(rest)
     else:
         print(json.dumps({
             "status": "ERROR",

@@ -1,6 +1,6 @@
 # Features: FDD
  
-**Status Overview**: 13 features total (1 implemented, 0 in development, 0 design ready, 0 in design, 12 not started)
+**Status Overview**: 20 features total (1 implemented, 0 in development, 0 design ready, 1 in design, 18 not started)
  
 **Meaning**:
 - ⏳ NOT_STARTED
@@ -377,6 +377,147 @@
   - Copy-pasteable workflow prompts
   - Methodology version tracking
   - Migration guides for breaking changes
+
+---
+
+### 14. [fdd-fdd-feature-business-context-artifact](feature-business-context-artifact/) 📝 HIGH
+ 
+- **Purpose**: Business requirements artifact lifecycle (create, update, validate) for `architecture/BUSINESS.md`
+- **Status**: IN_DESIGN
+- **Depends On**: None
+- **Blocks**: None
+- **Phases**:
+  - `ph-1`: ⏳ NOT_STARTED — Operation + validation workflows for BUSINESS.md
+- **Requirements Covered**:
+  - `fdd-fdd-req-executable-workflows`
+  - `fdd-fdd-req-deterministic-validation`
+  - `fdd-fdd-req-traceability`
+- **Scope**:
+  - Operation workflow for BUSINESS.md (create/update)
+  - Validation workflow for BUSINESS.md
+  - Structure requirements for BUSINESS.md
+  - Deterministic validation support in `skills/fdd`
+
+---
+
+### 15. [fdd-fdd-feature-overall-design-artifact](feature-overall-design-artifact/) ⏳ HIGH
+
+- **Purpose**: Overall design artifact lifecycle (create, update, validate) for `architecture/DESIGN.md`
+- **Status**: NOT_STARTED
+- **Depends On**: None
+- **Blocks**: None
+- **Phases**:
+  - `ph-1`: ⏳ NOT_STARTED — Operation + validation workflows for DESIGN.md
+- **Requirements Covered**:
+  - `fdd-fdd-req-executable-workflows`
+  - `fdd-fdd-req-design-first`
+  - `fdd-fdd-req-deterministic-validation`
+- **Scope**:
+  - Operation workflow for DESIGN.md (create/update)
+  - Validation workflow for DESIGN.md
+  - Structure requirements for DESIGN.md
+  - Deterministic cross-reference checks in `skills/fdd`
+
+---
+
+### 16. [fdd-fdd-feature-adr-artifact](feature-adr-artifact/) ⏳ MEDIUM
+
+- **Purpose**: ADR artifact lifecycle (create, update, validate) for `architecture/ADR/`
+- **Status**: NOT_STARTED
+- **Depends On**: None
+- **Blocks**: None
+- **Phases**:
+  - `ph-1`: ⏳ NOT_STARTED — Operation + validation workflows for ADRs under `architecture/ADR/`
+- **Requirements Covered**:
+  - `fdd-fdd-req-executable-workflows`
+  - `fdd-fdd-req-arch-decision-mgmt`
+  - `fdd-fdd-req-deterministic-validation`
+- **Scope**:
+  - Operation workflow for ADRs under `architecture/ADR/` (create/update)
+  - Validation workflow for ADRs under `architecture/ADR/`
+  - Structure requirements for ADRs under `architecture/ADR/`
+  - Deterministic ADR directory scanning in `skills/fdd`
+
+---
+
+### 17. [fdd-fdd-feature-features-manifest-artifact](feature-features-manifest-artifact/) ⏳ HIGH
+
+- **Purpose**: Features manifest lifecycle (create, update, validate) for `architecture/features/FEATURES.md`
+- **Status**: NOT_STARTED
+- **Depends On**: None
+- **Blocks**: None
+- **Phases**:
+  - `ph-1`: ⏳ NOT_STARTED — Operation + validation workflows for FEATURES.md
+- **Requirements Covered**:
+  - `fdd-fdd-req-executable-workflows`
+  - `fdd-fdd-req-feature-lifecycle`
+  - `fdd-fdd-req-deterministic-validation`
+- **Scope**:
+  - Operation workflow for FEATURES.md (create/update)
+  - Validation workflow for FEATURES.md
+  - Structure requirements for FEATURES.md
+  - Deterministic requirements coverage checks in `skills/fdd`
+
+---
+
+### 18. [fdd-fdd-feature-feature-design-artifact](feature-feature-design-artifact/) ⏳ HIGH
+
+- **Purpose**: Feature design artifact lifecycle (create, update, validate) for `architecture/features/feature-{slug}/DESIGN.md`
+- **Status**: NOT_STARTED
+- **Depends On**: None
+- **Blocks**: None
+- **Phases**:
+  - `ph-1`: ⏳ NOT_STARTED — Operation + validation workflows for feature DESIGN.md
+- **Requirements Covered**:
+  - `fdd-fdd-req-executable-workflows`
+  - `fdd-fdd-req-design-first`
+  - `fdd-fdd-req-traceability`
+- **Scope**:
+  - Operation workflow for feature DESIGN.md (create/update)
+  - Validation workflow for feature DESIGN.md
+  - Structure requirements for feature DESIGN.md
+  - Deterministic ID and section validation in `skills/fdd`
+
+---
+
+### 19. [fdd-fdd-feature-feature-changes-artifact](feature-feature-changes-artifact/) ⏳ HIGH
+
+- **Purpose**: Feature implementation plan lifecycle (create, update, validate) for `architecture/features/feature-{slug}/CHANGES.md`
+- **Status**: NOT_STARTED
+- **Depends On**: None
+- **Blocks**: None
+- **Phases**:
+  - `ph-1`: ⏳ NOT_STARTED — Operation + validation workflows for feature CHANGES.md
+- **Requirements Covered**:
+  - `fdd-fdd-req-executable-workflows`
+  - `fdd-fdd-req-incremental-development`
+  - `fdd-fdd-req-traceability`
+- **Scope**:
+  - Operation workflow for feature CHANGES.md (create/update)
+  - Validation workflow for feature CHANGES.md
+  - Structure requirements for feature CHANGES.md
+  - Deterministic link and phase checks in `skills/fdd`
+
+---
+
+### 20. [fdd-fdd-feature-common-requirements](feature-common-requirements/) ⏳ CRITICAL
+
+- **Purpose**: Shared requirements and format rules that apply across all FDD artifacts and structure specifications.
+- **Status**: NOT_STARTED
+- **Depends On**:
+  - [feature-init-structure](feature-init-structure/)
+- **Blocks**: None
+- **Phases**:
+  - `ph-1`: ⏳ NOT_STARTED — Define cross-artifact common requirements and formatting rules
+- **Requirements Covered**:
+  - `fdd-fdd-req-requirements-catalog`
+  - `fdd-fdd-req-traceability`
+  - `fdd-fdd-req-deterministic-validation`
+- **Scope**:
+  - Common link formatting rules for artifacts and adapter specs
+  - Placeholder prohibition rules (unfinished content markers)
+  - FDD ID format requirements and Markdown rendering rules (backticks, spacing, payload blocks)
+  - Shared validation/report formatting conventions used by structure requirements
 
 ---
 

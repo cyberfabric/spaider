@@ -661,63 +661,6 @@ def _parse_business_model(text: str) -> Tuple[set, Dict[str, set], set]:
     return actor_ids, capability_to_actors, usecase_ids
 
 
-ADR_HEADING_RE = re.compile(r"^##\s+(ADR-(\d{4})):\s+(.+?)\s*$")
-ADR_DATE_RE = re.compile(r"\*\*Date\*\*:\s*(\d{4}-\d{2}-\d{2})")
-ADR_STATUS_RE = re.compile(r"\*\*Status\*\*:\s*(Proposed|Accepted|Deprecated|Superseded)")
-ADR_NUM_RE = re.compile(r"\bADR-(\d{4})\b")
-FDD_ADR_NUM_RE = re.compile(r"\bfdd-[a-z0-9-]+-adr-(\d{4})\b")
-ADR_ID_RE = re.compile(r"\bfdd-[a-z0-9-]+-adr-[a-z0-9-]+\b")
-
-
-def _parse_adr_index(text: str) -> Tuple[List[Dict[str, object]], List[Dict[str, object]]]:
-    issues: List[Dict[str, object]] = []
-    adrs: List[Dict[str, object]] = []
-    lines = text.splitlines()
-    for idx, line in enumerate(lines, start=1):
-        m = ADR_HEADING_RE.match(line.strip())
-        if not m:
-            continue
-        adrs.append({"line": idx, "adr": m.group(1), "num": int(m.group(2)), "title": m.group(3)})
-
-    if not adrs:
-        issues.append({"type": "structure", "message": "No ADR entries found"})
-        return [], issues
-
-    nums = [a["num"] for a in adrs]
-    expected = list(range(1, len(nums) + 1))
-    if nums != expected:
-        issues.append({"type": "structure", "message": "ADR numbers must be sequential starting at ADR-0001 with no gaps", "found": nums})
-    if 1 not in nums:
-        issues.append({"type": "structure", "message": "ADR-0001 must exist"})
-
-    ids = [a["adr"] for a in adrs]
-    dup = sorted({x for x in ids if ids.count(x) > 1})
-    if dup:
-        issues.append({"type": "structure", "message": "Duplicate ADR numbers", "adrs": dup})
-
-    # Extract canonical FDD ADR IDs (required for cross-artifact references)
-    starts = [a["line"] - 1 for a in adrs]
-    for i, start0 in enumerate(starts):
-        end0 = starts[i + 1] if i + 1 < len(starts) else len(lines)
-        block = lines[start0:end0]
-        block_text = "\n".join(block)
-        id_line = next((l for l in block if "**ID**:" in l), None)
-        fdd_id: Optional[str] = None
-        if id_line is not None:
-            bt = extract_backticked_ids(id_line, ADR_ID_RE)
-            if bt:
-                fdd_id = bt[0]
-        if fdd_id is None:
-            issues.append({"type": "structure", "message": "ADR missing or invalid **ID** line", "adr": adrs[i]["adr"], "line": adrs[i]["line"]})
-        else:
-            adrs[i]["id"] = fdd_id
-
-    fdd_ids = [a.get("id") for a in adrs if a.get("id")]
-    dup_fdd = sorted({x for x in fdd_ids if fdd_ids.count(x) > 1})
-    if dup_fdd:
-        issues.append({"type": "structure", "message": "Duplicate ADR IDs", "ids": dup_fdd})
-
-    return adrs, issues
 
 
 def latest_archived_changes(feature_dir: Path) -> Optional[Path]:

@@ -44,7 +44,7 @@ FEATURE_TEST_ID_RE = re.compile(r"\bfdd-[a-z0-9-]+-feature-([a-z0-9-]+)-test-[a-
 ADR_NUM_RE = re.compile(r"\bADR-(\d{4})\b")
 FDD_ADR_NUM_RE = re.compile(r"\bfdd-[a-z0-9-]+-adr-(\d{4})\b")
 ADR_ID_RE = re.compile(r"\bfdd-[a-z0-9-]+-adr-[a-z0-9-]+\b")
-ADR_HEADING_RE = re.compile(r"^##\s+(ADR-(\d{4})):\s+(.+?)\s*$")
+ADR_HEADING_RE = re.compile(r"^#{1,2}\s+(ADR-(\d{4})):\s+(.+?)\s*$", re.MULTILINE)
 
 # Change IDs
 CHANGE_ID_RE = re.compile(r"\bfdd-[a-z0-9-]+-feature-([a-z0-9-]+)-change-[a-z0-9-]+\b")
@@ -108,7 +108,8 @@ ID_LINE_RE = re.compile(r"\*\*ID\*\*:\s*(.+)$")
 
 # ADR-specific patterns
 ADR_DATE_RE = re.compile(r"\*\*Date\*\*:\s*(\d{4}-\d{2}-\d{2})")
-ADR_STATUS_RE = re.compile(r"\*\*Status\*\*:\s*(Proposed|Accepted|Deprecated|Superseded)")
+ADR_STATUS_RE = re.compile(r"\*\*Status\*\*:\s*(Proposed|Rejected|Accepted|Deprecated|Superseded)")
+ADR_ID_LINE_RE = re.compile(r"\*\*ADR\s+ID\*\*:\s*`(fdd-[a-z0-9-]+-adr-[a-z0-9-]+)`", re.IGNORECASE)
 
 # Status overview pattern
 STATUS_OVERVIEW_RE = re.compile(

@@ -20,6 +20,8 @@ def detect_artifact_kind(artifact_path: Path) -> str:
         Artifact kind string
     """
     name = artifact_path.name
+    if artifact_path.exists() and artifact_path.is_dir() and name == "ADR":
+        return "adr"
     if name == "FEATURES.md":
         return "features-manifest"
     if name == "CHANGES.md" or name.endswith("-CHANGES.md"):

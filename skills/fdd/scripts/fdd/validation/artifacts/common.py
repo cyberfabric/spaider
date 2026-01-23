@@ -93,7 +93,7 @@ def common_checks(
         - List of error dicts
         - List of placeholder dicts
     """
-    from ...constants import LINK_RE, HTML_COMMENT_RE, ID_LINE_RE, SIZE_HARD_LIMIT_RE
+    from ...constants import LINK_RE, HTML_COMMENT_RE, ID_LINE_RE, SIZE_HARD_LIMIT_RE, ADR_ID_LINE_RE
     
     errors: List[Dict[str, object]] = []
     placeholder_hits: List[Dict[str, object]] = []
@@ -152,12 +152,19 @@ def common_checks(
             in_fence_mask[_idx] = True
 
     for i, line in enumerate(lines):
-        if "**ID**:" not in line:
+        if "**ADR ID**:" in line:
+            m_adr = ADR_ID_LINE_RE.search(line)
+            if not m_adr:
+                errors.append({"type": "id", "message": "ADR ID values must be wrapped in backticks", "line": i + 1, "text": line.strip()})
+                continue
+            val = f"`{m_adr.group(1)}`"
+        elif "**ID**:" in line:
+            m = ID_LINE_RE.search(line)
+            if not m:
+                continue
+            val = m.group(1).strip()
+        else:
             continue
-        m = ID_LINE_RE.search(line)
-        if not m:
-            continue
-        val = m.group(1).strip()
 
         if "fdd-" in val and "`" not in val:
             errors.append({"type": "id", "message": "ID values must be wrapped in backticks", "line": i + 1, "text": line.strip()})
@@ -186,7 +193,7 @@ def common_checks(
             if s == "<!-- fdd-id-content -->":
                 continue
 
-            if "**ID**:" in line:
+            if "**ID**:" in line or "**ADR ID**:" in line:
                 continue
 
             # Only validate value-like lines to avoid false positives in prose.
@@ -213,7 +220,7 @@ def common_checks(
     # and require that no non-empty lines exist outside the payload within the enclosing element.
     # Enclosing element is computed as the range between headings of the same level
     # (stop at next heading with level <= the element's heading level).
-    if artifact_kind in {"business-context", "overall-design", "adr", "features-manifest", "feature-design", "feature-changes"}:
+    if artifact_kind in {"business-context", "overall-design", "features-manifest", "feature-design", "feature-changes"}:
         id_line_start_re = re.compile(r"^\s*(?:[-*]\s*)?(?:\[[ xX]\]\s*)?\*\*ID\*\*:\s*(.+)$", re.IGNORECASE)
         heading_re = re.compile(r"^(#{1,6})\s+")
 

@@ -142,10 +142,10 @@ Calculate total score
 {If FAIL}: ❌ Fix issues, re-validate
 ```
 
-### 4. Validate ADR.md (If DESIGN.md passed)
+### 4. Validate `architecture/ADR/` (If DESIGN.md passed)
 
 **If DESIGN.md validation score ≥90**:
-- Check if `architecture/ADR.md` exists
+- Check if `architecture/ADR/` exists
 - If exists: Run `adr-validate` workflow
 - If missing: Suggest running `adr` workflow first
 
@@ -155,8 +155,8 @@ Calculate total score
 
 ## ADR Validation
 
-{If ADR.md exists}: Running adr-validate...
-{If ADR.md missing}: ⚠️ ADR.md not found. Run `adr` workflow to create Architecture Decision Records.
+{If architecture/ADR/ exists}: Running adr-validate...
+{If architecture/ADR/ missing}: ⚠️ architecture/ADR/ not found. Run `adr` workflow to create Architecture Decision Records.
 ```
 
 ---
@@ -185,8 +185,8 @@ Self-validating workflow
 
 ## Next Steps
 
-**If DESIGN.md PASS and ADR.md PASS**: `features` workflow
+**If DESIGN.md PASS and ADR PASS**: `features` workflow
 
-**If DESIGN.md PASS but ADR.md missing**: `adr` workflow to create ADRs
+**If DESIGN.md PASS but `architecture/ADR/` missing**: `adr` workflow to create ADRs
 
 **If DESIGN.md FAIL**: Fix DESIGN.md, re-validate

@@ -36,6 +36,8 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 
 **ALWAYS open and follow**: `../requirements/feature-changes-structure.md`
 
+**ALWAYS open and follow**: `../templates/feature-CHANGES.template.md` WHEN generating content
+
 Extract:
 - Required structure (change entries)
 - Task breakdown format

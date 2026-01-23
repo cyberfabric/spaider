@@ -29,6 +29,10 @@ When modifying FDD framework sources (requirements, workflows, AGENTS, and the `
 - **MUST** update `skills/fdd/fdd.clispec` when the CLI surface changes.
 - **MUST** run `python3 skills/fdd/scripts/fdd.py validate --artifact .` after edits.
 
+**Validation gates** (Makefile, validators, coverage checks):
+- **MUST NOT** bypass validation gates by weakening thresholds, adding exclusions, or changing checks to avoid failures.
+- **MUST** make gates pass by improving tests and/or fixing implementation.
+
 ### English Language Only
 
 **MUST** write all content in English.

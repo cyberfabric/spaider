@@ -165,7 +165,7 @@
     - `adapter-agents.md` (generate/update AI agent configuration from adapter)
     - `business-context.md` (propose changes to `architecture/BUSINESS.md`)
     - `design.md` (propose changes to `architecture/DESIGN.md`)
-    - `adr.md` (propose changes to `architecture/ADR.md`)
+    - `adr.md` (propose changes to `architecture/ADR/`)
     - `features.md` (propose changes to `architecture/features/FEATURES.md`)
     - `feature.md` (propose changes to a feature `DESIGN.md`)
     - `feature-changes.md` (propose changes to a feature `CHANGES.md`)

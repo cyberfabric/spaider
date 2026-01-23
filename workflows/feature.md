@@ -36,6 +36,8 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 
 **ALWAYS open and follow**: `../requirements/feature-design-structure.md`
 
+**ALWAYS open and follow**: `../templates/feature-DESIGN.template.md` WHEN generating content
+
 Extract:
 - Required sections (A-G)
 - FDL requirements for behavioral sections

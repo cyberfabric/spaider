@@ -283,7 +283,7 @@ fdd create overall design for task management service
   - **Q5**: NFRs (performance, security, scalability)
 - **Creates artifacts**: 
   - `architecture/DESIGN.md` (domain model, API contracts)
-  - `architecture/ADR.md` (ADR-0001: Initial Architecture)
+  - `architecture/ADR/` (ADR-0001: Initial Architecture)
 
 ---
 
@@ -304,7 +304,7 @@ fdd generate design from existing docs:
 - Maps to FDD DESIGN.md structure
 - **Creates artifacts**:
   - `architecture/DESIGN.md`
-  - `architecture/ADR.md` (ADR-0001: Initial Architecture)
+  - `architecture/ADR/` (ADR-0001: Initial Architecture)
 
 ---
 
@@ -324,7 +324,7 @@ fdd reverse engineer design from codebase
 - Infers architecture from code structure
 - **Creates artifacts**:
   - `architecture/DESIGN.md`
-  - `architecture/ADR.md` (ADR-0001: Initial Architecture)
+  - `architecture/ADR/` (ADR-0001: Initial Architecture)
 
 **What you get** (example snippet):
 ```markdown
@@ -357,7 +357,7 @@ fdd reverse engineer design from codebase
 @API.DELETE:/tasks/:id - Delete task
 ```
 
-**Result**: `architecture/DESIGN.md` and `architecture/ADR.md` created
+**Result**: `architecture/DESIGN.md` and `architecture/ADR/` created
 
 ---
 
@@ -376,7 +376,7 @@ fdd validate overall design
 - Agent performs systematic deterministic validation using skills
 - Validates structure and completeness
 - Must score ≥90/100
-- Auto-validates ADR.md
+- Auto-validates ADRs under `architecture/ADR/`
 - Works same for all scenarios
 
 **Result**: Design approved or issues found to fix

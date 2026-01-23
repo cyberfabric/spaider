@@ -27,9 +27,11 @@ def validate(
     skip_fs_checks: bool = False,
 ) -> Dict[str, object]:
     """Main validation dispatcher - routes to appropriate validator."""
-    artifact_text = artifact_path.read_text(encoding="utf-8")
+    artifact_text = ""
+    if artifact_path.is_file():
+        artifact_text = artifact_path.read_text(encoding="utf-8")
 
-    if not artifact_text.strip():
+    if artifact_path.is_file() and not artifact_text.strip():
         return {
             "required_section_count": 0,
             "missing_sections": [],

@@ -17,6 +17,142 @@ from typing import Dict, List, Optional, Tuple
 from ..utils import detect_requirements, load_text
 
 
+def _parse_feature_coverage_and_status(features_text: str) -> Tuple[Dict[str, str], Dict[str, set]]:
+    """Parse FEATURES.md for feature status and covered requirement IDs.
+
+    Returns:
+        - feature_status_by_path: e.g. {"feature-auth/": "IMPLEMENTED"}
+        - covered_req_ids_by_path: e.g. {"feature-auth/": {"fdd-x-req-y", ...}}
+    """
+    import re
+
+    from ..constants import FEATURE_HEADING_RE
+    from ..utils import field_block
+    from .artifacts.changes import _extract_id_list
+
+    lines = features_text.splitlines()
+    feature_indices: List[int] = []
+    feature_headers: List[Dict[str, object]] = []
+    for idx, line in enumerate(lines):
+        m = FEATURE_HEADING_RE.match(line.strip())
+        if not m:
+            continue
+        feature_indices.append(idx)
+        feature_headers.append({"path": m.group(3), "id": m.group(2)})
+
+    feature_status_by_path: Dict[str, str] = {}
+    covered_req_ids_by_path: Dict[str, set] = {}
+    valid_statuses = {"NOT_STARTED", "IN_DESIGN", "DESIGN_READY", "IN_DEVELOPMENT", "IMPLEMENTED"}
+
+    for i, header in enumerate(feature_headers):
+        start = feature_indices[i]
+        end = feature_indices[i + 1] if i + 1 < len(feature_indices) else len(lines)
+        block_lines = lines[start:end]
+
+        fb_status = field_block(block_lines, "Status")
+        status_value = None
+        if fb_status is not None:
+            status_value = str(fb_status["value"]).strip()
+            if status_value == "IN_PROGRESS":
+                status_value = "IN_DEVELOPMENT"
+            if status_value not in valid_statuses:
+                status_value = None
+
+        fb_req = field_block(block_lines, "Requirements Covered")
+        req_ids: set = set()
+        if fb_req is not None:
+            for rid in _extract_id_list(fb_req):
+                req_ids.add(rid)
+
+        p = str(header["path"])
+        feature_status_by_path[p] = status_value or ""
+        covered_req_ids_by_path[p] = req_ids
+
+    return feature_status_by_path, covered_req_ids_by_path
+
+
+def _cross_validate_identifier_statuses(
+    *,
+    business_path: Optional[Path],
+    design_path: Optional[Path],
+    features_path: Optional[Path],
+    skip_fs_checks: bool,
+) -> List[Dict[str, object]]:
+    """Cross-artifact status checks.
+
+    - BUSINESS capability status IMPLEMENTED => all linked features are IMPLEMENTED.
+    - DESIGN requirement status IMPLEMENTED => covered by at least one IMPLEMENTED feature.
+    """
+    if skip_fs_checks:
+        return []
+    if business_path is None or design_path is None or features_path is None:
+        return []
+    if not (business_path.exists() and design_path.exists() and features_path.exists()):
+        return []
+
+    from ..utils import parse_business_capability_statuses, parse_design_requirement_statuses
+
+    errors: List[Dict[str, object]] = []
+
+    bt, berr = load_text(business_path)
+    dt, derr = load_text(design_path)
+    ft, ferr = load_text(features_path)
+    if berr or derr or ferr:
+        # Base validators will report file-level errors; do not duplicate.
+        return []
+
+    bt = bt or ""
+    dt = dt or ""
+    ft = ft or ""
+
+    cap_info = parse_business_capability_statuses(bt)
+    design_req_status = parse_design_requirement_statuses(dt)
+
+    feature_status_by_path, covered_req_ids_by_path = _parse_feature_coverage_and_status(ft)
+
+    # Rule 1: capability IMPLEMENTED => all listed features IMPLEMENTED
+    for cap_id, info in cap_info.items():
+        if not isinstance(info, dict):
+            continue
+        if info.get("status") != "IMPLEMENTED":
+            continue
+        feats = info.get("features")
+        if not isinstance(feats, list) or not feats:
+            continue
+        not_impl = [p for p in feats if feature_status_by_path.get(str(p), "") != "IMPLEMENTED"]
+        if not_impl:
+            errors.append(
+                {
+                    "type": "cross",
+                    "message": "Capability status is IMPLEMENTED but not all linked features are IMPLEMENTED",
+                    "capability": cap_id,
+                    "features_not_implemented": sorted(set(not_impl)),
+                }
+            )
+
+    # Rule 2: DESIGN req IMPLEMENTED => covered by at least one IMPLEMENTED feature
+    for rid, st in design_req_status.items():
+        if st != "IMPLEMENTED":
+            continue
+        covered_by_impl = False
+        for feat_path, fstatus in feature_status_by_path.items():
+            if fstatus != "IMPLEMENTED":
+                continue
+            if rid in covered_req_ids_by_path.get(feat_path, set()):
+                covered_by_impl = True
+                break
+        if not covered_by_impl:
+            errors.append(
+                {
+                    "type": "cross",
+                    "message": "DESIGN requirement status is IMPLEMENTED but it is not covered by any IMPLEMENTED feature",
+                    "requirement": rid,
+                }
+            )
+
+    return errors
+
+
 # Artifact dependency graph: artifact_kind -> list of dependency kinds
 ARTIFACT_DEPENDENCIES: Dict[str, List[str]] = {
     "feature-changes": ["feature-design"],
@@ -66,11 +202,11 @@ def find_artifact_path(artifact_kind: str, from_path: Path) -> Optional[Path]:
         return None
     
     if artifact_kind == "adr":
-        # Look for architecture/ADR.md
+        # Look for architecture/ADR/ directory.
         for parent in from_path.parents:
-            candidate = parent / "architecture" / "ADR.md"
-            if candidate.exists() and candidate.is_file():
-                return candidate
+            candidate_dir = parent / "architecture" / "ADR"
+            if candidate_dir.exists() and candidate_dir.is_dir():
+                return candidate_dir
         return None
     
     return None
@@ -163,6 +299,7 @@ def validate_with_dependencies(
     design_path = dependencies.get("overall-design")
     business_path = dependencies.get("business-context")
     adr_path = dependencies.get("adr")
+    features_path = dependencies.get("features-manifest")
     
     report = validate(
         artifact_path,
@@ -174,6 +311,18 @@ def validate_with_dependencies(
         skip_fs_checks=skip_fs_checks,
     )
     report["artifact_kind"] = artifact_kind
+
+    # Cross-artifact status checks (only when core paths are available)
+    cross_errors = _cross_validate_identifier_statuses(
+        business_path=business_path,
+        design_path=design_path,
+        features_path=features_path,
+        skip_fs_checks=skip_fs_checks,
+    )
+    if cross_errors:
+        report.setdefault("errors", [])
+        report["errors"].extend(cross_errors)
+        report["status"] = "FAIL"
     
     # Include dependency validation results
     if dependency_reports:
@@ -200,7 +349,7 @@ def validate_all_artifacts(
     
     Discovers and validates:
     - architecture/BUSINESS.md
-    - architecture/ADR.md
+    - architecture/ADR/ (directory)
     - architecture/DESIGN.md
     - architecture/features/FEATURES.md
     - All feature DESIGN.md and CHANGES.md
@@ -213,11 +362,12 @@ def validate_all_artifacts(
     overall_status = "PASS"
     
     arch_dir = code_root / "architecture"
+    adr_dir = arch_dir / "ADR"
     
     # Validate core artifacts in order (dependencies first)
     core_artifacts = [
         ("business-context", arch_dir / "BUSINESS.md"),
-        ("adr", arch_dir / "ADR.md"),
+        ("adr", adr_dir),
         ("overall-design", arch_dir / "DESIGN.md"),
         ("features-manifest", arch_dir / "features" / "FEATURES.md"),
     ]
@@ -228,7 +378,7 @@ def validate_all_artifacts(
         
         # Get dependency paths for cross-reference validation
         business_path = arch_dir / "BUSINESS.md" if (arch_dir / "BUSINESS.md").exists() else None
-        adr_path = arch_dir / "ADR.md" if (arch_dir / "ADR.md").exists() else None
+        adr_path = adr_dir if adr_dir.exists() else None
         design_path = arch_dir / "DESIGN.md" if (arch_dir / "DESIGN.md").exists() else None
         
         ak, ar = detect_requirements(artifact_path)
@@ -247,6 +397,19 @@ def validate_all_artifacts(
         
         if report.get("status") != "PASS":
             overall_status = "FAIL"
+
+    # Cross-artifact status checks across core artifacts
+    cross_errors = _cross_validate_identifier_statuses(
+        business_path=arch_dir / "BUSINESS.md" if (arch_dir / "BUSINESS.md").exists() else None,
+        design_path=arch_dir / "DESIGN.md" if (arch_dir / "DESIGN.md").exists() else None,
+        features_path=arch_dir / "features" / "FEATURES.md" if (arch_dir / "features" / "FEATURES.md").exists() else None,
+        skip_fs_checks=skip_fs_checks,
+    )
+    if cross_errors:
+        artifact_reports.setdefault("cross-artifact-status", {"status": "FAIL", "errors": [], "placeholder_hits": [], "missing_sections": [], "required_section_count": 0})
+        artifact_reports["cross-artifact-status"].setdefault("errors", [])
+        artifact_reports["cross-artifact-status"]["errors"].extend(cross_errors)
+        overall_status = "FAIL"
     
     # Validate all feature artifacts
     features_dir = arch_dir / "features"
@@ -267,7 +430,7 @@ def validate_all_artifacts(
                     fk,
                     design_path=arch_dir / "DESIGN.md" if (arch_dir / "DESIGN.md").exists() else None,
                     business_path=arch_dir / "BUSINESS.md" if (arch_dir / "BUSINESS.md").exists() else None,
-                    adr_path=arch_dir / "ADR.md" if (arch_dir / "ADR.md").exists() else None,
+                    adr_path=adr_dir if adr_dir.exists() else None,
                     skip_fs_checks=skip_fs_checks,
                 )
                 report["artifact_kind"] = fk

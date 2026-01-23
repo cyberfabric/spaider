@@ -282,7 +282,7 @@ def detect_requirements(artifact_path: Path) -> Tuple[str, Path]:
     if name == "BUSINESS.md":
         return "business-context", req("requirements/business-context-structure.md")
 
-    if name == "ADR.md":
+    if name == "ADR":
         return "adr", req("requirements/adr-structure.md")
 
     if name == "FEATURES.md":

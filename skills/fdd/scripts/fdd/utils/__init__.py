@@ -34,7 +34,10 @@ from .parsing import (
 
 from .helpers import (
     parse_business_model,
-    parse_adr_index,
+    parse_business_capability_statuses,
+    load_adr_entries,
+    scan_adr_directory,
+    parse_design_requirement_statuses,
 )
 
 from .language_config import (
@@ -72,7 +75,10 @@ __all__ = [
     "extract_backticked_ids",
     # Helper functions
     "parse_business_model",
-    "parse_adr_index",
+    "parse_business_capability_statuses",
+    "load_adr_entries",
+    "scan_adr_directory",
+    "parse_design_requirement_statuses",
     # Language configuration
     "LanguageConfig",
     "load_language_config",

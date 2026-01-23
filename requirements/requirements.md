@@ -25,7 +25,7 @@ This file defines requirements that are shared across multiple `*-structure.md` 
 - Artifact docs:
   - `architecture/BUSINESS.md`
   - `architecture/DESIGN.md`
-  - `architecture/ADR.md`
+  - `architecture/ADR/`
   - `architecture/features/FEATURES.md`
   - `architecture/features/feature-{slug}/DESIGN.md`
   - `architecture/features/feature-{slug}/CHANGES.md`
@@ -52,7 +52,7 @@ This file defines requirements that are shared across multiple `*-structure.md` 
   - `@/path/to/file`
   - `@DESIGN.md`
   - `@BUSINESS.md`
-  - `@ADR.md`
+  - `@ADR/`
 
 ### Links (Adapter Spec Docs)
 
@@ -66,7 +66,7 @@ This file defines requirements that are shared across multiple `*-structure.md` 
   - `@/path/to/file`
   - `@DESIGN.md`
   - `@BUSINESS.md`
-  - `@ADR.md`
+  - `@ADR/`
 
 ### Link Target Validity (Artifacts)
 
@@ -213,7 +213,7 @@ This file defines requirements that are shared across multiple `*-structure.md` 
 - [ ] No occurrences of `@/` in artifact docs
 - [ ] No occurrences of `@DESIGN.md` in artifact docs
 - [ ] No occurrences of `@BUSINESS.md` in artifact docs
-- [ ] No occurrences of `@ADR.md` in artifact docs
+- [ ] No occurrences of `@ADR/` in artifact docs
 
 ### Link Target Validity (Artifacts)
 
@@ -227,7 +227,7 @@ This file defines requirements that are shared across multiple `*-structure.md` 
 - [ ] No occurrences of `@/` in adapter spec docs under `{adapter-directory}/specs/`
 - [ ] No occurrences of `@DESIGN.md` in adapter spec docs under `{adapter-directory}/specs/`
 - [ ] No occurrences of `@BUSINESS.md` in adapter spec docs under `{adapter-directory}/specs/`
-- [ ] No occurrences of `@ADR.md` in adapter spec docs under `{adapter-directory}/specs/`
+- [ ] No occurrences of `@ADR/` in adapter spec docs under `{adapter-directory}/specs/`
 
 ### Placeholders (Adapter Spec Docs)
 
@@ -316,14 +316,14 @@ This file defines requirements that are shared across multiple `*-structure.md` 
 **Valid**:
 ```markdown
 See [BUSINESS.md](BUSINESS.md)
-See [ADR.md](ADR.md)
+See [ADR](ADR/)
 See [api.json](../../../docs/api/api.json)
 ```
 
 **Invalid**:
 ```markdown
 See `@/architecture/BUSINESS.md`
-See `@ADR.md`
+See `@ADR/`
 ```
 
 ---

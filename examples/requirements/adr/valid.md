@@ -1,26 +1,24 @@
-# Architecture Decision Records
-
-## ADR-0001: Use deterministic validation
+# ADR-0001: Use deterministic validation
 
 **Date**: 2025-01-01
+
 **Status**: Accepted
 
-### Context and Problem Statement
+**ADR ID**: `fdd-demo-adr-deterministic-validation`
 
-We need consistent validation.
+## Context and Problem Statement
 
-### Decision Drivers
+We need consistent validation across artifacts and workflows.
 
-- Determinism
+## Considered Options
 
-### Considered Options
+* Deterministic validation via `fdd validate`
+* Manual validation only
 
-- Option A
+## Decision Outcome
 
-### Decision Outcome
+Chosen option: "Deterministic validation via fdd validate", because it provides a fast, repeatable gate that prevents structural drift.
 
-We choose deterministic validation.
+## Related Design Elements
 
-### Related Design Elements
-
-- `fdd-demo-req-validate-artifacts`
+* `fdd-demo-req-validate-artifacts`

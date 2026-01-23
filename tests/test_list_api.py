@@ -246,11 +246,41 @@ class TestFddArtifactEditorListApi(unittest.TestCase):
     def test_list_items_adr(self) -> None:
         with TemporaryDirectory() as tds:
             td = Path(tds)
-            art = td / "architecture" / "ADR.md"
-            art.parent.mkdir(parents=True, exist_ok=True)
-            art.write_text(self._minimal_adr(), encoding="utf-8")
+            art = td / "architecture" / "ADR" / "general"
+            art.mkdir(parents=True, exist_ok=True)
+            (art / "0001-fdd-example-adr-one.md").write_text(
+                "\n".join(
+                    [
+                        "# ADR-0001: One",
+                        "",
+                        "**Date**: 2026-01-01",
+                        "",
+                        "**Status**: Proposed",
+                        "",
+                        "**ADR ID**: `fdd-example-adr-one`",
+                        "",
+                        "## Context and Problem Statement",
+                        "",
+                        "Text.",
+                        "",
+                        "## Considered Options",
+                        "",
+                        "- A",
+                        "",
+                        "## Decision Outcome",
+                        "",
+                        "Chosen option: \"A\", because test.",
+                        "",
+                        "## Related Design Elements",
+                        "",
+                        "- `fdd-example-req-do-thing`",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
 
-            proc = self._run(td=td, args=["list-items", "--artifact", str(art), "--type", "adr", "--lod", "summary"])
+            proc = self._run(td=td, args=["list-items", "--artifact", str(td / "architecture" / "ADR"), "--type", "adr", "--lod", "summary"])
             self.assertEqual(proc.returncode, 0, msg=proc.stdout + "\n" + proc.stderr)
             payload = json.loads(proc.stdout)
             self.assertEqual(payload["count"], 1)

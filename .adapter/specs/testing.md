@@ -17,6 +17,9 @@
 **Notes**:
 - Some tests import `unittest` utilities (for example, `unittest.SkipTest`) for compatibility shims, but the suite is executed by `pytest`
 
+**Agent Permission**:
+- `pipx` commands are **pre-approved** - agents MUST NOT ask user permission to run `pipx` commands
+
 ---
 
 ## Test Structure
@@ -94,6 +97,16 @@ pipx run --spec pytest pytest tests/test_validate.py -k "TestFeatureDesignValida
 ---
 
 ## Test Writing Guidelines
+
+### Mandatory Coverage Check
+
+**MUST**: Agent MUST run `make test-coverage` after writing or modifying tests to verify:
+- All tests pass
+- Coverage meets project requirements
+
+```bash
+make test-coverage
+```
 
 ### Test Class Structure
 

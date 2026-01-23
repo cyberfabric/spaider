@@ -484,7 +484,7 @@ The `fdd` validation tool MUST use only Python 3.6+ standard library. No externa
 **ID**: `fdd-fdd-constraint-markdown`
 
 <!-- fdd-id-content -->
-All FDD artifacts (BUSINESS.md, DESIGN.md, ADR.md, FEATURES.md, etc.) MUST be plain Markdown. No binary formats, proprietary tools, or custom file formats permitted. This constraint ensures artifacts are version-controllable, diffable, and editable in any text editor. Domain models and API contracts referenced by artifacts may be in any format (specified by adapter).
+All FDD artifacts (BUSINESS.md, DESIGN.md, ADR/, FEATURES.md, etc.) MUST be plain Markdown. No binary formats, proprietary tools, or custom file formats permitted. This constraint ensures artifacts are version-controllable, diffable, and editable in any text editor. Domain models and API contracts referenced by artifacts may be in any format (specified by adapter).
 
 <!-- fdd-id-content -->
 #### Constraint 3: Git-Based Workflow
@@ -639,7 +639,7 @@ The FDD system consists of 6 core components organized in a layered architecture
 **Artifacts**:
 - `BUSINESS.md` (business context): Vision, Actors, Capabilities, Use Cases
 - `DESIGN.md` (overall design): Architecture, Requirements, Technical Details
-- `ADR.md` (architecture decisions): MADR-formatted decision records
+- `ADR/{category}/NNNN-fdd-{slug}.md` (architecture decisions): MADR-formatted decision records
 - `FEATURES.md` (feature manifest): Feature list with status tracking
 - `DESIGN.md` (feature scope): Feature specifications with flows, algorithms, states
 - `CHANGES.md` (implementation plan): Atomic changes with task breakdown
@@ -668,7 +668,7 @@ The FDD system consists of 6 core components organized in a layered architecture
 - FEATURES.md references Requirements, lists Features
 - Feature DESIGN.md references Actors, defines Flows/Algorithms/States
 - CHANGES.md references Requirements from feature DESIGN.md
-- ADR.md referenced by Requirements/Principles/Constraints
+- ADR directory referenced by Requirements/Principles/Constraints
 
 **Proposal Format (Deterministic Changeset v1)**:
 - Proposals MUST live under `architecture/changes/` and MUST be machine-parseable
@@ -766,7 +766,7 @@ See Section B.2 for complete NFR specifications:
 1. Start with adapter (minimal: just Extends line)
 2. Add BUSINESS.md (business context)
 3. Add DESIGN.md (architecture)
-4. Optionally add ADR.md (decisions)
+4. Optionally add ADRs under `architecture/ADR/` (decisions)
 5. Add FEATURES.md and feature designs
 6. Add CHANGES.md and implement
 7. Evolve adapter as patterns emerge

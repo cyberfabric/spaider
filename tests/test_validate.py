@@ -14,7 +14,6 @@ from typing import List
 sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "fdd" / "scripts"))
 
 from fdd.validation.traceability import (
-    _parse_adr_index,
     _parse_business_model,
     compute_excluded_line_ranges,
     is_effective_code_line,
@@ -2279,22 +2278,37 @@ class TestTraceabilityInternals(unittest.TestCase):
         self.assertIn("fdd-example-actor-user", cap_to_actors["fdd-example-capability-login"])
         self.assertIsInstance(usecase_ids, set)
 
-    def test_parse_adr_index_errors_and_missing_id(self):
-        """Cover _parse_adr_index error branches: missing entries, non-sequential nums, missing **ID**."""
-        text = "\n".join(
-            [
-                "# ADR Index",
-                "",
-                "## ADR-0002: Something",
-                "**Date**: 2026-01-01",
-                "**Status**: Accepted",
-            ]
-        )
-        adrs, issues = _parse_adr_index(text)
-        self.assertTrue(any(i.get("message") == "ADR numbers must be sequential starting at ADR-0001 with no gaps" for i in issues))
-        self.assertTrue(any(i.get("message") == "ADR-0001 must exist" for i in issues))
-        self.assertTrue(any("missing or invalid" in i.get("message", "").lower() for i in issues))
-        self.assertEqual(len(adrs), 1)
+    def test_scan_adr_directory_errors_and_missing_adr_id(self):
+        """Cover ADR directory error branches: non-sequential nums, missing ADR-0001, missing **ADR ID**."""
+        from fdd.utils.helpers import scan_adr_directory
+
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            adr_dir = root / "ADR" / "general"
+            adr_dir.mkdir(parents=True)
+            (adr_dir / "0002-fdd-example-adr-something.md").write_text(
+                "\n".join(
+                    [
+                        "# ADR-0002: Something",
+                        "",
+                        "**Date**: 2026-01-01",
+                        "",
+                        "**Status**: Accepted",
+                        "",
+                        "## Context and Problem Statement",
+                        "",
+                        "X",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            adrs, issues = scan_adr_directory(root / "ADR")
+            self.assertEqual(len(adrs), 1)
+            self.assertTrue(any(i.get("message") == "ADR numbers must be sequential starting at ADR-0001 with no gaps" for i in issues))
+            self.assertTrue(any(i.get("message") == "ADR-0001 must exist" for i in issues))
+            self.assertTrue(any("ADR missing or invalid" in str(i.get("message")) for i in issues))
 
     def test_latest_archived_changes_picks_latest(self):
         """Cover latest_archived_changes() selecting newest CHANGES-*.md."""
@@ -3148,7 +3162,7 @@ class TestRequirementExamples(unittest.TestCase):
             # (example_slug, relative_artifact_path)
             ("business-context", Path("architecture/BUSINESS.md")),
             ("overall-design", Path("architecture/DESIGN.md")),
-            ("adr", Path("architecture/ADR.md")),
+            ("adr", Path("architecture/ADR")),
             ("features-manifest", Path("architecture/features/FEATURES.md")),
             ("feature-design", Path("architecture/features/feature-sample/DESIGN.md")),
             ("feature-changes", Path("architecture/features/feature-sample/CHANGES.md")),
@@ -3161,7 +3175,12 @@ class TestRequirementExamples(unittest.TestCase):
                 artifact_path.parent.mkdir(parents=True, exist_ok=True)
 
                 example_text = (examples_dir / slug / "valid.md").read_text(encoding="utf-8")
-                artifact_path.write_text(example_text, encoding="utf-8")
+                if slug == "adr":
+                    # ADR is a directory artifact: write the example as a per-record ADR file inside.
+                    (artifact_path / "general").mkdir(parents=True, exist_ok=True)
+                    (artifact_path / "general" / "0001-fdd-demo-adr-deterministic-validation.md").write_text(example_text, encoding="utf-8")
+                else:
+                    artifact_path.write_text(example_text, encoding="utf-8")
 
                 # Run the same CLI entrypoint used by end-users.
                 buf = io.StringIO()

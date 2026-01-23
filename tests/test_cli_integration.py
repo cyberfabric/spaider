@@ -9,6 +9,7 @@ import sys
 import os
 import json
 import io
+import unittest.mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from contextlib import redirect_stdout, redirect_stderr
@@ -348,6 +349,118 @@ other
             out = json.loads(stdout.getvalue())
             self.assertEqual(out.get("status"), "NOT_FOUND")
 
+    def test_agent_workflows_empty_agent_raises(self):
+        with self.assertRaises(SystemExit):
+            main(["agent-workflows", "--agent", " "])
+
+    def test_agent_workflows_missing_filename_format_returns_config_incomplete(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            (root / "fdd-agent-workflows.json").write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "agents": {
+                            "windsurf": {
+                                "workflow_dir": ".windsurf/workflows",
+                                "workflow_command_prefix": "fdd-",
+                                "workflow_filename_format": " ",
+                                "template": ["# /{command}", "", "ALWAYS open and follow `{target_workflow_path}`"],
+                            }
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 2)
+
+    def test_agent_workflows_rename_scan_head_read_error_and_regex_no_match(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            wf_dir = root / ".windsurf" / "workflows"
+            wf_dir.mkdir(parents=True)
+
+            bad_head = wf_dir / "x.md"
+            bad_head.write_text("x\n", encoding="utf-8")
+
+            no_match = wf_dir / "y.md"
+            no_match.write_text("# /x\n\nALWAYS open and follow `abc\n", encoding="utf-8")
+
+            orig = Path.read_text
+
+            def _rt(self: Path, *a, **k):
+                if self.resolve() == bad_head.resolve():
+                    raise OSError("boom")
+                return orig(self, *a, **k)
+
+            with unittest.mock.patch.object(Path, "read_text", _rt):
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root), "--fdd-root", str(Path(fdd_cli.__file__).resolve().parents[4])])
+            self.assertEqual(code, 0)
+
+    def test_agent_workflows_delete_stale_unlink_error_ignored(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            wf_dir = root / ".windsurf" / "workflows"
+            wf_dir.mkdir(parents=True)
+
+            fdd_root = Path(fdd_cli.__file__).resolve().parents[4]
+            target_abs = (fdd_root / "workflows" / "does-not-exist.md").resolve().as_posix()
+            stale = wf_dir / "fdd-stale.md"
+            stale.write_text(f"# /fdd-stale\n\nALWAYS open and follow `{target_abs}`\n", encoding="utf-8")
+
+            orig_unlink = Path.unlink
+
+            def _unlink(self: Path, *a, **k):
+                if self.resolve() == stale.resolve():
+                    raise OSError("no")
+                return orig_unlink(self, *a, **k)
+
+            with unittest.mock.patch.object(Path, "unlink", _unlink):
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root), "--fdd-root", str(fdd_root)])
+            self.assertEqual(code, 0)
+
+    def test_agent_workflows_update_read_error_treated_as_empty(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            wf_dir = root / ".windsurf" / "workflows"
+            wf_dir.mkdir(parents=True)
+            fdd_root = Path(fdd_cli.__file__).resolve().parents[4]
+
+            dst = wf_dir / "fdd-business-context.md"
+            dst.write_text("x\n", encoding="utf-8")
+
+            orig = Path.read_text
+
+            def _rt(self: Path, *a, **k):
+                if self.resolve() == dst.resolve():
+                    raise OSError("boom")
+                return orig(self, *a, **k)
+
+            with unittest.mock.patch.object(Path, "read_text", _rt):
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root), "--fdd-root", str(fdd_root)])
+            self.assertEqual(code, 0)
+
     def test_get_item_delegates_to_read_section(self):
         """Cover get-item delegating to read-section."""
         with TemporaryDirectory() as tmpdir:
@@ -517,8 +630,789 @@ Another reference to fdd-test-req-auth here.
                 exit_code = main(["where-defined", "--root", str(root), "--id", "fdd-missing-id"])
 
             self.assertIn(exit_code, (1, 2))
+
+
+class TestCLIAgentIntegrationCommands(unittest.TestCase):
+    def _write_minimal_fdd_skill(self, root: Path) -> None:
+        (root / "skills" / "fdd").mkdir(parents=True, exist_ok=True)
+        (root / "skills" / "fdd" / "SKILL.md").write_text("# FDD Skill\n", encoding="utf-8")
+
+    def test_agent_skills_windsurf_legacy_creates_skill_folder(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(["agent-skills", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(exit_code, 0)
+
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("status"), "PASS")
+            entry = root / ".windsurf" / "skills" / "fdd" / "SKILL.md"
+            self.assertTrue(entry.exists())
+            txt = entry.read_text(encoding="utf-8")
+            self.assertIn("ALWAYS open and follow", txt)
+
+    def test_agent_skills_cursor_outputs_creates_rules_and_command(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(["agent-skills", "--agent", "cursor", "--root", str(root)])
+            self.assertEqual(exit_code, 0)
+
+            rules = root / ".cursor" / "rules" / "fdd.mdc"
+            cmd = root / ".cursor" / "commands" / "fdd.md"
+            self.assertTrue(rules.exists())
+            self.assertTrue(cmd.exists())
+            self.assertIn("ALWAYS open and follow", rules.read_text(encoding="utf-8"))
+            self.assertIn("ALWAYS open and follow", cmd.read_text(encoding="utf-8"))
+
+    def test_agent_skills_claude_outputs_creates_command(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(["agent-skills", "--agent", "claude", "--root", str(root)])
+            self.assertEqual(exit_code, 0)
+
+            cmd = root / ".claude" / "commands" / "fdd.md"
+            self.assertTrue(cmd.exists())
+            self.assertIn("ALWAYS open and follow", cmd.read_text(encoding="utf-8"))
+
+    def test_agent_skills_copilot_outputs_creates_instructions_and_prompt(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(["agent-skills", "--agent", "copilot", "--root", str(root)])
+            self.assertEqual(exit_code, 0)
+
+            instructions = root / ".github" / "copilot-instructions.md"
+            prompt = root / ".github" / "prompts" / "fdd-skill.prompt.md"
+            self.assertTrue(instructions.exists())
+            self.assertTrue(prompt.exists())
+            self.assertIn("ALWAYS open and follow", instructions.read_text(encoding="utf-8"))
+            self.assertIn("ALWAYS open and follow", prompt.read_text(encoding="utf-8"))
+
+
+class TestCLIAgentWorkflowsCommands(unittest.TestCase):
+    def _write_minimal_agent_workflows_cfg(self, root: Path, agent: str) -> Path:
+        cfg_path = root / "fdd-agent-workflows.json"
+        cfg_path.write_text(
+            json.dumps(
+                {
+                    "version": 1,
+                    "agents": {
+                        agent: {
+                            "workflow_dir": ".windsurf/workflows",
+                            "workflow_command_prefix": "fdd-",
+                            "workflow_filename_format": "{command}.md",
+                            "template": [
+                                "# /{command}",
+                                "",
+                                "ALWAYS open and follow `{target_workflow_path}`",
+                            ],
+                        }
+                    },
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return cfg_path
+
+    def _write_minimal_fdd_skill(self, root: Path) -> None:
+        (root / "skills" / "fdd").mkdir(parents=True, exist_ok=True)
+        (root / "skills" / "fdd" / "SKILL.md").write_text("# FDD Skill\n", encoding="utf-8")
+
+    def test_agent_workflows_windsurf_creates_files(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(exit_code, 0)
+
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("status"), "PASS")
+            self.assertGreater(out.get("counts", {}).get("workflows", 0), 0)
+            self.assertGreater(out.get("counts", {}).get("created", 0), 0)
+            created = out.get("created", [])
+            self.assertTrue(any(Path(p).exists() for p in created))
+
+    def test_agent_workflows_dry_run_does_not_write_files(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root), "--dry-run"])
+            self.assertEqual(exit_code, 0)
+
+            out = json.loads(stdout.getvalue())
+            self.assertTrue(out.get("dry_run"))
+            created = out.get("created", [])
+            self.assertGreater(len(created), 0)
+            self.assertTrue(all(not Path(p).exists() for p in created))
+
+    def test_agent_workflows_unknown_agent_writes_stub_and_returns_config_incomplete(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(["agent-workflows", "--agent", "mystery-agent", "--root", str(root)])
+            self.assertEqual(exit_code, 2)
+
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("status"), "CONFIG_INCOMPLETE")
+
+    def test_agent_skills_empty_agent_raises(self):
+        with self.assertRaises(SystemExit):
+            main(["agent-skills", "--agent", " "])
+
+    def test_agent_skills_project_root_not_found(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-skills", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 1)
+
+    def test_agent_skills_auto_adds_missing_recognized_agent_to_existing_config(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+
+            cfg_path = root / "fdd-agent-skills.json"
+            cfg_path.write_text(
+                json.dumps({"version": 1, "agents": {"cursor": {"outputs": []}}}, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-skills", "--agent", "windsurf", "--root", str(root)])
+            self.assertIn(code, (0, 1, 2))
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            self.assertIn("windsurf", (cfg.get("agents") or {}))
+
+    def test_agent_skills_outputs_read_error_updates(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+
+            cfg_path = root / "fdd-agent-skills.json"
+            cfg_path.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "agents": {
+                            "cursor": {
+                                "outputs": [
+                                    {
+                                        "path": ".cursor/rules/fdd.mdc",
+                                        "template": ["ALWAYS open and follow `{target_skill_path}`"],
+                                    }
+                                ]
+                            }
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            out_path = root / ".cursor" / "rules" / "fdd.mdc"
+            out_path.parent.mkdir(parents=True)
+            out_path.write_text("x\n", encoding="utf-8")
+
+            orig = Path.read_text
+
+            def _rt(self: Path, *a, **k):
+                if self.resolve() == out_path.resolve():
+                    raise OSError("boom")
+                return orig(self, *a, **k)
+
+            with unittest.mock.patch.object(Path, "read_text", _rt):
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    code = main(["agent-skills", "--agent", "cursor", "--root", str(root)])
+            self.assertEqual(code, 0)
+
+    def test_agent_skills_legacy_schema_missing_skill_name_and_entry_filename_defaults(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+
+            cfg_path = root / "fdd-agent-skills.json"
+            cfg_path.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "agents": {
+                            "windsurf": {
+                                "skills_dir": ".windsurf/skills",
+                                "template": ["ALWAYS open and follow `{target_skill_path}`"],
+                            }
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-skills", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 2)
+
+            cfg_path.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "agents": {
+                            "windsurf": {
+                                "skills_dir": ".windsurf/skills",
+                                "skill_name": "fdd",
+                                "entry_filename": " ",
+                                "template": ["ALWAYS open and follow `{target_skill_path}`"],
+                            }
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            entry = root / ".windsurf" / "skills" / "fdd" / "SKILL.md"
+            entry.parent.mkdir(parents=True, exist_ok=True)
+            entry.write_text("x\n", encoding="utf-8")
+
+            orig = Path.read_text
+
+            def _rt(self: Path, *a, **k):
+                if self.resolve() == entry.resolve():
+                    raise OSError("boom")
+                return orig(self, *a, **k)
+
+            with unittest.mock.patch.object(Path, "read_text", _rt):
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    code = main(["agent-skills", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 0)
+
+
+class TestCLISubcommandErrorBranches(unittest.TestCase):
+    def test_list_items_load_error(self):
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            code = main(["list-items", "--artifact", "/tmp/does-not-exist.md"])
+        self.assertEqual(code, 1)
+
+    def test_read_section_load_error(self):
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            code = main(["read-section", "--artifact", "/tmp/does-not-exist.md", "--section", "A"])
+        self.assertEqual(code, 1)
+
+    def test_read_section_feature_id_branches(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            p = Path(tmpdir) / "FEATURES.md"
+            p.write_text("x\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with unittest.mock.patch.object(fdd_cli, "read_feature_entry", return_value=None):
+                with redirect_stdout(stdout):
+                    code = main(["read-section", "--artifact", str(p), "--feature-id", "fdd-x-feature-y"])
+            self.assertEqual(code, 1)
+
+            stdout = io.StringIO()
+            with unittest.mock.patch.object(fdd_cli, "read_feature_entry", return_value=(0, 1)):
+                with redirect_stdout(stdout):
+                    code = main(["read-section", "--artifact", str(p), "--feature-id", "fdd-x-feature-y"])
+            self.assertEqual(code, 0)
+
+    def test_read_section_change_branches(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            p = Path(tmpdir) / "CHANGES.md"
+            p.write_text("x\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with unittest.mock.patch.object(fdd_cli, "read_change_block", return_value=None):
+                with redirect_stdout(stdout):
+                    code = main(["read-section", "--artifact", str(p), "--change", "1"])
+            self.assertEqual(code, 1)
+
+            stdout = io.StringIO()
+            with unittest.mock.patch.object(fdd_cli, "read_change_block", return_value=(0, 1)):
+                with redirect_stdout(stdout):
+                    code = main(["read-section", "--artifact", str(p), "--change", "1"])
+            self.assertEqual(code, 0)
+
+    def test_read_section_heading_branch(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            p = Path(tmpdir) / "DESIGN.md"
+            p.write_text("x\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with unittest.mock.patch.object(fdd_cli, "read_heading_block_by_title", return_value=None):
+                with redirect_stdout(stdout):
+                    code = main(["read-section", "--artifact", str(p), "--heading", "X"])
+            self.assertEqual(code, 1)
+
+            stdout = io.StringIO()
+            with unittest.mock.patch.object(fdd_cli, "read_heading_block_by_title", return_value=(0, 1)):
+                with redirect_stdout(stdout):
+                    code = main(["read-section", "--artifact", str(p), "--heading", "X"])
+            self.assertEqual(code, 0)
+
+    def test_get_item_branches_delegate(self):
+        from fdd import cli as fdd_cli
+
+        with unittest.mock.patch.object(fdd_cli, "_cmd_read_section", return_value=0):
+            self.assertEqual(main(["get-item", "--artifact", "x", "--section", "A"]), 0)
+        with unittest.mock.patch.object(fdd_cli, "_cmd_read_section", return_value=0):
+            self.assertEqual(main(["get-item", "--artifact", "x", "--heading", "H"]), 0)
+        with unittest.mock.patch.object(fdd_cli, "_cmd_read_section", return_value=0):
+            self.assertEqual(main(["get-item", "--artifact", "x", "--feature-id", "fdd-x-feature-y"]), 0)
+        with unittest.mock.patch.object(fdd_cli, "_cmd_read_section", return_value=0):
+            self.assertEqual(main(["get-item", "--artifact", "x", "--change", "1"]), 0)
+
+    def test_find_id_and_search_load_error(self):
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            code = main(["find-id", "--artifact", "/tmp/does-not-exist.md", "--id", "x"])
+        self.assertEqual(code, 1)
+
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            code = main(["search", "--artifact", "/tmp/does-not-exist.md", "--query", "x"])
+        self.assertEqual(code, 1)
+
+    def test_agent_workflows_project_root_not_found(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 1)
             out = json.loads(stdout.getvalue())
             self.assertEqual(out.get("status"), "NOT_FOUND")
+
+    def test_agent_workflows_config_error_agents_not_dict(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            (root / "fdd-agent-workflows.json").write_text(
+                json.dumps({"version": 1, "agents": "bad"}, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 1)
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("status"), "CONFIG_ERROR")
+
+    def test_agent_workflows_auto_adds_missing_recognized_agent_to_existing_config(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+
+            cfg_path = root / "fdd-agent-workflows.json"
+            cfg_path.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "agents": {
+                            "cursor": {
+                                "workflow_dir": ".cursor/commands",
+                                "workflow_command_prefix": "fdd-",
+                                "workflow_filename_format": "{command}.md",
+                                "template": ["# /{command}", "", "ALWAYS open and follow `{target_workflow_path}`"],
+                            }
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 0)
+            updated = json.loads(cfg_path.read_text(encoding="utf-8"))
+            self.assertIn("windsurf", (updated.get("agents") or {}))
+
+    def test_agent_workflows_prefix_non_str_defaults(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            (root / "fdd-agent-workflows.json").write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "agents": {
+                            "windsurf": {
+                                "workflow_dir": ".windsurf/workflows",
+                                "workflow_command_prefix": 123,
+                                "workflow_filename_format": "{command}.md",
+                                "template": ["# /{command}", "", "ALWAYS open and follow `{target_workflow_path}`"],
+                            }
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 0)
+
+    def test_agent_workflows_template_invalid_returns_config_incomplete(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            (root / "fdd-agent-workflows.json").write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "agents": {
+                            "windsurf": {
+                                "workflow_dir": ".windsurf/workflows",
+                                "workflow_command_prefix": "fdd-",
+                                "workflow_filename_format": "{command}.md",
+                                "template": "bad",
+                            }
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 2)
+
+    def test_agent_workflows_renames_misnamed_proxy_and_deletes_stale_proxy(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+
+            wf_dir = root / ".windsurf" / "workflows"
+            wf_dir.mkdir(parents=True)
+
+            fdd_root = Path(fdd_cli.__file__).resolve().parents[4]
+            target = (fdd_root / "workflows" / "business-context.md").resolve()
+            target_rel = fdd_cli._safe_relpath(target, root)
+
+            misnamed = wf_dir / "foo.md"
+            misnamed.write_text(
+                "\n".join(
+                    [
+                        "# /fdd-business-context",
+                        "",
+                        f"ALWAYS open and follow `{target_rel}`",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            missing_target = (fdd_root / "workflows" / "does-not-exist.md").resolve()
+            stale = wf_dir / "fdd-stale.md"
+            stale.write_text(
+                "\n".join(
+                    [
+                        "# /fdd-stale",
+                        "",
+                        f"ALWAYS open and follow `{missing_target.as_posix()}`",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(exit_code, 0)
+
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("status"), "PASS")
+
+            expected_dst = wf_dir / "fdd-business-context.md"
+            self.assertTrue(expected_dst.exists())
+            self.assertFalse(misnamed.exists())
+
+            self.assertFalse(stale.exists())
+
+    def test_agent_workflows_config_incomplete_missing_workflow_dir(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            (root / "fdd-agent-workflows.json").write_text(
+                json.dumps({"version": 1, "agents": {"cursor": {"template": ["x"]}}}, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-workflows", "--agent", "cursor", "--root", str(root)])
+            self.assertEqual(code, 2)
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("status"), "CONFIG_INCOMPLETE")
+
+    def test_agent_workflows_rename_conflict(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            wf_dir = root / ".windsurf" / "workflows"
+            wf_dir.mkdir(parents=True)
+
+            fdd_root = Path(fdd_cli.__file__).resolve().parents[4]
+            target = (fdd_root / "workflows" / "business-context.md").resolve()
+            target_rel = fdd_cli._safe_relpath(target, root)
+
+            misnamed = wf_dir / "foo.md"
+            misnamed.write_text(f"# /fdd-business-context\n\nALWAYS open and follow `{target_rel}`\n", encoding="utf-8")
+
+            dst = wf_dir / "fdd-business-context.md"
+            dst.write_text("preexisting", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-workflows", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 0)
+            out = json.loads(stdout.getvalue())
+            self.assertGreaterEqual(out.get("counts", {}).get("rename_conflicts", 0), 1)
+            self.assertTrue(misnamed.exists())
+
+
+class TestCLICoreHelpers(unittest.TestCase):
+    def test_safe_relpath_from_dir_relpath_exception_returns_abs(self):
+        from fdd import cli as fdd_cli
+
+        target = Path("/tmp/x")
+        with unittest.mock.patch.object(fdd_cli.os.path, "relpath", side_effect=Exception("boom")):
+            out = fdd_cli._safe_relpath_from_dir(target, Path("/tmp"))
+        self.assertEqual(out, target.as_posix())
+
+    def test_render_template_missing_variable_raises_system_exit(self):
+        from fdd import cli as fdd_cli
+
+        with self.assertRaises(SystemExit):
+            fdd_cli._render_template(["{missing}"], {})
+
+    def test_list_fdd_workflows_missing_dir_raises_system_exit(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            with self.assertRaises(SystemExit):
+                fdd_cli._list_fdd_workflows(Path(tmpdir))
+
+    def test_looks_like_generated_proxy_true_false(self):
+        from fdd import cli as fdd_cli
+
+        self.assertTrue(fdd_cli._looks_like_generated_proxy("ALWAYS open and follow `x`\n", "x"))
+        self.assertFalse(fdd_cli._looks_like_generated_proxy("ALWAYS open and follow `y`\n", "x"))
+
+    def test_list_fdd_workflows_skips_non_workflow_and_handles_read_error(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            workflows = root / "workflows"
+            workflows.mkdir()
+            (workflows / "AGENTS.md").write_text("x\n", encoding="utf-8")
+            (workflows / "README.md").write_text("x\n", encoding="utf-8")
+            (workflows / "not-workflow.md").write_text("# title\n", encoding="utf-8")
+            (workflows / "ok.md").write_text("---\ntype: workflow\n---\n", encoding="utf-8")
+            bad = workflows / "bad.md"
+            bad.write_text("---\ntype: workflow\n---\n", encoding="utf-8")
+
+            orig = Path.read_text
+
+            def _rt(self: Path, *a, **k):
+                if self.resolve() == bad.resolve():
+                    raise OSError("boom")
+                return orig(self, *a, **k)
+
+            with unittest.mock.patch.object(Path, "read_text", _rt):
+                names = fdd_cli._list_fdd_workflows(root)
+            self.assertEqual(names, ["ok"])
+
+    def test_load_json_file_invalid_json_returns_none(self):
+        from fdd import cli as fdd_cli
+
+        with TemporaryDirectory() as tmpdir:
+            p = Path(tmpdir) / "x.json"
+            p.write_text("{not-json}", encoding="utf-8")
+            self.assertIsNone(fdd_cli._load_json_file(p))
+
+
+class TestCLIAgentSkillsMoreBranches(unittest.TestCase):
+    def _write_minimal_fdd_skill(self, root: Path) -> None:
+        (root / "skills" / "fdd").mkdir(parents=True, exist_ok=True)
+        (root / "skills" / "fdd" / "SKILL.md").write_text("# FDD Skill\n", encoding="utf-8")
+
+    def test_agent_skills_outputs_invalid_outputs_type(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+            (root / "fdd-agent-skills.json").write_text(
+                json.dumps({"version": 1, "agents": {"cursor": {"outputs": "bad"}}}, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-skills", "--agent", "cursor", "--root", str(root)])
+            self.assertEqual(code, 2)
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("status"), "CONFIG_INCOMPLETE")
+
+    def test_agent_skills_outputs_missing_path_and_template(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+            (root / "fdd-agent-skills.json").write_text(
+                json.dumps({"version": 1, "agents": {"cursor": {"outputs": [{"template": ["x"]}]}}}, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-skills", "--agent", "cursor", "--root", str(root)])
+            self.assertEqual(code, 2)
+
+            (root / "fdd-agent-skills.json").write_text(
+                json.dumps({"version": 1, "agents": {"cursor": {"outputs": [{"path": ".cursor/rules/fdd.mdc", "template": "bad"}]}}}, indent=2)
+                + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-skills", "--agent", "cursor", "--root", str(root)])
+            self.assertEqual(code, 2)
+
+    def test_agent_skills_outputs_unchanged(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+            (root / "fdd-agent-skills.json").write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "agents": {
+                            "cursor": {
+                                "outputs": [
+                                    {
+                                        "path": ".cursor/rules/fdd.mdc",
+                                        "template": ["ALWAYS open and follow `{target_skill_path}`"],
+                                    }
+                                ]
+                            }
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            out_path = root / ".cursor" / "rules" / "fdd.mdc"
+            out_path.parent.mkdir(parents=True)
+            out_path.write_text("ALWAYS open and follow `../../skills/fdd/SKILL.md`\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-skills", "--agent", "cursor", "--root", str(root)])
+            self.assertEqual(code, 0)
+            out = json.loads(stdout.getvalue())
+            self.assertEqual(out.get("outputs")[0].get("action"), "unchanged")
+
+    def test_agent_skills_legacy_schema_success_and_config_incomplete(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".git").mkdir()
+            self._write_minimal_fdd_skill(root)
+
+            (root / "fdd-agent-skills.json").write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "agents": {
+                            "windsurf": {
+                                "skills_dir": ".windsurf/skills",
+                                "skill_name": "fdd",
+                                "entry_filename": "SKILL.md",
+                                "template": ["ALWAYS open and follow `{target_skill_path}`"],
+                            }
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-skills", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 0)
+            entry = root / ".windsurf" / "skills" / "fdd" / "SKILL.md"
+            self.assertTrue(entry.exists())
+
+            (root / "fdd-agent-skills.json").write_text(
+                json.dumps({"version": 1, "agents": {"windsurf": {"skill_name": "fdd", "template": ["x"]}}}, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["agent-skills", "--agent", "windsurf", "--root", str(root)])
+            self.assertEqual(code, 2)
+
 
 
 class TestCLIErrorHandling(unittest.TestCase):

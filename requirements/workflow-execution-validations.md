@@ -328,8 +328,8 @@ purpose: Define execution specifics for validation workflows
    - [ ] YES - Ran: TODO, TBD, `**ID**:`, placeholders
    - [ ] NO - Validation is INVALID, must restart
 
-6. ⚠️ **Did I check ADR headers for ID fields? (if validating ADR.md)**
-   - [ ] YES - Verified `**ID**:` after EACH `## ADR-` heading
+6. ⚠️ **Did I check ADR headers for ID fields? (if validating ADRs)**
+   - [ ] YES - Verified `**ADR ID**:` line in each ADR file
    - [ ] NO - Validation is INVALID, must restart
 
 7. ⚠️ **Did I check requirement traceability? (if validating DESIGN.md)**

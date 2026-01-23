@@ -25,7 +25,7 @@ from ...utils import (
     load_text,
     find_present_section_ids,
     parse_business_model,
-    parse_adr_index,
+    load_adr_entries,
 )
 
 
@@ -61,7 +61,7 @@ def validate_overall_design(
 
     if not skip_fs_checks and artifact_path is not None:
         bp = business_path or (artifact_path.parent / "BUSINESS.md")
-        ap = adr_path or (artifact_path.parent / "ADR.md")
+        ap = adr_path or (artifact_path.parent / "ADR")
 
         bt, berr = load_text(bp)
         if berr:
@@ -69,11 +69,8 @@ def validate_overall_design(
         else:
             business_actors, business_caps_to_actors, business_usecases = parse_business_model(bt or "")
 
-        at, aerr = load_text(ap)
-        if aerr:
-            errors.append({"type": "cross", "message": aerr})
-        else:
-            adr_entries, adr_issues = parse_adr_index(at or "")
+        if ap.exists() and ap.is_dir():
+            adr_entries, adr_issues = load_adr_entries(ap)
             errors.extend(adr_issues)
             for e in adr_entries:
                 if "id" in e and e["id"]:

@@ -68,17 +68,31 @@ ALWAYS open and follow `.adapter/specs/patterns.md` WHEN creating or modifying A
 
 ALWAYS open and follow `requirements/business-context-structure.md` WHEN working with BUSINESS.md
 
+ALWAYS open and follow `templates/BUSINESS.template.md` WHEN generating BUSINESS.md
+
 ALWAYS open and follow `requirements/overall-design-structure.md` WHEN working with DESIGN.md
 
-ALWAYS open and follow `requirements/adr-structure.md` WHEN working with ADR.md
+ALWAYS open and follow `templates/DESIGN.template.md` WHEN generating DESIGN.md
+
+ALWAYS open and follow `requirements/adr-structure.md` WHEN working with ADR
+
+ALWAYS open and follow `templates/ADR.template.md` WHEN generating ADR
 
 ALWAYS open and follow `requirements/features-manifest-structure.md` WHEN working with FEATURES.md
 
+ALWAYS open and follow `templates/FEATURES.template.md` WHEN generating FEATURES.md
+
 ALWAYS open and follow `requirements/feature-design-structure.md` WHEN working with feature DESIGN.md
+
+ALWAYS open and follow `templates/feature-DESIGN.template.md` WHEN generating feature DESIGN.md
 
 ALWAYS open and follow `requirements/feature-changes-structure.md` WHEN working with feature CHANGES.md
 
+ALWAYS open and follow `templates/feature-CHANGES.template.md` WHEN generating feature CHANGES.md
+
 ALWAYS open and follow `requirements/adapter-structure.md` WHEN creating or configuring FDD adapter
+
+ALWAYS open and follow `templates/adapter-AGENTS.template.md` WHEN generating adapter AGENTS.md
 
 ---
 

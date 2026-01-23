@@ -22,7 +22,7 @@ FDD uses **Markdown-based artifacts** for design documentation, not code-level t
 |----------|----------|---------|
 | `BUSINESS.md` | `architecture/` | Business context, actors, capabilities |
 | `DESIGN.md` | `architecture/` | Overall system design |
-| `ADR.md` | `architecture/` | Architecture Decision Records |
+| `ADR/{category}/NNNN-fdd-id-{slug}.md` | `architecture/` | Architecture Decision Records |
 | `FEATURES.md` | `architecture/` | Feature manifest |
 | `DESIGN.md` | `architecture/features/feature-{slug}/` | Feature design |
 | `CHANGES.md` | `architecture/features/feature-{slug}/` | Implementation changes |

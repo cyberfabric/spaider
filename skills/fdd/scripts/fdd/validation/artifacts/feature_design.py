@@ -323,23 +323,33 @@ def validate_feature_design(
                 for field in required_fields:
                     fb = field_block(block, field)
                     if fb is None:
-                        errors.append({"type": "content", "message": "Missing required field in requirement", "section": "F", "field": field, "line": start + 1})
+                        errors.append({"type": "content", "message": "Missing required field", "section": "F", "field": field, "line": start + 1})
                         continue
+
                     if not str(fb["value"]).strip() and not has_list_item(list(fb["tail"])):
                         errors.append({"type": "content", "message": "Field must not be empty", "section": "F", "field": field, "line": start + 1})
-                    
-                    # Validate Status field value
+
                     if field == "Status":
                         status_val = str(fb["value"]).strip()
-                        valid_statuses = {"NOT_STARTED", "IN_PROGRESS", "IMPLEMENTED"}
-                        # Extract status keyword (with or without emoji)
-                        status_found = False
-                        for vs in valid_statuses:
-                            if vs in status_val:
-                                status_found = True
-                                break
-                        if not status_found:
-                            errors.append({"type": "content", "message": "Status must be one of: NOT_STARTED, IN_PROGRESS, IMPLEMENTED", "section": "F", "field": "Status", "line": start + 1, "found": status_val})
+                        valid_statuses = {"NOT_STARTED", "IN_DESIGN", "DESIGN_READY", "IN_DEVELOPMENT", "IMPLEMENTED"}
+
+                        normalized: Optional[str] = None
+                        if "IN_PROGRESS" in status_val:
+                            normalized = "IN_DEVELOPMENT"
+                        else:
+                            for vs in valid_statuses:
+                                if vs in status_val:
+                                    normalized = vs
+                                    break
+                        if normalized is None:
+                            errors.append({
+                                "type": "content",
+                                "message": "Status must be one of: NOT_STARTED, IN_DESIGN, DESIGN_READY, IN_DEVELOPMENT, IMPLEMENTED",
+                                "section": "F",
+                                "field": "Status",
+                                "line": start + 1,
+                                "found": status_val,
+                            })
 
                 phases_field = field_block(block, "Phases")
                 phase_list: List[int] = []

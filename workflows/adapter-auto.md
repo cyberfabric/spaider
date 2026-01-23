@@ -113,7 +113,7 @@ Extract:
 #### Scan 2: ADRs
 ```yaml
 Search for:
-  - architecture/ADR.md
+  - ADR/
   - docs/adr/*.md, docs/decisions/*.md
   - adr/*.md, decisions/*.md
   

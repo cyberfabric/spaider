@@ -1,8 +1,4 @@
-"""
-Test helper functions for parsing artifacts.
-
-Tests find_present_section_ids, parse_business_model, and parse_adr_index.
-"""
+"""Test helper functions for parsing artifacts."""
 
 import unittest
 import sys
@@ -14,7 +10,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "fdd" / "script
 from fdd.utils.helpers import (
     find_present_section_ids,
     parse_business_model,
-    parse_adr_index,
+    load_adr_entries,
+    scan_adr_directory,
 )
 
 from fdd.utils.markdown import (
@@ -260,151 +257,68 @@ Additional line: `fdd-app-actor-four`
         self.assertNotIn("fdd-app-capability-not-in-c", capabilities)
 
 
-class TestParseAdrIndex(unittest.TestCase):
-    """Test parse_adr_index function."""
+class TestAdrDirectoryHelpers(unittest.TestCase):
+    def test_load_adr_entries_missing_path(self) -> None:
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            adrs, issues = load_adr_entries(td / "ADR")
+            self.assertEqual(adrs, [])
+            self.assertGreater(len(issues), 0)
 
-    def test_parse_adr_index_basic(self):
-        """Test basic ADR index parsing."""
-        text = """# ADR Index
+    def test_load_adr_entries_file_rejected(self) -> None:
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            p = td / "adr-file.md"
+            p.write_text("# ADR-0001: X\n", encoding="utf-8")
+            adrs, issues = load_adr_entries(p)
+            self.assertEqual(adrs, [])
+            self.assertTrue(any("must be a directory" in str(i.get("message")) for i in issues))
 
-## ADR-0001: Use Python for Implementation
+    def test_scan_adr_directory_no_files(self) -> None:
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            td.mkdir(parents=True, exist_ok=True)
+            adrs, issues = scan_adr_directory(td)
+            self.assertEqual(adrs, [])
+            self.assertGreater(len(issues), 0)
 
-**Date**: 2024-01-15
+    def test_scan_adr_directory_skips_invalid_filenames(self) -> None:
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            (td / "bad.md").write_text("# ADR-0001: X\n", encoding="utf-8")
+            adrs, issues = scan_adr_directory(td)
+            self.assertEqual(adrs, [])
+            self.assertGreater(len(issues), 0)
 
-**Status**: Accepted
+    def test_scan_adr_directory_multiple_headings_fails(self) -> None:
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            p = td / "0001-fdd-app-adr-test.md"
+            p.write_text("# ADR-0001: A\n# ADR-0001: B\n", encoding="utf-8")
+            adrs, issues = scan_adr_directory(td)
+            self.assertEqual(adrs, [])
+            self.assertTrue(any("must contain exactly one ADR heading" in str(i.get("message")) for i in issues))
 
-**ID**: `fdd-app-adr-0001`
+    def test_scan_adr_directory_heading_must_be_h1(self) -> None:
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            p = td / "0001-fdd-app-adr-test.md"
+            p.write_text("## ADR-0001: A\n**ADR ID**: `fdd-app-adr-test`\n", encoding="utf-8")
+            adrs, issues = scan_adr_directory(td)
+            self.assertEqual(len(adrs), 1)
+            self.assertTrue(any("H1" in str(i.get("message")) for i in issues))
 
-Decision content here.
-
-## ADR-0002: Choose PostgreSQL
-
-**Date**: 2024-01-20
-
-**Status**: Proposed
-
-**ID**: `fdd-app-adr-0002`
-
-Decision content.
-"""
-        adrs, issues = parse_adr_index(text)
-        
-        self.assertEqual(len(adrs), 2)
-        self.assertEqual(len(issues), 0)
-        
-        # Check first ADR
-        self.assertEqual(adrs[0]["ref"], "ADR-0001")
-        self.assertEqual(adrs[0]["num"], 1)
-        self.assertEqual(adrs[0]["title"], "Use Python for Implementation")
-        self.assertEqual(adrs[0]["date"], "2024-01-15")
-        self.assertEqual(adrs[0]["status"], "Accepted")
-        self.assertEqual(adrs[0]["id"], "fdd-app-adr-0001")
-        
-        # Check second ADR
-        self.assertEqual(adrs[1]["ref"], "ADR-0002")
-        self.assertEqual(adrs[1]["num"], 2)
-        self.assertEqual(adrs[1]["title"], "Choose PostgreSQL")
-        self.assertEqual(adrs[1]["date"], "2024-01-20")
-        self.assertEqual(adrs[1]["status"], "Proposed")
-        self.assertEqual(adrs[1]["id"], "fdd-app-adr-0002")
-
-    def test_parse_adr_index_empty(self):
-        """Test parsing empty text."""
-        adrs, issues = parse_adr_index("")
-        
-        self.assertEqual(len(adrs), 0)
-        self.assertEqual(len(issues), 0)
-
-    def test_parse_adr_index_missing_metadata(self):
-        """Test ADR with missing date, status, or ID."""
-        text = """## ADR-0001: Minimal ADR
-
-Some content without metadata.
-"""
-        adrs, issues = parse_adr_index(text)
-        
-        self.assertEqual(len(adrs), 1)
-        self.assertEqual(adrs[0]["ref"], "ADR-0001")
-        self.assertEqual(adrs[0]["title"], "Minimal ADR")
-        self.assertIsNone(adrs[0]["date"])
-        self.assertIsNone(adrs[0]["status"])
-        self.assertIsNone(adrs[0]["id"])
-
-    def test_parse_adr_index_metadata_in_various_positions(self):
-        """Test that metadata is found within 10 lines after heading."""
-        text = """## ADR-0001: Test
-
-Line 1
-Line 2
-**Date**: 2024-01-15
-Line 4
-Line 5
-**Status**: Accepted
-Line 7
-**ID**: `fdd-app-adr-0001`
-"""
-        adrs, issues = parse_adr_index(text)
-        
-        self.assertEqual(len(adrs), 1)
-        self.assertEqual(adrs[0]["date"], "2024-01-15")
-        self.assertEqual(adrs[0]["status"], "Accepted")
-        self.assertEqual(adrs[0]["id"], "fdd-app-adr-0001")
-
-    def test_parse_adr_index_stops_at_next_heading(self):
-        """Test that metadata search stops at next heading."""
-        text = """## ADR-0001: First
-
-Content
-
-## ADR-0002: Second
-
-**Date**: 2024-01-20
-
-This date should not be for ADR-0001.
-"""
-        adrs, issues = parse_adr_index(text)
-        
-        self.assertEqual(len(adrs), 2)
-        self.assertIsNone(adrs[0]["date"])
-        self.assertEqual(adrs[1]["date"], "2024-01-20")
-
-    def test_parse_adr_index_padded_numbers(self):
-        """Test ADR numbers with leading zeros."""
-        text = """## ADR-0042: High Number ADR
-
-**Date**: 2024-01-15
-"""
-        adrs, issues = parse_adr_index(text)
-        
-        self.assertEqual(len(adrs), 1)
-        self.assertEqual(adrs[0]["ref"], "ADR-0042")
-        self.assertEqual(adrs[0]["num"], 42)
-
-    def test_parse_adr_index_multiple_status_values(self):
-        """Test different status values."""
-        text = """## ADR-0001: Accepted One
-
-**Status**: Accepted
-
-## ADR-0002: Proposed One
-
-**Status**: Proposed
-
-## ADR-0003: Deprecated One
-
-**Status**: Deprecated
-
-## ADR-0004: Superseded One
-
-**Status**: Superseded
-"""
-        adrs, issues = parse_adr_index(text)
-        
-        self.assertEqual(len(adrs), 4)
-        self.assertEqual(adrs[0]["status"], "Accepted")
-        self.assertEqual(adrs[1]["status"], "Proposed")
-        self.assertEqual(adrs[2]["status"], "Deprecated")
-        self.assertEqual(adrs[3]["status"], "Superseded")
+    def test_scan_adr_directory_id_mismatch_and_sequential_checks(self) -> None:
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            p1 = td / "0001-fdd-app-adr-one.md"
+            p1.write_text("# ADR-0001: One\n**ADR ID**: `fdd-app-adr-two`\n", encoding="utf-8")
+            p3 = td / "0003-fdd-app-adr-three.md"
+            p3.write_text("# ADR-0003: Three\n**ADR ID**: `fdd-app-adr-three`\n", encoding="utf-8")
+            adrs, issues = scan_adr_directory(td)
+            self.assertEqual(len(adrs), 2)
+            self.assertTrue(any("must match filename" in str(i.get("message")) for i in issues))
+            self.assertTrue(any("sequential" in str(i.get("message")) for i in issues))
 
 
 class TestMarkdownUtils(unittest.TestCase):
@@ -703,33 +617,20 @@ class TestMarkdownUtils(unittest.TestCase):
         self.assertEqual(by_change[2]["id"], "change-2")
 
     def test_list_items_generic_adr_summary(self) -> None:
-        lines = [
-            "# ADR Index\n",
-            "\n",
-            "## ADR-0001: Use Python\n",
-            "**Date**: 2024-01-15\n",
-            "**Status**: Accepted\n",
-            "\n",
-            "## ADR-0002: Use Rust\n",
-        ]
-
+        # ADR is directory-based; this helper does not have filesystem context.
+        # Ensure it behaves deterministically and does not crash.
         items = list_items(
-            kind="generic",
-            artifact_name="ADR.md",
-            lines=lines,
-            active_lines=lines,
+            kind="adr",
+            artifact_name="ADR",
+            lines=[],
+            active_lines=[],
             base_offset=0,
             lod="summary",
             pattern=None,
             regex=False,
             type_filter=None,
         )
-
-        self.assertEqual([it["id"] for it in items], ["ADR-0001", "ADR-0002"])
-        self.assertEqual(items[0]["type"], "adr")
-        self.assertEqual(items[0]["title"], "Use Python")
-        self.assertEqual(items[0]["date"], "2024-01-15")
-        self.assertEqual(items[0]["status"], "Accepted")
+        self.assertEqual(items, [])
 
     def test_list_items_generic_business_summary(self) -> None:
         a1 = "fdd-app-actor-admin"
@@ -862,8 +763,10 @@ class TestSearchUtils(unittest.TestCase):
         with TemporaryDirectory() as tds:
             td = Path(tds)
             (td / "architecture").mkdir(parents=True)
-            p = td / "architecture" / "ADR.md"
-            p.write_text("## ADR-0001: Title\n\ntext\n", encoding="utf-8")
+            adr_dir = td / "architecture" / "ADR" / "general"
+            adr_dir.mkdir(parents=True)
+            p = adr_dir / "0001-fdd-app-adr-title.md"
+            p.write_text("# ADR-0001: Title\n\ntext\n", encoding="utf-8")
             hits = definition_hits_in_file(path=p, root=td, needle="ADR-0001", include_tags=False)
             self.assertEqual(len(hits), 1)
             self.assertEqual(hits[0]["match"], "adr_heading")
@@ -917,7 +820,8 @@ class TestSearchUtils(unittest.TestCase):
 
             (td / "architecture" / "BUSINESS.md").write_text("# Biz\n", encoding="utf-8")
             (td / "architecture" / "DESIGN.md").write_text("# Design\n", encoding="utf-8")
-            (td / "architecture" / "ADR.md").write_text("# ADR\n", encoding="utf-8")
+            (td / "architecture" / "ADR" / "general").mkdir(parents=True, exist_ok=True)
+            (td / "architecture" / "ADR" / "general" / "0001-fdd-app-adr-0001.md").write_text("# ADR-0001: X\n\n**ADR ID**: `fdd-app-adr-0001`\n\n## Context and Problem Statement\n\nX\n\n## Considered Options\n\nX\n\n## Decision Outcome\n\nChosen option: \"X\", because X.\n\n## Related Design Elements\n\n- `fdd-app-req-login`\n", encoding="utf-8")
             (td / "architecture" / "features" / "FEATURES.md").write_text("# Features\n", encoding="utf-8")
             (td / "architecture" / "features" / "feature-x" / "DESIGN.md").write_text("# Feature\n", encoding="utf-8")
             (td / "architecture" / "features" / "feature-x" / "CHANGES.md").write_text("# Implementation Plan: X\n", encoding="utf-8")
@@ -936,10 +840,10 @@ class TestSearchUtils(unittest.TestCase):
             self.assertTrue(any(str(p).endswith("architecture/DESIGN.md") for p in req_files))
 
             adr_files = iter_candidate_definition_files(td, needle=adr)
-            self.assertTrue(any(str(p).endswith("architecture/ADR.md") for p in adr_files))
+            self.assertTrue(any("/architecture/ADR/" in str(p).replace("\\", "/") for p in adr_files))
 
             fadr_files = iter_candidate_definition_files(td, needle=f_adr)
-            self.assertTrue(any(str(p).endswith("architecture/ADR.md") for p in fadr_files))
+            self.assertTrue(any("/architecture/ADR/" in str(p).replace("\\", "/") for p in fadr_files))
 
             algo_files = iter_candidate_definition_files(td, needle=algo)
             self.assertTrue(any("architecture/features/" in str(p) and str(p).endswith("/DESIGN.md") for p in algo_files))

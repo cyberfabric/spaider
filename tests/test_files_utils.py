@@ -192,7 +192,7 @@ class TestDetectRequirements(unittest.TestCase):
         self.assertEqual(kind, "business-context")
         self.assertTrue(str(rp).endswith("requirements/business-context-structure.md"))
 
-        kind, rp = detect_requirements(Path("/tmp/architecture/ADR.md"))
+        kind, rp = detect_requirements(Path("/tmp/architecture/ADR"))
         self.assertEqual(kind, "adr")
 
         kind, rp = detect_requirements(Path("/tmp/architecture/FEATURES.md"))

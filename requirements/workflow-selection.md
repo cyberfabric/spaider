@@ -111,13 +111,13 @@ This guide helps you select the correct FDD workflow based on:
 
 **adr.md** - Create or update Architecture Decision Records
 - **Use when**: Need to document architectural decisions
-- **Creates**: `architecture/ADR.md`
+- **Creates**: `architecture/ADR/` (directory with per-record ADR files)
 - **Format**: MADR with FDD extensions
 - **Modes**: CREATE (new ADR) or UPDATE (edit ADR)
 - **Next**: `adr-validate`
 
 **adr-validate.md** - Validate ADRs
-- **Use when**: ADR.md created or updated
+- **Use when**: ADRs created or updated
 - **Validates**: MADR format, numbering, related design elements
 - **Score**: ≥90/100
 - **Next**: `features` or continue design work

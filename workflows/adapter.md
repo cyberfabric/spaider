@@ -50,6 +50,8 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 
 **ALWAYS open and follow**: `../requirements/adapter-structure.md`
 
+**ALWAYS open and follow**: `../templates/adapter-AGENTS.template.md` WHEN generating adapter AGENTS.md
+
 Extract:
 - Adapter lifecycle phases
 - When to use each mode

@@ -236,9 +236,9 @@ def iter_candidate_definition_files(root, *, needle: str) -> List[Path]:
     kind = infer_fdd_type(needle)
     want_suffixes: List[str] = []
     if needle.startswith("ADR-"):
-        want_suffixes = ["architecture/ADR.md"]
+        want_suffixes = ["architecture/ADR/*.md", "architecture/ADR/*/*.md"]
     elif "-adr-" in needle:
-        want_suffixes = ["architecture/ADR.md"]
+        want_suffixes = ["architecture/ADR/*.md", "architecture/ADR/*/*.md"]
     elif kind in {"actor", "capability", "usecase"}:
         want_suffixes = ["architecture/BUSINESS.md"]
     elif kind in {"requirement", "principle", "nfr", "constraint"}:
@@ -250,7 +250,7 @@ def iter_candidate_definition_files(root, *, needle: str) -> List[Path]:
     elif "-feature-" in needle and "-change-" in needle:
         want_suffixes = ["architecture/features/feature-*/CHANGES.md", "architecture/features/feature-*/archive/*.md"]
     else:
-        want_suffixes = ["architecture/DESIGN.md", "architecture/BUSINESS.md", "architecture/ADR.md"]
+        want_suffixes = ["architecture/DESIGN.md", "architecture/BUSINESS.md", "architecture/ADR/*.md", "architecture/ADR/*/*.md"]
 
     expanded: List[str] = []
     seen: set = set()
@@ -287,7 +287,7 @@ def definition_hits_in_file(*, path: Path, root: Path, needle: str, include_tags
     is_markdown = path.suffix.lower() == ".md"
 
     if needle.startswith("ADR-"):
-        adr_heading_re = re.compile(rf"^##\s+{re.escape(needle)}\s*:")
+        adr_heading_re = re.compile(rf"^#{{1,2}}\s+{re.escape(needle)}\s*:")
         for i, line in enumerate(lines, start=1):
             if adr_heading_re.match(line.strip()):
                 hits.append({"path": rel, "line": i, "col": 1, "text": line, "match": "adr_heading"})
@@ -323,7 +323,7 @@ def definition_hits_in_file(*, path: Path, root: Path, needle: str, include_tags
     for i, line in enumerate(lines, start=1):
         if needle not in line:
             continue
-        if is_markdown and "**ID**:" in line:
+        if is_markdown and ("**ID**:" in line or (itype == "adr" and "**ADR ID**:" in line)):
             idx0 = i - 1
             if expected_business_section is not None and section_idx is not None:
                 rng = section_idx.get(expected_business_section)

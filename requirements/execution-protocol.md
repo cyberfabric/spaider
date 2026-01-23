@@ -102,7 +102,7 @@ python3 <FDD_ROOT>/skills/fdd/scripts/fdd.py adapter-info --root <PROJECT_ROOT> 
 
 **FDD Unified Tool (`<FDD_ROOT>/skills/fdd`)**:
 - ALWAYS use for discovering FDD adapter configuration (adapter-info)
-- ALWAYS use for searching FDD artifacts (DESIGN.md, BUSINESS.md, FEATURES.md, CHANGES.md, ADR.md)
+- ALWAYS use for searching FDD artifacts (DESIGN.md, BUSINESS.md, FEATURES.md, CHANGES.md, ADR directory)
 - ALWAYS use for ID lookup (actors, capabilities, requirements, flows, algorithms, states, changes)
 - ALWAYS use for traceability scans (where-defined, where-used)
 - ALWAYS use for code traceability (fdd-* tags)
@@ -290,8 +290,8 @@ python3 <FDD_ROOT>/skills/fdd/scripts/fdd.py adapter-info --root <PROJECT_ROOT> 
    - [ ] YES - Ran TODO, ID, placeholder searches
    - [ ] NO - Validation is INVALID, must re-do
 
-6. ⚠️ **Did I check ADR headers for ID fields? (if validating ADR.md)**
-   - [ ] YES - Verified `**ID**:` after EACH `## ADR-` heading
+6. ⚠️ **Did I check ADR headers for ID fields? (if validating ADRs)**
+   - [ ] YES - Verified `**ADR ID**:` after the ADR H1 heading
    - [ ] NO - Validation is INVALID, must re-do
 
 7. ⚠️ **Did I verify traceability fields? (if validating DESIGN.md)**

@@ -36,6 +36,8 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 
 **ALWAYS open and follow**: `../requirements/overall-design-structure.md`
 
+**ALWAYS open and follow**: `../templates/DESIGN.template.md` WHEN generating content
+
 Extract:
 - Required sections (A: Architecture Overview, B: Requirements & Principles, C: Technical Architecture, D: Additional Context)
 - Content requirements per section
@@ -190,8 +192,8 @@ After operation:
 
 **CREATE Mode only**:
 - Automatically trigger `adr` workflow
-- If ADR.md does NOT exist: Create ADR.md with ADR-0001 (Initial Architecture)
-- If ADR.md exists: Skip
+- If `architecture/ADR/` does NOT exist or has no ADR files: Create ADR-0001 under `architecture/ADR/general/`
+- If `architecture/ADR/` already has ADR files: Skip
 
 **UPDATE Mode**:
 - Skip ADR creation (user can run `adr` workflow separately if needed)
@@ -210,7 +212,7 @@ After operation:
 
 ## Creating Initial ADR
 
-Creating ADR.md with ADR-0001 (Initial Architecture)...
+Creating ADR-0001 under `architecture/ADR/general/`...
 ```
 
 ---

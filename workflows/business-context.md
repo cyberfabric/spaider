@@ -37,8 +37,11 @@ This workflow guides the execution of the specified task.
 
 **ALWAYS open and follow**: `../requirements/business-context-structure.md`
 
+**ALWAYS open and follow**: `../templates/BUSINESS.template.md` WHEN generating content
+
 Extract:
-- Required sections (A: Vision, B: Actors, C: Capabilities, D: Additional Context)
+- Required sections (A: Vision, B: Actors, C: Capabilities)
+- Optional sections (D: Use Cases, E: Additional Context)
 - ID formats for actors and capabilities
 - Content requirements per section
 - Examples and validation criteria
@@ -75,7 +78,8 @@ Check if `architecture/BUSINESS.md` exists:
   - Section A: Vision
   - Section B: Actors (with IDs)
   - Section C: Capabilities (with IDs)
-  - Section D: Additional Context (if present)
+  - Section D: Use Cases (if present)
+  - Section E: Additional Context (if present)
 - Ask user: What to update?
   - Add new actors
   - Edit existing actors
@@ -83,6 +87,7 @@ Check if `architecture/BUSINESS.md` exists:
   - Add new capabilities
   - Edit existing capabilities
   - Remove capabilities
+  - Update use cases
   - Update vision
   - Update additional context
 - Proceed to Step 3 with appropriate questions
@@ -110,7 +115,13 @@ Check if `architecture/BUSINESS.md` exists:
 - **UPDATE**: Show current capabilities, ask to add/edit/remove or keep
 - Store as: `CAPABILITIES[]`
 
-**Q4: Additional Context** (optional)
+**Q4: Use Cases** (optional)
+- Context: How actors use capabilities to achieve goals
+- **CREATE**: Allow skip if not needed
+- **UPDATE**: Show current use cases, ask to add/edit/remove or keep
+- Store as: `USE_CASES[]`
+
+**Q5: Additional Context** (optional)
 - Context: Constraints, compliance, legacy integration
 - **CREATE**: Allow skip if none
 - **UPDATE**: Show current context, ask for updates or keep
@@ -141,11 +152,12 @@ Generate content following `business-context-structure.md`:
 - Section A: Vision ({VISION})
 - Section B: Actors (with IDs, roles)
 - Section C: Capabilities (with IDs, descriptions, actor references)
-- Section D: Additional Context (if {ADDITIONAL_CONTEXT})
+- Section D: Use Cases (if {USE_CASES})
+- Section E: Additional Context (if {ADDITIONAL_CONTEXT})
 
 Ensure:
 - All IDs wrapped in backticks
-- All sections present
+- All required sections present
 - No placeholders
 
 ### 6. Summary and Confirmation
@@ -156,6 +168,7 @@ Show:
 - Vision statement (if changed)
 - Actors: {count} ({added}/{modified}/{removed})
 - Capabilities: {count} ({added}/{modified}/{removed})
+- Use cases (if any/changed)
 - Additional context (if any/changed)
 - Changes summary (for UPDATE mode)
 

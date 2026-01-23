@@ -28,8 +28,6 @@ This workflow guides the execution of the specified task.
 
 ---
 
-
-
 ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing this workflow
 
 ## ⚠️ PRE-FLIGHT CHECKLIST (ALWAYS Complete Before Proceeding)
@@ -50,7 +48,7 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 - [ ] ✅ I have read ALL files listed above
 - [ ] ✅ I understand "Maximum Attention to Detail" requirement
 - [ ] ✅ I am ready to check EVERY validation criterion individually
-- [ ] ✅ I will verify `**ID**:` field in EACH ADR header
+- [ ] ✅ I will verify `**ADR ID**:` field in EACH ADR header
 - [ ] ✅ I will run grep searches for systematic verification
 - [ ] ✅ I will complete self-test before reporting results
 
@@ -74,7 +72,7 @@ Extract:
 ## Prerequisites
 
 **MUST validate**:
-- [ ] ADR.md exists - validate: Check file at `architecture/ADR.md`
+- [ ] ADR directory exists - validate: Check directory at `architecture/ADR/`
 - [ ] DESIGN.md exists - validate: Check file at `architecture/DESIGN.md`
 - [ ] BUSINESS.md exists - validate: Check file at `architecture/BUSINESS.md`
 
@@ -97,7 +95,7 @@ Extract:
 ### 2. Execute Validation
 
 Follow validation criteria from `adr-structure.md`:
-- File Structure (15 pts): Header, ADR-0001 exists, chronological order
+- File Structure (15 pts): ADR directory exists, ADR-0001 exists
 - ADR Numbering (15 pts): Sequential, no gaps, proper format (ADR-NNNN)
 - Required Sections (30 pts): Context, Drivers, Options, Outcome, Related Elements
 - Content Quality (25 pts): Clear context, ≥2 options, rationale, consequences
@@ -109,7 +107,7 @@ Calculate total score
 
 **Format**:
 ```markdown
-## Validation: ADR.md
+## Validation: ADR/
 
 **Score**: {X}/100  
 **Status**: PASS | FAIL  
@@ -145,7 +143,7 @@ Calculate total score
 
 ### Next Steps
 
-{If PASS}: ✅ ADR.md validated, proceed with feature development
+{If PASS}: ✅ ADRs validated, proceed with feature development
 
 {If FAIL}: ❌ Fix issues, re-run validation
 ```
@@ -165,7 +163,6 @@ Self-validating workflow
 
 ---
 
-
 ## Validation Checklist
 
 - [ ] All prerequisites were met
@@ -173,9 +170,8 @@ Self-validating workflow
 
 ---
 
-
 ## Next Steps
 
 **If PASS**: ADRs validated, architecture documentation complete
 
-**If FAIL**: Fix ADR.md, re-validate
+**If FAIL**: Fix ADR files under ADR/, re-validate

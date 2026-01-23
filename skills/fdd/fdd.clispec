@@ -10,7 +10,7 @@ OPTIONS:
   --requirements  <path>  Requirements file to validate against (auto-detected if not provided)
   --design  <path>  Path to DESIGN.md for cross-reference validation
   --business  <path>  Path to BUSINESS.md for cross-reference validation
-  --adr  <path>  Path to ADR.md for cross-reference validation
+  --adr  <path>  Path to ADR directory (architecture/ADR/) for cross-reference validation
   --features  <string>  Comma-separated feature slugs for traceability scan filtering
   --skip-fs-checks  <boolean>  Skip filesystem checks during validation
   --output  <path>  Save validation report to file (default: stdout)
@@ -77,7 +77,7 @@ EXAMPLE:
   $ python3 scripts/fdd.py list-ids --artifact architecture/BUSINESS.md
   $ python3 scripts/fdd.py list-ids --artifact architecture/DESIGN.md --pattern "-actor-"
   $ python3 scripts/fdd.py list-ids --artifact architecture/features/FEATURES.md --pattern "feature-.*" --regex
-  $ python3 scripts/fdd.py list-ids --artifact architecture/ADR.md --under-heading "Section B"
+  $ python3 scripts/fdd.py list-ids --artifact architecture/ADR --under-heading "Section B"
 
 RELATED:
   - @CLI.find-id
@@ -163,7 +163,7 @@ EXIT CODES:
 EXAMPLE:
   $ python3 scripts/fdd.py get-item --artifact architecture/BUSINESS.md --id fdd-myapp-actor-admin
   $ python3 scripts/fdd.py get-item --artifact architecture/DESIGN.md --heading "Authentication System"
-  $ python3 scripts/fdd.py get-item --artifact architecture/ADR.md --section A
+  $ python3 scripts/fdd.py get-item --artifact architecture/ADR --section A
 
 RELATED:
   - @CLI.list-items
@@ -336,3 +336,58 @@ RELATED:
   - @CLI.where-defined
   - @CLI.scan-ids
 ---
+
+COMMAND agent-workflows
+SYNOPSIS: python3 scripts/fdd.py agent-workflows --agent <name> [options]
+DESCRIPTION: Generate/update agent-specific workflow proxy files (e.g. Windsurf .windsurf/workflows) that redirect to existing FDD workflows
+WORKFLOW: adapter-agents
+
+ARGUMENTS:
+
+OPTIONS:
+  --agent  <string>  required  Agent/IDE key (e.g., windsurf)
+  --root  <path>  Project root directory to search from (default: current directory)
+  --fdd-root  <path>  Explicit FDD core root (optional override)
+  --config  <path>  Path to agent workflows config JSON (default: {project-root}/fdd-agent-workflows.json)
+  --dry-run  <boolean>  Compute changes without writing files
+
+EXIT CODES:
+  0  Success (config present and sync completed)
+  1  Error (invalid args, missing project root, invalid config)
+  2  Config incomplete (agent exists in config but missing required fields)
+
+EXAMPLE:
+  $ python3 scripts/fdd.py agent-workflows --agent windsurf
+  $ python3 scripts/fdd.py agent-workflows --agent windsurf --dry-run
+
+RELATED:
+  - @Workflow.adapter-agents
+
+---
+
+COMMAND agent-skills
+SYNOPSIS: python3 scripts/fdd.py agent-skills --agent <name> [options]
+DESCRIPTION: Generate/update agent-specific skill outputs (e.g. Windsurf .windsurf/skills/<skill-name>/SKILL.md, Cursor .cursor/rules/*.mdc, Claude .claude/commands/*.md, Copilot .github/copilot-instructions.md)
+WORKFLOW: adapter-agents
+
+ARGUMENTS:
+
+OPTIONS:
+  --agent  <string>  required  Agent/IDE key (e.g., windsurf)
+  --root  <path>  Project root directory to search from (default: current directory)
+  --config  <path>  Path to agent skills config JSON (default: {project-root}/fdd-agent-skills.json)
+  --dry-run  <boolean>  Compute changes without writing files
+
+EXIT CODES:
+  0  Success (config present and skill sync completed)
+  1  Error (invalid args, missing project root, invalid config)
+  2  Config incomplete (agent exists in config but missing required fields)
+
+EXAMPLE:
+  $ python3 scripts/fdd.py agent-skills --agent windsurf
+  $ python3 scripts/fdd.py agent-skills --agent windsurf --dry-run
+
+RELATED:
+  - @CLI.agent-workflows
+  - @Workflow.adapter-agents
+

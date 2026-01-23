@@ -90,7 +90,7 @@ This requirement applies only when a workflow explicitly requires producing prop
 - Proposal folder `{artifact-prefix}` MUST be derived from the first listed artifact according to:
   - `architecture/BUSINESS.md` -> `business-context`
   - `architecture/DESIGN.md` -> `overall-design`
-  - `architecture/ADR.md` -> `adr`
+  - `architecture/ADR/` -> `adr`
   - `architecture/features/FEATURES.md` -> `features-manifest`
   - `architecture/features/feature-{slug}/DESIGN.md` -> `feature-design`
 

@@ -228,7 +228,7 @@ FDD provides **Claude-compatible skills** for automated artifact search and vali
 **Available Skills**:
 
 **fdd** (Unified Tool):
-- **Validation**: Validate BUSINESS.md, DESIGN.md, ADR.md, FEATURES.md, feature DESIGN.md, feature CHANGES.md
+- **Validation**: Validate BUSINESS.md, DESIGN.md, architecture/ADR/ directory, FEATURES.md, feature DESIGN.md, feature CHANGES.md
 - **Search**: List sections, IDs, and items in any artifact
 - **Traceability**: Find where FDD/ADR IDs are defined or used (repo-wide traceability)
 - **Code Integration**: Codebase traceability scan (@fdd-* tags)
@@ -273,7 +273,7 @@ Adapter Configuration:
 
 Architecture & Requirements:
 ├─ business-context.md      → Create OR update business context (BUSINESS.md)
-├─ adr.md                   → Create/add/edit Architecture Decision Records
+├─ adr/{category}/NNNN-fdd-{slug}.md   → Create/add/edit Architecture Decision Records
 └─ design.md                → Create OR update overall design (DESIGN.md)
 
 Feature Management:
@@ -287,7 +287,7 @@ Feature Management:
 ```
 ├─ adapter-validate.md      → Validate adapter completeness
 ├─ business-validate.md     → Validate BUSINESS.md structure
-├─ adr-validate.md          → Validate ADR.md structure  
+├─ adr-validate.md          → Validate ADR directory structure  
 ├─ design-validate.md       → Validate DESIGN.md (≥90/100)
 ├─ features-validate.md     → Validate FEATURES.md manifest
 ├─ feature-validate.md      → Validate feature DESIGN.md (100/100)
@@ -316,7 +316,7 @@ Day 2: Create business context & design
        
        Run: design-validate.md
        → 5 minutes, score 95/100 
-       → Auto-validates ADR.md
+       → Auto-validates ADR/*
 
 Day 3: Plan features
        Run: features.md workflow
@@ -456,7 +456,7 @@ architecture/
 │   ├── Section C: Technical Architecture
 │   └── Section D: Additional Context (optional)
 │
-├── ADR.md                       # Architecture Decision Records (MADR format)
+├── ADR/{category}/NNNN-fdd-{slug}.md  # Architecture Decision Records (MADR format)
 │
 ├── diagrams/                    # Architecture diagrams
 │
@@ -614,7 +614,7 @@ Completeness: 85% (minimum: 100%)
 - Domain model types (formally specified)
 - API contracts (formally specified)
 - Security model and NFRs
-- Architecture Decision Records (ADR.md)
+- Architecture Decision Records (`architecture/ADR/`)
 
 **Features Manifest** (`architecture/features/FEATURES.md`):
 - Complete list of all features
@@ -771,7 +771,7 @@ FDD tasks vary greatly. Each operation class below lists realistic model options
 - **Fast/Lite** – latency-optimized, high throughput, smaller context.
 
 #### 1. Documentation & Design (Writing)
-**Tasks**: Create/expand `BUSINESS.md`, `DESIGN.md`, `FEATURES.md`, `ADR.md`
+**Tasks**: Create/expand `BUSINESS.md`, `DESIGN.md`, `FEATURES.md`, `architecture/ADR/`
 **Requirements**: Long-context understanding, structured output, template following
 
 **Recommended**
@@ -831,7 +831,8 @@ FDD is designed for a **single expert** (typically an architect or senior develo
 - Skills system (`fdd`) works with any AI assistant
 - Requires `python3` for skill execution
 
-For teams, work can be distributed: one person owns overall design and architecture decisions (BUSINESS.md, DESIGN.md, ADR.md), while others can own individual feature designs (FEATURES.md, feature/DESIGN.md) and implementation (CHANGES.md). All artifacts use plain English (FDL) for actor flows and algorithms, making them reviewable by non-technical stakeholders. Validation workflows ensure consistency and completeness before implementation.
+For teams, work can be distributed: one person owns overall design and architecture decisions (BUSINESS.md, DESIGN.md, architecture/ADR/), while others can own individual feature designs (FEATURES.md, feature/DESIGN.md) and implementation (CHANGES.md). All artifacts use plain English (FDL) for actor flows and algorithms, making them reviewable by non-technical stakeholders. Validation workflows ensure consistency and completeness before implementation.
+
 
 ---
 
@@ -852,7 +853,7 @@ For teams, work can be distributed: one person owns overall design and architect
 │   ├── workflow-execution.md                   # General workflow execution
 │   ├── business-context-structure.md           # BUSINESS.md structure
 │   ├── overall-design-structure.md             # DESIGN.md structure
-│   ├── adr-structure.md                        # ADR.md structure
+│   ├── adr-structure.md                        # ADR directory structure
 │   ├── features-manifest-structure.md          # FEATURES.md structure
 │   ├── feature-design-structure.md             # Feature DESIGN.md structure
 │   ├── feature-changes-structure.md            # Feature CHANGES.md structure
@@ -875,7 +876,7 @@ For teams, work can be distributed: one person owns overall design and architect
     ├── business-context.md                     # Create/update BUSINESS.md
     ├── business-validate.md                    # Validate BUSINESS.md
     ├── adr.md                                  # Create/add/edit ADRs
-    ├── adr-validate.md                         # Validate ADR.md
+    ├── adr-validate.md                         # Validate ADR
     ├── design.md                               # Create/update DESIGN.md
     ├── design-validate.md                      # Validate DESIGN.md
     ├── features.md                             # Create/update FEATURES.md
@@ -898,7 +899,7 @@ For teams, work can be distributed: one person owns overall design and architect
 architecture/                                    # Your designs (created by workflows)
 ├── BUSINESS.md                                 # Business context
 ├── DESIGN.md                                   # Overall Design
-├── ADR.md                                      # Architecture Decision Records
+├── ADR/{category}/NNNN-fdd-id-{slug}.md        # Architecture Decision Records
 ├── diagrams/                                   # Architecture diagrams
 └── features/                                   # Feature designs
     ├── FEATURES.md                            # Feature manifest

@@ -1,6 +1,6 @@
 ---
 name: fdd
-description: Unified FDD tool for validation and search. Validates FDD artifacts (BUSINESS.md, DESIGN.md, ADR.md, FEATURES.md, feature DESIGN.md, feature CHANGES.md) against FDD requirements with cascading dependency validation. Provides read-only search and traceability for FDD artifacts and FDD/ADR IDs with repo-wide scanning capabilities. Supports optional project-level configuration via .fdd-config.json.
+description: Unified FDD tool for validation and search. Validates FDD artifacts (BUSINESS.md, DESIGN.md, architecture/ADR/ directory, FEATURES.md, feature DESIGN.md, feature CHANGES.md) against FDD requirements with cascading dependency validation. Provides read-only search and traceability for FDD artifacts and FDD/ADR IDs with repo-wide scanning capabilities. Supports optional project-level configuration via .fdd-config.json.
 ---
 
 # FDD Unified Tool
@@ -38,6 +38,59 @@ The unified tool uses subcommands for different operations:
 ```bash
 python3 scripts/fdd.py <subcommand> [options]
 ```
+
+## Agent Integration (Workflows and Skills)
+
+This tool can generate agent/IDE integration files that point back to existing FDD workflows and this skill.
+
+**Supported agents (built-in defaults)**:
+- `windsurf`
+- `cursor`
+- `claude`
+- `copilot`
+
+### Generate Agent Workflow Proxies
+
+Create or update agent-specific workflow proxy files (example: Windsurf `.windsurf/workflows/*.md`).
+
+```bash
+python3 scripts/fdd.py agent-workflows --agent windsurf
+python3 scripts/fdd.py agent-workflows --agent windsurf --dry-run
+```
+
+**Behavior**:
+- Creates/updates workflow proxy files (one per FDD workflow)
+- Renames misnamed proxy files to the canonical `fdd-{workflow}.md` naming where safe
+- Deletes stale proxy files that point to workflows that no longer exist
+
+**Config**:
+- Default file: `fdd-agent-workflows.json`
+- If the agent is unknown, the tool creates a stub config and exits with `CONFIG_INCOMPLETE` until you fill in the required fields.
+
+### Generate Agent Skills
+
+Create or update agent-specific skill outputs (example: Windsurf `.windsurf/skills/fdd/SKILL.md`).
+
+```bash
+python3 scripts/fdd.py agent-skills --agent windsurf
+python3 scripts/fdd.py agent-skills --agent windsurf --dry-run
+```
+
+**Config**:
+- Default file: `fdd-agent-skills.json`
+
+**Schema**:
+- Preferred: `outputs[]` (array of output files)
+- Legacy: a single skill folder schema (`skills_dir`, `skill_name`, `entry_filename`, `template`) is still supported for backward compatibility
+
+For each output, the generated content is a proxy that instructs the agent to open and follow this canonical file.
+
+### Unknown Agent Behavior
+
+For both `agent-workflows` and `agent-skills`:
+- If the config file does not exist, it is created with an empty stub for the requested agent.
+- If required fields are missing, the command exits with `CONFIG_INCOMPLETE` (exit code `2`).
+- No agent files are generated until the config is completed.
 
 ## Project Configuration
 
@@ -98,8 +151,8 @@ python3 scripts/fdd.py validate --artifact .
 
 This performs **cascading validation**:
 1. **BUSINESS.md** — validates business context structure
-2. **ADR.md** — validates ADR structure, cross-refs to BUSINESS.md
-3. **DESIGN.md** — validates overall design, cross-refs to BUSINESS.md and ADR.md
+2. **architecture/ADR/** — validates ADR structure, cross-refs to BUSINESS.md
+3. **DESIGN.md** — validates overall design, cross-refs to BUSINESS.md and ADRs
 4. **FEATURES.md** — validates features manifest, cross-refs to DESIGN.md requirements
 5. **Feature DESIGN.md** — validates each feature design, cross-refs to overall DESIGN.md
 6. **Feature CHANGES.md** — validates each feature changes, cross-refs to feature DESIGN.md
@@ -317,7 +370,7 @@ python3 scripts/fdd.py where-used --root {repo-root} --id {id} --max-bytes 50000
 When `--requirements` is not provided, the tool automatically selects the appropriate requirements file:
 
 - `BUSINESS.md` → `requirements/business-context-structure.md`
-- `ADR.md` → `requirements/adr-structure.md`
+- `ADR/` → `requirements/adr-structure.md`
 - `FEATURES.md` → `requirements/features-manifest-structure.md`
 - `DESIGN.md` (feature scope) → `requirements/feature-design-structure.md`
 - `CHANGES.md` → `requirements/feature-changes-structure.md`

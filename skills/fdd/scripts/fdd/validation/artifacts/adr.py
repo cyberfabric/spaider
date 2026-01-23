@@ -1,5 +1,5 @@
 """
-FDD Validator - ADR.md Validation
+FDD Validator - ADR Validation
 
 Validates architectural decision records.
 """
@@ -9,23 +9,22 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from ...constants import (
-    ADR_HEADING_RE,
     ADR_DATE_RE,
-    ADR_STATUS_RE,
+    ADR_HEADING_RE,
+    ADR_ID_LINE_RE,
     ADR_ID_RE,
     ADR_NUM_RE,
+    ADR_STATUS_RE,
     ACTOR_ID_RE,
     CAPABILITY_ID_RE,
-    REQ_ID_RE,
     PRINCIPLE_ID_RE,
+    REQ_ID_RE,
 )
 
 from ...utils import (
     find_placeholders,
-    parse_adr_index,
+    load_adr_entries,
     load_text,
-    field_block,
-    has_list_item,
 )
 
 
@@ -39,10 +38,72 @@ def validate_adr(
     skip_fs_checks: bool = False,
 ) -> Dict[str, object]:
     errors: List[Dict[str, object]] = []
-    placeholders = find_placeholders(artifact_text)
 
-    adr_entries, issues = parse_adr_index(artifact_text)
-    errors.extend(issues)
+    # Directory-mode validation: architecture/ADR/ contains many per-record ADR files.
+    if artifact_path is not None and artifact_path.exists() and artifact_path.is_dir():
+        adr_entries, issues = load_adr_entries(artifact_path)
+        errors.extend(issues)
+
+        placeholders: List[Dict[str, object]] = []
+        business_actors: set = set()
+        business_caps: set = set()
+        design_req: set = set()
+        design_principle: set = set()
+
+        if not skip_fs_checks:
+            bp = business_path or (artifact_path.parent / "BUSINESS.md")
+            dp = design_path or (artifact_path.parent / "DESIGN.md")
+
+            bt, berr = load_text(bp)
+            if berr:
+                errors.append({"type": "cross", "message": berr})
+            else:
+                business_actors = set(ACTOR_ID_RE.findall(bt or ""))
+                business_caps = set(CAPABILITY_ID_RE.findall(bt or ""))
+
+            dt, derr = load_text(dp)
+            if derr:
+                errors.append({"type": "cross", "message": derr})
+            else:
+                design_req = set(REQ_ID_RE.findall(dt or ""))
+                design_principle = set(PRINCIPLE_ID_RE.findall(dt or ""))
+
+        per_file_issues: List[Dict[str, object]] = []
+        for e in adr_entries:
+            p = e.get("path")
+            if not p:
+                continue
+            try:
+                t = Path(str(p)).read_text(encoding="utf-8")
+            except Exception as ex:
+                per_file_issues.append({"adr": e.get("ref"), "message": f"Failed to read ADR file: {ex}", "path": str(p)})
+                continue
+
+            placeholders.extend(find_placeholders(t))
+            per_file_issues.extend(
+                _validate_single_adr_text(
+                    t,
+                    adr_ref=str(e.get("ref")),
+                    require_h1=True,
+                    business_actors=business_actors,
+                    business_caps=business_caps,
+                    design_req=design_req,
+                    design_principle=design_principle,
+                )
+            )
+
+        passed = (len(errors) == 0) and (len(per_file_issues) == 0) and (len(placeholders) == 0)
+        return {
+            "required_section_count": 4,
+            "missing_sections": [],
+            "placeholder_hits": placeholders,
+            "status": "PASS" if passed else "FAIL",
+            "errors": errors,
+            "adr_issues": per_file_issues,
+            "adr_count": len(adr_entries),
+        }
+
+    placeholders = find_placeholders(artifact_text)
 
     business_actors: set = set()
     business_caps: set = set()
@@ -67,79 +128,111 @@ def validate_adr(
             design_req = set(REQ_ID_RE.findall(dt or ""))
             design_principle = set(PRINCIPLE_ID_RE.findall(dt or ""))
 
-    lines = artifact_text.splitlines()
-    current_adr: Optional[str] = None
-    current_block: List[str] = []
-    per_adr_issues: List[Dict[str, object]] = []
-
-    def flush():
-        nonlocal current_adr, current_block
-        if current_adr is None:
-            return
-        block_text = "\n".join(current_block)
-
-        if ADR_DATE_RE.search(block_text) is None:
-            per_adr_issues.append({"adr": current_adr, "message": "Missing **Date**: YYYY-MM-DD"})
-        if ADR_STATUS_RE.search(block_text) is None:
-            per_adr_issues.append({"adr": current_adr, "message": "Missing or invalid **Status**"})
-
-        required_sections = [
-            "### Context and Problem Statement",
-            "### Decision Drivers",
-            "### Considered Options",
-            "### Decision Outcome",
-            "### Related Design Elements",
-        ]
-        for sec in required_sections:
-            if sec not in block_text:
-                per_adr_issues.append({"adr": current_adr, "message": f"Missing section: {sec}"})
-
-        if "### Related Design Elements" in block_text:
-            related_text = block_text.split("### Related Design Elements", 1)[1]
-            referenced = set(ACTOR_ID_RE.findall(related_text)) | set(CAPABILITY_ID_RE.findall(related_text)) | set(REQ_ID_RE.findall(related_text)) | set(PRINCIPLE_ID_RE.findall(related_text))
-            if not referenced:
-                per_adr_issues.append({"adr": current_adr, "message": "Related Design Elements must contain at least one ID"})
-            if business_actors:
-                bad = sorted([x for x in ACTOR_ID_RE.findall(related_text) if x not in business_actors])
-                if bad:
-                    per_adr_issues.append({"adr": current_adr, "message": "Unknown actor IDs in Related Design Elements", "ids": bad})
-            if business_caps:
-                bad = sorted([x for x in CAPABILITY_ID_RE.findall(related_text) if x not in business_caps])
-                if bad:
-                    per_adr_issues.append({"adr": current_adr, "message": "Unknown capability IDs in Related Design Elements", "ids": bad})
-            if design_req:
-                bad = sorted([x for x in REQ_ID_RE.findall(related_text) if x not in design_req])
-                if bad:
-                    per_adr_issues.append({"adr": current_adr, "message": "Unknown requirement IDs in Related Design Elements", "ids": bad})
-            if design_principle:
-                bad = sorted([x for x in PRINCIPLE_ID_RE.findall(related_text) if x not in design_principle])
-                if bad:
-                    per_adr_issues.append({"adr": current_adr, "message": "Unknown principle IDs in Related Design Elements", "ids": bad})
-
-        current_adr = None
-        current_block = []
-
-    for line in lines:
-        m = ADR_HEADING_RE.match(line.strip())
-        if m:
-            flush()
-            current_adr = m.group(1)
-            current_block = []
-            continue
-        if current_adr is not None:
-            current_block.append(line)
-    flush()
+    per_adr_issues = _validate_single_adr_text(
+        artifact_text,
+        adr_ref=None,
+        require_h1=True,
+        business_actors=business_actors,
+        business_caps=business_caps,
+        design_req=design_req,
+        design_principle=design_principle,
+    )
 
     passed = (len(errors) == 0) and (len(per_adr_issues) == 0) and (len(placeholders) == 0)
     return {
-        "required_section_count": 5,
+        "required_section_count": 4,
         "missing_sections": [],
         "placeholder_hits": placeholders,
         "status": "PASS" if passed else "FAIL",
         "errors": errors,
         "adr_issues": per_adr_issues,
-        "adr_count": len(adr_entries),
+        "adr_count": 1,
     }
+
+
+MADR_H1_RE = re.compile(r"^#\s+(ADR-(\d{4})):\s+(.+?)\s*$", re.MULTILINE)
+ADR_ENTRY_RE = ADR_HEADING_RE
+
+
+def _validate_single_adr_text(
+    text: str,
+    *,
+    adr_ref: Optional[str],
+    require_h1: bool,
+    business_actors: Optional[set] = None,
+    business_caps: Optional[set] = None,
+    design_req: Optional[set] = None,
+    design_principle: Optional[set] = None,
+) -> List[Dict[str, object]]:
+    issues: List[Dict[str, object]] = []
+
+    def _has_heading(block: str, title: str) -> bool:
+        t = re.escape(title)
+        return (
+            re.search(rf"^##\s+{t}\s*$", block, flags=re.MULTILINE) is not None
+            or re.search(rf"^###\s+{t}\s*$", block, flags=re.MULTILINE) is not None
+        )
+
+    def _related_block(block: str) -> Optional[str]:
+        if re.search(r"^##\s+Related Design Elements\s*$", block, flags=re.MULTILINE) is not None:
+            return block.split("## Related Design Elements", 1)[1]
+        if re.search(r"^###\s+Related Design Elements\s*$", block, flags=re.MULTILINE) is not None:
+            return block.split("### Related Design Elements", 1)[1]
+        return None
+
+    h1 = [m for m in MADR_H1_RE.finditer(text)]
+    is_single_record = len(h1) == 1
+    if require_h1 and not is_single_record:
+        issues.append({"adr": adr_ref or "(file)", "message": "ADR must have exactly one H1 heading: '# ADR-NNNN: Title'"})
+        return issues
+
+    if is_single_record:
+        if ADR_DATE_RE.search(text) is None:
+            issues.append({"adr": adr_ref or "(file)", "message": "Missing **Date**: YYYY-MM-DD"})
+        if ADR_STATUS_RE.search(text) is None:
+            issues.append({"adr": adr_ref or "(file)", "message": "Missing or invalid **Status**"})
+        if ADR_ID_LINE_RE.search(text) is None:
+            issues.append({"adr": adr_ref or "(file)", "message": "Missing or invalid **ADR ID** line"})
+
+        if "Chosen option:" not in text:
+            issues.append({"adr": adr_ref or "(file)", "message": "Decision Outcome must include 'Chosen option:'"})
+
+        required_sections = [
+            "Context and Problem Statement",
+            "Considered Options",
+            "Decision Outcome",
+            "Related Design Elements",
+        ]
+        for sec in required_sections:
+            if not _has_heading(text, sec):
+                issues.append({"adr": adr_ref or "(file)", "message": f"Missing required section: {sec}"})
+
+        rel = _related_block(text)
+        if rel is not None:
+            referenced = set(ACTOR_ID_RE.findall(rel)) | set(CAPABILITY_ID_RE.findall(rel)) | set(REQ_ID_RE.findall(rel)) | set(PRINCIPLE_ID_RE.findall(rel))
+            if not referenced:
+                issues.append({"adr": adr_ref or "(file)", "message": "Related Design Elements must contain at least one ID"})
+
+            if business_actors:
+                bad = sorted([x for x in ACTOR_ID_RE.findall(rel) if x not in business_actors])
+                if bad:
+                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown actor IDs in Related Design Elements", "ids": bad})
+            if business_caps:
+                bad = sorted([x for x in CAPABILITY_ID_RE.findall(rel) if x not in business_caps])
+                if bad:
+                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown capability IDs in Related Design Elements", "ids": bad})
+            if design_req:
+                bad = sorted([x for x in REQ_ID_RE.findall(rel) if x not in design_req])
+                if bad:
+                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown requirement IDs in Related Design Elements", "ids": bad})
+            if design_principle:
+                bad = sorted([x for x in PRINCIPLE_ID_RE.findall(rel) if x not in design_principle])
+                if bad:
+                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown principle IDs in Related Design Elements", "ids": bad})
+
+        return issues
+
+    return issues
 
 
 FIELD_HEADER_RE = re.compile(r"^\s*[-*]?\s*\*\*([^*]+)\*\*:\s*(.*)$")

@@ -2,7 +2,7 @@
 Test overall DESIGN.md validation.
 
 Critical validator that ensures system design integrity,
-requirements traceability, and cross-references to BUSINESS.md and ADR.md.
+requirements traceability, and cross-references to BUSINESS.md and ADR/{category}/NNNN-fdd-{slug}.md.
 """
 
 import unittest
@@ -364,7 +364,7 @@ Description.
 
 
 class TestOverallDesignCrossReferences(unittest.TestCase):
-    """Test cross-reference validation with BUSINESS.md and ADR.md."""
+    """Test cross-reference validation with BUSINESS.md and ADR directory."""
 
     def test_cross_reference_validation_with_business(self):
         """Test validation with BUSINESS.md cross-references."""
@@ -642,25 +642,45 @@ class TestOverallDesignADRReferences(unittest.TestCase):
     """Test ADR reference validation."""
 
     def test_adr_references_validated(self):
-        """Test that ADR references are validated against ADR.md."""
+        """Test that ADR references are validated against architecture/ADR directory."""
         with TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             arch = tmppath / "architecture"
             arch.mkdir()
-            
-            adr = arch / "ADR.md"
-            adr.write_text("""# ADR Index
 
-## ADR-0001: Use Python
-
-**Date**: 2024-01-01
-
-**Status**: Accepted
-
-**ID**: `fdd-app-adr-0001`
-
-Decision content.
-""")
+            adr_dir = arch / "ADR" / "general"
+            adr_dir.mkdir(parents=True)
+            (adr_dir / "0001-fdd-app-adr-use-python.md").write_text(
+                "\n".join(
+                    [
+                        "# ADR-0001: Use Python",
+                        "",
+                        "**Date**: 2024-01-01",
+                        "",
+                        "**Status**: Accepted",
+                        "",
+                        "**ADR ID**: `fdd-app-adr-use-python`",
+                        "",
+                        "## Context and Problem Statement",
+                        "",
+                        "Decision content.",
+                        "",
+                        "## Considered Options",
+                        "",
+                        "- Python",
+                        "",
+                        "## Decision Outcome",
+                        "",
+                        "Chosen option: \"Python\", because test.",
+                        "",
+                        "## Related Design Elements",
+                        "",
+                        "- `fdd-app-req-test`",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
             
             design = arch / "DESIGN.md"
             design_text = """# Technical Design
@@ -696,7 +716,7 @@ References ADR-0001.
             report = validate_overall_design(
                 design_text,
                 artifact_path=design,
-                adr_path=adr,
+                adr_path=arch / "ADR",
                 skip_fs_checks=False
             )
             
@@ -713,18 +733,40 @@ References ADR-0001.
             tmppath = Path(tmpdir)
             arch = tmppath / "architecture"
             arch.mkdir()
-            
-            adr = arch / "ADR.md"
-            adr.write_text("""# ADR Index
 
-## ADR-0001: Real ADR
-
-**Date**: 2024-01-01
-
-**Status**: Accepted
-
-**ID**: `fdd-app-adr-0001`
-""")
+            adr_dir = arch / "ADR" / "general"
+            adr_dir.mkdir(parents=True)
+            (adr_dir / "0001-fdd-app-adr-real.md").write_text(
+                "\n".join(
+                    [
+                        "# ADR-0001: Real ADR",
+                        "",
+                        "**Date**: 2024-01-01",
+                        "",
+                        "**Status**: Accepted",
+                        "",
+                        "**ADR ID**: `fdd-app-adr-real`",
+                        "",
+                        "## Context and Problem Statement",
+                        "",
+                        "Real.",
+                        "",
+                        "## Considered Options",
+                        "",
+                        "- A",
+                        "",
+                        "## Decision Outcome",
+                        "",
+                        "Chosen option: \"A\", because test.",
+                        "",
+                        "## Related Design Elements",
+                        "",
+                        "- `fdd-app-req-test`",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
             
             design = arch / "DESIGN.md"
             design_text = """# Technical Design
@@ -760,7 +802,7 @@ Unknown ADR!
             report = validate_overall_design(
                 design_text,
                 artifact_path=design,
-                adr_path=adr,
+                adr_path=arch / "ADR",
                 skip_fs_checks=False
             )
             

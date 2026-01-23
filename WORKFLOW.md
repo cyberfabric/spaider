@@ -118,11 +118,11 @@
 
 **Artifacts**:
 - `architecture/DESIGN.md`
-- `architecture/ADR.md` (optional)
+- `architecture/ADR/` (optional)
 - `architecture/features/FEATURES.md`
 
 **Workflows**:
-- `design` - Create/update DESIGN.md (may update ADR.md)
+- `design` - Create/update DESIGN.md (may create/update ADRs under `architecture/ADR/`)
 - `design-validate` - Validate DESIGN.md (vs BUSINESS.md, vs structure, ADR consistency)
 - `features` - Create/update FEATURES.md (decompose design into features)
 - `features-validate` - Validate FEATURES.md (vs DESIGN.md, vs structure)
@@ -244,7 +244,7 @@
 
 ### Layer 3: Overall Design
 
-**Artifacts**: `architecture/DESIGN.md`, `architecture/ADR.md`
+**Artifacts**: `architecture/DESIGN.md`, `architecture/ADR/`
 
 **Workflows**:
 - `design` (Architect)
@@ -372,7 +372,7 @@
 ### Architect Workflows (6)
 
 7. `design` - Type: Operation
-   - Create/update DESIGN.md (and ADR.md)
+   - Create/update DESIGN.md (and ADR/{category}/NNNN-fdd-id-{slug}.md)
    - Prerequisite: BUSINESS.md validated
    
 8. `design-validate` - Type: Validation (shared with PM)
