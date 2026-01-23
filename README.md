@@ -705,7 +705,7 @@ This interactive workflow will:
 
 **Result**: Adapter created/updated at `{adapter-directory}/` with status COMPLETE or INCOMPLETE
 
-For manual setup, see: **`ADAPTER_GUIDE.md`**
+For manual setup, see: **`guides/ADAPTER.md`**
 
 ### 4. Configure AI Agent (2 minutes, optional) 
 
@@ -846,7 +846,7 @@ For teams, work can be distributed: one person owns overall design and architect
 ├── WORKFLOW.md                                 # Workflow system overview
 ├── FDL.md                                      # FDD Description Language syntax (removed)
 ├── CLISPEC.md                                  # CLI command specification format
-├── ADAPTER_GUIDE.md                            # How to create project adapter
+├── guides/ADAPTER.md                           # How to create project adapter
 ├── requirements/                               # All FDD requirements and structure specs
 │   ├── FDL.md                                  # FDD Description Language syntax
 │   ├── execution-protocol.md                   # Workflow execution protocol
@@ -931,7 +931,7 @@ architecture/                                    # Your designs (created by work
 
 ### For Creating Adapters
 
-- **`ADAPTER_GUIDE.md`** - Complete guide for creating project adapters
+- **`guides/ADAPTER.md`** - Complete guide for creating project adapters
 - **`workflows/adapter.md`** - Interactive workflow for adapter creation/update
 
 ---

@@ -26,4 +26,4 @@ ALWAYS open and follow discovered `{adapter-directory}/AGENTS.md` WHEN adapter i
 - `../requirements/workflow-selection.md` - Complete workflow selection guide
 - `../requirements/workflow-execution.md` - How to execute workflows
 - `../requirements/extension.md` - Extension mechanism
-- `../ADAPTER_GUIDE.md` - Creating project adapters
+- `../guides/ADAPTER.md` - Creating project adapters

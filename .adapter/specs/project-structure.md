@@ -30,7 +30,7 @@ FDD/
 ├── AGENTS.md            # Core AI agent navigation
 ├── QUICKSTART.md        # Quick start guide
 ├── WORKFLOW.md          # Workflow overview
-├── ADAPTER_GUIDE.md     # Adapter creation guide
+├── guides/ADAPTER.md    # Adapter creation guide
 ├── CLISPEC.md           # CLI specification
 └── fdd-flow-layers.drawio.svg  # Architecture diagram
 ```

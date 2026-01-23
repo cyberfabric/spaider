@@ -460,7 +460,7 @@ Syntax highlighting:
 ## References
 
 - **FDD Methodology**: `AGENTS.md`
-- **Adapter Guide**: `ADAPTER_GUIDE.md`
+- **Adapter Guide**: `guides/ADAPTER.md`
 - **Example Usage**: See `../fdd-cli-adapter/AGENTS.md` for real-world CLISPEC
 
 ---

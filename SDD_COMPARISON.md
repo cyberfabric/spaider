@@ -266,7 +266,7 @@ This is an industry-standard linear weighting system for feature comparison matr
 ## Primary sources consulted
 
 ### FDD
-- `README.md`, `WORKFLOW.md`, `QUICKSTART.md`, `ADAPTER_GUIDE.md`
+- `README.md`, `WORKFLOW.md`, `QUICKSTART.md`, `guides/ADAPTER.md`
 - FDD workflow execution requirements and protocols in `requirements/` and `workflows/`
 
 ### OpenSpec
