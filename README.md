@@ -273,7 +273,7 @@ Adapter Configuration:
 
 Architecture & Requirements:
 ├─ business-context.md      → Create OR update business context (BUSINESS.md)
-├─ adr/{category}/NNNN-fdd-{slug}.md   → Create/add/edit Architecture Decision Records
+├─ adr.md                   → Create/add/edit Architecture Decision Records
 └─ design.md                → Create OR update overall design (DESIGN.md)
 
 Feature Management:
