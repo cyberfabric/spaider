@@ -47,6 +47,27 @@ Extract:
 
 ---
 
+## Engineering Best Practices (MANDATORY)
+
+Apply these practices while implementing each work package.
+
+- [ ] TDD: Write a failing test for the next behavior change, implement the minimal code to pass, then refactor.
+- [ ] SOLID:
+  - Single Responsibility: Keep each module/function focused on one reason to change.
+  - Open/Closed: Extend behavior via composition/configuration instead of editing unrelated logic.
+  - Liskov Substitution: Ensure implementations honor the interface contract and invariants.
+  - Interface Segregation: Prefer small, purpose-driven interfaces over broad ones.
+  - Dependency Inversion: Depend on abstractions; inject dependencies to keep logic testable.
+- [ ] DRY: Remove duplication by extracting shared logic with clear ownership.
+- [ ] KISS: Prefer the simplest correct solution that matches the design and adapter conventions.
+- [ ] YAGNI: Do not introduce features/abstractions not required by the current design scope.
+- [ ] Refactoring discipline: Refactor only after tests pass; keep behavior unchanged while improving structure.
+- [ ] Testability: Structure code so core logic is testable without heavy integration setup.
+- [ ] Error handling: Fail explicitly with clear errors; do not silently ignore failures.
+- [ ] Observability (when applicable): Log meaningful events at integration boundaries without leaking secrets.
+
+---
+
 ## Prerequisites
 
 **MUST validate**:
@@ -218,6 +239,7 @@ Expected:
 
 - [ ] All prerequisites were met
 - [ ] All steps were executed in order
+- [ ] Engineering best practices were followed during implementation (TDD, SOLID, DRY, KISS, YAGNI)
 
 ---
 

@@ -47,6 +47,7 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 - [ ] ✅ I am ready to check EVERY validation criterion individually
 - [ ] ✅ I will verify tests pass and build succeeds
 - [ ] ✅ I will complete self-test before reporting results
+- [ ] ✅ I will validate adherence to engineering best practices required by `code.md` (TDD, SOLID, DRY, KISS, YAGNI)
 
 **⚠️ If ANY checkbox is unchecked → STOP and read missing files first**
 
@@ -221,6 +222,13 @@ Extract:
 - No ignored tests without documented reason
 - No placeholder tests (assert!(true))
 
+**Engineering best practices (required by `code.md`)**:
+- TDD: New/changed behavior is covered by tests, and tests meaningfully assert the expected outcomes.
+- SOLID: Responsibilities are separated; no single function/module mixes unrelated concerns; dependencies are injectable where appropriate.
+- DRY: No copy-paste duplication across feature code and tests without clear justification.
+- KISS: No unnecessary complexity introduced to satisfy the design.
+- YAGNI: No speculative abstractions, configuration, or extension points beyond the validated design scope.
+
 **Score**: 15 points
 
 ### 10. Validate Code Logic Consistency with Design
@@ -340,6 +348,7 @@ Extract:
 ✅ | ❌ No unimplemented! in business logic: {found count}
 ✅ | ❌ No ignored tests without reason: {found count}
 ✅ | ❌ Error handling complete
+✅ | ❌ Engineering best practices followed (TDD, SOLID, DRY, KISS, YAGNI)
 
 **Code Logic Consistency** ({X}/20):
 ✅ | ❌ Requirements logic matches design specifications
@@ -428,6 +437,7 @@ Self-validating workflow
 
 - [ ] All prerequisites were met
 - [ ] All steps were executed in order
+- [ ] Engineering best practices adherence was validated (TDD, SOLID, DRY, KISS, YAGNI)
 
 ---
 
