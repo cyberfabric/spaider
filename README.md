@@ -115,13 +115,13 @@ All operation workflows automatically detect whether you're creating something n
 
 First time:
 ```
-Follow @/FDD/workflows/adapter.md
+Open and follow `workflows/adapter.md`
 → No adapter found → CREATE mode
 ```
 
 Later, to update:
 ```
-Follow @/FDD/workflows/adapter.md
+Open and follow `workflows/adapter.md`
 → Adapter exists → UPDATE mode
 → What to update?
    - Domain model specs
@@ -152,7 +152,7 @@ Q3: API contract format?
 **Example: Iterating on Feature Design**
 
 ```
-Follow @/FDD/workflows/feature.md
+Open and follow `workflows/feature.md`
 → Feature exists → UPDATE mode
 → What to update?
    - Add new actor flow
@@ -223,7 +223,7 @@ FDD provides **Claude-compatible skills** for automated artifact search and vali
 **Available Skills**:
 
 **fdd** (Unified Tool):
-- **Validation**: Validate PRD.md, DESIGN.md, architecture/ADR/ directory, FEATURES.md, feature DESIGN.md
+- **Validation**: Validate FDD artifacts registered in `{adapter-dir}/artifacts.json` (defaults include PRD, DESIGN, ADR directory, FEATURES, and feature DESIGN artifacts)
 - **Search**: List sections, IDs, and items in any artifact
 - **Traceability**: Find where FDD/ADR IDs are defined or used (repo-wide traceability)
 - **Code Integration**: Codebase traceability scan (@fdd-* tags)
@@ -243,10 +243,10 @@ python3 skills/fdd/scripts/fdd.py where-used --id "fdd-example-req-001"
 
 # Validate feature design
 python3 skills/fdd/scripts/fdd.py validate \
-  --artifact architecture/features/feature-login/DESIGN.md
+  --artifact {feature_design_path_from_artifacts_json}
 
 # List all IDs in a document
-python3 skills/fdd/scripts/fdd.py list-ids --artifact architecture/DESIGN.md
+python3 skills/fdd/scripts/fdd.py list-ids --artifact {design_path_from_artifacts_json}
 ```
 
 Skills integrate with FDD workflows - validation workflows use `fdd` as the Deterministic Gate.
@@ -589,28 +589,28 @@ Completeness: 85% (minimum: 100%)
 - Testing frameworks and build tools
 - Project-specific conventions
 
-**PRD** (`architecture/PRD.md`):
+**PRD** (path defined by `{adapter-dir}/artifacts.json`, kind: `PRD`; default: `architecture/PRD.md`):
 - System vision and purpose
 - Key actors (users, systems, services)
 - Core capabilities (what system can do)
 - Business constraints and compliance requirements
 
-**Overall Design** (`architecture/DESIGN.md`):
+**Overall Design** (path defined by `{adapter-dir}/artifacts.json`, kind: `DESIGN`; default: `architecture/DESIGN.md`):
 - Architecture style and layers
 - Requirements and principles
 - Domain model types (formally specified)
 - API contracts (formally specified)
 - Security model and NFRs
-- Architecture Decision Records (`architecture/ADR/`)
+- Architecture Decision Records (path defined by `{adapter-dir}/artifacts.json`, kind: `ADR`; default: `architecture/ADR/`)
 
-**Features Manifest** (`architecture/features/FEATURES.md`):
+**Features Manifest** (path defined by `{adapter-dir}/artifacts.json`, kind: `FEATURES`; default: `architecture/features/FEATURES.md`):
 - Complete list of all features
 - Feature priorities (CRITICAL, HIGH, MEDIUM, LOW)
 - Feature status (⏳ NOT_STARTED, 🔄 IN_PROGRESS, ✅ COMPLETE)
 - Dependencies between features
 - Auto-generated from feature designs
 
-**Feature Design** (`architecture/features/feature-{slug}/DESIGN.md`):
+**Feature Design** (path defined by `{adapter-dir}/artifacts.json`, kind: `FEATURE`; default: `architecture/features/feature-{slug}/DESIGN.md`):
 - Feature overview and scope
 - Actor flows (how users interact - PRIMARY)
 - Algorithms in FDL (plain English logic)
@@ -661,7 +661,7 @@ git submodule add <fdd-repo-url> /FDD
 
 With AI agent:
 ```
-Follow @/FDD/workflows/adapter.md to create FDD adapter
+Open and follow `workflows/adapter.md` to create the adapter
 ```
 
 This interactive workflow will:
@@ -698,8 +698,8 @@ This optional workflow uses the `fdd` skill generators to create/update agent-sp
 
 **AI agent workflows**: 
 ```
-Follow @/FDD/workflows/prd.md
-Follow @/FDD/workflows/design.md
+Open and follow `workflows/prd.md`
+Open and follow `workflows/design.md`
 ```
 
 These workflows guide you through creating PRD.md and DESIGN.md with interactive questions.
@@ -708,8 +708,8 @@ These workflows guide you through creating PRD.md and DESIGN.md with interactive
 
 **AI agent workflows**:
 ```
-Follow @/FDD/workflows/features.md  # Generate FEATURES.md
-Follow @/FDD/workflows/feature.md   # Create feature design
+Open and follow `workflows/features.md`  # Generate FEATURES manifest
+Open and follow `workflows/feature.md`   # Create feature design
 ```
 
 These workflows extract features from design and guide you through creating feature designs.
@@ -740,7 +740,7 @@ FDD tasks vary greatly. Each operation class below lists realistic model options
 - **Fast/Lite** – latency-optimized, high throughput, smaller context.
 
 #### 1. Documentation & Design (Writing)
-**Tasks**: Create/expand `PRD.md`, `DESIGN.md`, `FEATURES.md`, `architecture/ADR/`
+**Tasks**: Create/expand PRD/DESIGN/FEATURES/ADR artifacts (paths resolved from `{adapter-dir}/artifacts.json`)
 **Requirements**: Long-context understanding, structured output, template following
 
 **Recommended**
@@ -800,7 +800,7 @@ FDD is designed for a **single expert** (typically an architect or senior develo
 - Skills system (`fdd`) works with any AI assistant
 - Requires `python3` for skill execution
 
-For teams, work can be distributed: one person owns overall design and architecture decisions (PRD.md, DESIGN.md, architecture/ADR/), while others can own individual feature designs (FEATURES.md, feature/DESIGN.md) and implementation. All artifacts use plain English (FDL) for actor flows and algorithms, making them reviewable by non-technical stakeholders. Validation workflows ensure consistency and completeness before implementation.
+For teams, work can be distributed: one person owns overall design and architecture decisions (PRD/DESIGN/ADR artifacts), while others can own individual feature designs (FEATURES + feature DESIGN artifacts) and implementation. All artifacts use plain English (FDL) for actor flows and algorithms, making them reviewable by non-technical stakeholders. Validation workflows ensure consistency and completeness before implementation.
 
 
 ---
@@ -968,7 +968,7 @@ Validation is done via checklists (manual review). AI assistants can help automa
 
 ### Example: Login Feature
 
-**PRD** (`architecture/PRD.md`):
+**PRD** (default: `architecture/PRD.md`):
 ```markdown
 ## B. Actors
 - **End User**: Person accessing the system
@@ -977,7 +977,7 @@ Validation is done via checklists (manual review). AI assistants can help automa
 - User authentication with email/password
 ```
 
-**Overall Design** (`architecture/DESIGN.md`):
+**Overall Design** (default: `architecture/DESIGN.md`):
 ```markdown
 ## C. Technical Architecture
 
@@ -989,7 +989,7 @@ Validation is done via checklists (manual review). AI assistants can help automa
 - POST /auth/login (email, password) → session token
 ```
 
-**Feature Design** (`architecture/features/feature-login/DESIGN.md`):
+**Feature Design** (default: `architecture/features/feature-login/DESIGN.md`):
 ```markdown
 ## B. Actor Flows
 

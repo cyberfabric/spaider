@@ -16,8 +16,8 @@ Use this track when you have an existing codebase (with or without existing docs
 **Goal**: produce validated baseline artifacts so future changes are controlled.
 
 - Use the codebase and any existing docs as input.
-- Create `architecture/PRD.md` ([taxonomy](TAXONOMY.md#prdmd)).
-- Create `architecture/DESIGN.md` ([taxonomy](TAXONOMY.md#designmd)).
+- Create the PRD artifact (default: `architecture/PRD.md`) ([taxonomy](TAXONOMY.md#prdmd)).
+- Create the overall design artifact (default: `architecture/DESIGN.md`) ([taxonomy](TAXONOMY.md#designmd)).
 - Capture stable decisions as ADRs when needed ([taxonomy](TAXONOMY.md#adr)).
 - Validate baseline artifacts before feature work.
 
@@ -25,7 +25,7 @@ Use this track when you have an existing codebase (with or without existing docs
 
 Use this when baseline exists and you want to code a new capability.
 
-- Update `architecture/features/FEATURES.md` ([taxonomy](TAXONOMY.md#featuresmd)).
+- Update the FEATURES manifest artifact (default: `architecture/features/FEATURES.md`) ([taxonomy](TAXONOMY.md#featuresmd)).
 - Create/update feature `DESIGN.md` ([taxonomy](TAXONOMY.md#feature-designmd)).
 - Implement with `implement`.
 
@@ -40,7 +40,7 @@ Recommended context to include:
 - Existing docs you trust (paths)
 - Constraints and invariants you must preserve
 - What you want to treat as source of truth (code vs docs)
-- For validation workflows: what artifact/path you want to validate (defaults are standard FDD locations)
+- For validation workflows: what artifact/path you want to validate (resolve via `{adapter-dir}/artifacts.json`; defaults may be `architecture/...`)
 
 Example format:
 ```text
@@ -64,7 +64,7 @@ Goal:
 #### 1. `/fdd-prd`
 
 **What it does**:
-- Creates or updates `architecture/PRD.md` ([taxonomy](TAXONOMY.md#prdmd)).
+- Creates or updates the PRD artifact ([taxonomy](TAXONOMY.md#prdmd)).
 
 **Provide context**:
 - If docs exist: paths and what is reliable
@@ -89,7 +89,7 @@ Context:
 #### 3. `/fdd-design` (ADR + Overall Design)
 
 **What it does**:
-- Creates or updates `architecture/DESIGN.md` ([taxonomy](TAXONOMY.md#designmd)).
+- Creates or updates the overall design artifact ([taxonomy](TAXONOMY.md#designmd)).
 - Creates or updates ADRs when decisions must be recorded ([taxonomy](TAXONOMY.md#adr)).
 
 **Provide context**:
@@ -134,7 +134,7 @@ Context:
 #### 5. `/fdd-features`
 
 **What it does**:
-- Creates or updates `architecture/features/FEATURES.md` ([taxonomy](TAXONOMY.md#featuresmd)).
+- Creates or updates the FEATURES manifest artifact ([taxonomy](TAXONOMY.md#featuresmd)).
 
 **Provide context**:
 - If the system is large: which modules/domains should become separate features

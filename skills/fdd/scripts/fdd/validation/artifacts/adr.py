@@ -46,28 +46,27 @@ def validate_adr(
         errors.extend(issues)
 
         placeholders: List[Dict[str, object]] = []
-        prd_actors: set = set()
-        prd_caps: set = set()
-        design_req: set = set()
-        design_principle: set = set()
+        prd_actors: Optional[set] = None
+        prd_caps: Optional[set] = None
+        design_req: Optional[set] = None
+        design_principle: Optional[set] = None
 
         if not skip_fs_checks:
-            bp = prd_path or (artifact_path.parent / "PRD.md")
-            dp = design_path or (artifact_path.parent / "DESIGN.md")
+            if prd_path is not None:
+                bt, berr = load_text(prd_path)
+                if berr:
+                    errors.append({"type": "cross", "message": berr, "line": 1})
+                else:
+                    prd_actors = set(ACTOR_ID_RE.findall(bt or ""))
+                    prd_caps = set(CAPABILITY_ID_RE.findall(bt or "")) | set(PRD_FR_ID_RE.findall(bt or ""))
 
-            bt, berr = load_text(bp)
-            if berr:
-                errors.append({"type": "cross", "message": berr})
-            else:
-                prd_actors = set(ACTOR_ID_RE.findall(bt or ""))
-                prd_caps = set(CAPABILITY_ID_RE.findall(bt or "")) | set(PRD_FR_ID_RE.findall(bt or ""))
-
-            dt, derr = load_text(dp)
-            if derr:
-                errors.append({"type": "cross", "message": derr})
-            else:
-                design_req = set(REQ_ID_RE.findall(dt or ""))
-                design_principle = set(PRINCIPLE_ID_RE.findall(dt or ""))
+            if design_path is not None:
+                dt, derr = load_text(design_path)
+                if derr:
+                    errors.append({"type": "cross", "message": derr, "line": 1})
+                else:
+                    design_req = set(REQ_ID_RE.findall(dt or ""))
+                    design_principle = set(PRINCIPLE_ID_RE.findall(dt or ""))
 
         per_file_issues: List[Dict[str, object]] = []
         for e in adr_entries:
@@ -77,21 +76,25 @@ def validate_adr(
             try:
                 t = Path(str(p)).read_text(encoding="utf-8")
             except Exception as ex:
-                per_file_issues.append({"adr": e.get("ref"), "message": f"Failed to read ADR file: {ex}", "path": str(p)})
+                per_file_issues.append({"adr": e.get("ref"), "message": f"Failed to read ADR file: {ex}", "path": str(p), "line": 1})
                 continue
 
             placeholders.extend(find_placeholders(t))
-            per_file_issues.extend(
-                _validate_single_adr_text(
-                    t,
-                    adr_ref=str(e.get("ref")),
-                    require_h1=True,
-                    prd_actors=prd_actors,
-                    prd_caps=prd_caps,
-                    design_req=design_req,
-                    design_principle=design_principle,
-                )
+            file_issues = _validate_single_adr_text(
+                t,
+                adr_ref=str(e.get("ref")),
+                require_h1=True,
+                prd_actors=prd_actors,
+                prd_caps=prd_caps,
+                design_req=design_req,
+                design_principle=design_principle,
             )
+            for it in file_issues:
+                if "path" not in it:
+                    it["path"] = str(p)
+                if "line" not in it:
+                    it["line"] = 1
+            per_file_issues.extend(file_issues)
 
         passed = (len(errors) == 0) and (len(per_file_issues) == 0) and (len(placeholders) == 0)
         return {
@@ -106,28 +109,27 @@ def validate_adr(
 
     placeholders = find_placeholders(artifact_text)
 
-    prd_actors: set = set()
-    prd_caps: set = set()
-    design_req: set = set()
-    design_principle: set = set()
+    prd_actors: Optional[set] = None
+    prd_caps: Optional[set] = None
+    design_req: Optional[set] = None
+    design_principle: Optional[set] = None
 
-    if not skip_fs_checks and artifact_path is not None:
-        bp = prd_path or (artifact_path.parent / "PRD.md")
-        dp = design_path or (artifact_path.parent / "DESIGN.md")
+    if not skip_fs_checks:
+        if prd_path is not None:
+            bt, berr = load_text(prd_path)
+            if berr:
+                errors.append({"type": "cross", "message": berr, "line": 1})
+            else:
+                prd_actors = set(ACTOR_ID_RE.findall(bt or ""))
+                prd_caps = set(CAPABILITY_ID_RE.findall(bt or "")) | set(PRD_FR_ID_RE.findall(bt or ""))
 
-        bt, berr = load_text(bp)
-        if berr:
-            errors.append({"type": "cross", "message": berr})
-        else:
-            prd_actors = set(ACTOR_ID_RE.findall(bt or ""))
-            prd_caps = set(CAPABILITY_ID_RE.findall(bt or "")) | set(PRD_FR_ID_RE.findall(bt or ""))
-
-        dt, derr = load_text(dp)
-        if derr:
-            errors.append({"type": "cross", "message": derr})
-        else:
-            design_req = set(REQ_ID_RE.findall(dt or ""))
-            design_principle = set(PRINCIPLE_ID_RE.findall(dt or ""))
+        if design_path is not None:
+            dt, derr = load_text(design_path)
+            if derr:
+                errors.append({"type": "cross", "message": derr, "line": 1})
+            else:
+                design_req = set(REQ_ID_RE.findall(dt or ""))
+                design_principle = set(PRINCIPLE_ID_RE.findall(dt or ""))
 
     per_adr_issues = _validate_single_adr_text(
         artifact_text,
@@ -167,6 +169,30 @@ def _validate_single_adr_text(
 ) -> List[Dict[str, object]]:
     issues: List[Dict[str, object]] = []
 
+    lines = text.splitlines()
+
+    def _line_for_pos(pos: int) -> int:
+        return text.count("\n", 0, pos) + 1
+
+    def _line_for_match(m: Optional[re.Match]) -> int:
+        if m is None:
+            return 1
+        return _line_for_pos(m.start())
+
+    def _line_for_heading(title: str) -> int:
+        t = re.escape(str(title))
+        m = re.search(rf"^##\s+{t}\s*$", text, flags=re.MULTILINE)
+        if m is None:
+            m = re.search(rf"^###\s+{t}\s*$", text, flags=re.MULTILINE)
+        return _line_for_match(m)
+
+    def _line_for_literal(lit: str) -> int:
+        needle = str(lit)
+        for idx, ln in enumerate(lines, start=1):
+            if needle in ln:
+                return idx
+        return 1
+
     def _has_heading(block: str, title: str) -> bool:
         t = re.escape(title)
         return (
@@ -184,19 +210,20 @@ def _validate_single_adr_text(
     h1 = [m for m in MADR_H1_RE.finditer(text)]
     is_single_record = len(h1) == 1
     if require_h1 and not is_single_record:
-        issues.append({"adr": adr_ref or "(file)", "message": "ADR must have exactly one H1 heading: '# ADR-NNNN: Title'"})
+        issues.append({"adr": adr_ref or "(file)", "message": "ADR must have exactly one H1 heading: '# ADR-NNNN: Title'", "line": 1})
         return issues
 
     if is_single_record:
+        h1_line = _line_for_match(h1[0]) if h1 else 1
         if ADR_DATE_RE.search(text) is None:
-            issues.append({"adr": adr_ref or "(file)", "message": "Missing **Date**: YYYY-MM-DD"})
+            issues.append({"adr": adr_ref or "(file)", "message": "Missing **Date**: YYYY-MM-DD", "line": h1_line})
         if ADR_STATUS_RE.search(text) is None:
-            issues.append({"adr": adr_ref or "(file)", "message": "Missing or invalid **Status**"})
+            issues.append({"adr": adr_ref or "(file)", "message": "Missing or invalid **Status**", "line": h1_line})
         if ADR_ID_LINE_RE.search(text) is None:
-            issues.append({"adr": adr_ref or "(file)", "message": "Missing or invalid **ADR ID** line"})
+            issues.append({"adr": adr_ref or "(file)", "message": "Missing or invalid **ADR ID** line", "line": h1_line})
 
         if "Chosen option:" not in text:
-            issues.append({"adr": adr_ref or "(file)", "message": "Decision Outcome must include 'Chosen option:'"})
+            issues.append({"adr": adr_ref or "(file)", "message": "Decision Outcome must include 'Chosen option:'", "line": _line_for_heading("Decision Outcome")})
 
         required_sections = [
             "Context and Problem Statement",
@@ -206,37 +233,45 @@ def _validate_single_adr_text(
         ]
         for sec in required_sections:
             if not _has_heading(text, sec):
-                issues.append({"adr": adr_ref or "(file)", "message": f"Missing required section: {sec}"})
+                issues.append({"adr": adr_ref or "(file)", "message": f"Missing required section: {sec}", "line": h1_line})
 
         rel = _related_block(text)
         if rel is not None:
+            rel_actor_ids = set(ACTOR_ID_RE.findall(rel))
+            rel_cap_ids = set(CAPABILITY_ID_RE.findall(rel))
+            rel_prd_fr_ids = set(PRD_FR_ID_RE.findall(rel))
+            rel_req_ids = set(REQ_ID_RE.findall(rel))
+            rel_principle_ids = set(PRINCIPLE_ID_RE.findall(rel))
             referenced = (
-                set(ACTOR_ID_RE.findall(rel))
-                | set(CAPABILITY_ID_RE.findall(rel))
-                | set(PRD_FR_ID_RE.findall(rel))
-                | set(REQ_ID_RE.findall(rel))
-                | set(PRINCIPLE_ID_RE.findall(rel))
+                rel_actor_ids
+                | rel_cap_ids
+                | rel_prd_fr_ids
+                | rel_req_ids
+                | rel_principle_ids
             )
             if not referenced:
-                issues.append({"adr": adr_ref or "(file)", "message": "Related Design Elements must contain at least one ID"})
+                issues.append({"adr": adr_ref or "(file)", "message": "Related Design Elements must contain at least one ID", "line": _line_for_heading("Related Design Elements")})
 
-            if prd_actors:
-                bad = sorted([x for x in ACTOR_ID_RE.findall(rel) if x not in prd_actors])
+            if prd_actors is not None and rel_actor_ids:
+                bad = sorted([x for x in rel_actor_ids if x not in prd_actors])
                 if bad:
-                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown actor IDs in Related Design Elements", "ids": bad})
-            if prd_caps:
-                rel_caps = set(CAPABILITY_ID_RE.findall(rel)) | set(PRD_FR_ID_RE.findall(rel))
-                bad = sorted([x for x in rel_caps if x not in prd_caps])
+                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown actor IDs in Related Design Elements", "ids": bad, "line": _line_for_literal(bad[0]) if bad else _line_for_heading("Related Design Elements")})
+
+            if prd_caps is not None and (rel_cap_ids or rel_prd_fr_ids):
+                rel_caps_all = rel_cap_ids | rel_prd_fr_ids
+                bad = sorted([x for x in rel_caps_all if x not in prd_caps])
                 if bad:
-                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown PRD IDs in Related Design Elements", "ids": bad})
-            if design_req:
-                bad = sorted([x for x in REQ_ID_RE.findall(rel) if x not in design_req])
+                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown PRD IDs in Related Design Elements", "ids": bad, "line": _line_for_literal(bad[0]) if bad else _line_for_heading("Related Design Elements")})
+
+            if design_req is not None and rel_req_ids:
+                bad = sorted([x for x in rel_req_ids if x not in design_req])
                 if bad:
-                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown requirement IDs in Related Design Elements", "ids": bad})
-            if design_principle:
-                bad = sorted([x for x in PRINCIPLE_ID_RE.findall(rel) if x not in design_principle])
+                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown requirement IDs in Related Design Elements", "ids": bad, "line": _line_for_literal(bad[0]) if bad else _line_for_heading("Related Design Elements")})
+
+            if design_principle is not None and rel_principle_ids:
+                bad = sorted([x for x in rel_principle_ids if x not in design_principle])
                 if bad:
-                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown principle IDs in Related Design Elements", "ids": bad})
+                    issues.append({"adr": adr_ref or "(file)", "message": "Unknown principle IDs in Related Design Elements", "ids": bad, "line": _line_for_literal(bad[0]) if bad else _line_for_heading("Related Design Elements")})
 
         return issues
 

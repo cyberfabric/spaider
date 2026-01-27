@@ -14,7 +14,7 @@ purpose: Define validation rules for ADR directory and per-record ADR files
 
 **ALWAYS open and follow**: `../workflows/adr.md` WHEN executing workflow
 
-**ALWAYS open and follow**: `../templates/ADR.template.md` WHEN generating a new ADR file under `architecture/ADR/`
+**ALWAYS open and follow**: `../templates/ADR.template.md` WHEN generating a new ADR file under the ADR directory (resolved from `{adapter-dir}/artifacts.json`)
 
 **ALWAYS open**: `../examples/requirements/adr/valid.md` WHEN reviewing valid artifact structure
 
@@ -45,16 +45,16 @@ purpose: Define validation rules for ADR directory and per-record ADR files
 
 **Purpose**: Track all significant architectural decisions and their rationale
 
-**Location**: `architecture/ADR/` (directory)
+**Location**: Defined by `{adapter-dir}/artifacts.json` (kind: `ADR`). Default: `architecture/ADR/` (directory)
 
 **Default category**: `architecture/ADR/general/`
 
-**File naming**: `architecture/ADR/{category}/0001-<adr-fdd-id>.md`
+**File naming** (default): `architecture/ADR/{category}/0001-<adr-fdd-id>.md`
 - `{category}`: user-defined grouping folder (kebab-case recommended)
 - `0001`: ADR number (must match `ADR-0001`)
 - `<adr-fdd-id>`: `fdd-{project}-adr-{slug}`
 
-**Reference from DESIGN.md**: link to ADR file path under `architecture/ADR/`
+**Reference from DESIGN.md**: link to ADR file path under the ADR directory (resolved from `{adapter-dir}/artifacts.json`)
 
 ---
 
@@ -78,8 +78,8 @@ purpose: Define validation rules for ADR directory and per-record ADR files
 ### File Validation
 
 1. **ADR directory exists**
-   - Directory `architecture/ADR/` exists
-   - Directory contains ≥1 ADR file matching `architecture/ADR/**/NNNN-fdd-*-adr-*.md` (categories are optional)
+   - ADR directory path exists (resolved from `{adapter-dir}/artifacts.json`)
+   - ADR directory contains ≥1 ADR file matching `**/NNNN-fdd-*-adr-*.md` (categories are optional)
 
 ### ADR Structure Validation (Across All Files)
 

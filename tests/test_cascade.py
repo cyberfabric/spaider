@@ -6,11 +6,30 @@ from pathlib import Path
 
 from skills.fdd.scripts.fdd.validation.cascade import (
     ARTIFACT_DEPENDENCIES,
-    find_artifact_path,
     resolve_dependencies,
     validate_all_artifacts,
     validate_with_dependencies,
 )
+
+
+def _write_registry(*, project_root: Path, adapter_dir: Path, entries: list) -> None:
+    (project_root / ".fdd-config.json").write_text(
+        '{\n  "fddAdapterPath": "adapter"\n}\n',
+        encoding="utf-8",
+    )
+    adapter_dir.mkdir(parents=True, exist_ok=True)
+    (adapter_dir / "AGENTS.md").write_text("# FDD Adapter: Test\n\n**Extends**: `../AGENTS.md`\n", encoding="utf-8")
+    (adapter_dir / "artifacts.json").write_text(
+        (
+            "{\n"
+            "  \"version\": \"1.0\",\n"
+            "  \"artifacts\": "
+            + __import__("json").dumps(entries, indent=2)
+            + "\n"
+            "}\n"
+        ),
+        encoding="utf-8",
+    )
 
 
 class TestArtifactDependencies(unittest.TestCase):
@@ -29,142 +48,6 @@ class TestArtifactDependencies(unittest.TestCase):
         self.assertEqual(ARTIFACT_DEPENDENCIES.get("unknown", []), [])
 
 
-class TestFindArtifactPath(unittest.TestCase):
-    """Test artifact path discovery."""
-
-    def test_find_feature_design_exists(self):
-        """Find DESIGN.md in same directory as an arbitrary feature-local file."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            anchor = tmp_path / "artifact.md"
-            design = tmp_path / "DESIGN.md"
-            anchor.write_text("# Artifact")
-            design.write_text("# Design")
-            
-            result = find_artifact_path("feature-design", anchor)
-            self.assertEqual(result, design)
-
-    def test_find_feature_design_not_exists(self):
-        """Return None if DESIGN.md not found."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            anchor = tmp_path / "artifact.md"
-            anchor.write_text("# Artifact")
-            
-            result = find_artifact_path("feature-design", anchor)
-            self.assertIsNone(result)
-
-    def test_find_features_manifest_exists(self):
-        """Find FEATURES.md in architecture/features/."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            arch_features = tmp_path / "architecture" / "features"
-            arch_features.mkdir(parents=True)
-            features = arch_features / "FEATURES.md"
-            features.write_text("# Features")
-            artifact = tmp_path / "some" / "path" / "artifact.md"
-            artifact.parent.mkdir(parents=True)
-            artifact.write_text("# Artifact")
-            
-            result = find_artifact_path("features-manifest", artifact)
-            self.assertEqual(result, features)
-
-    def test_find_features_manifest_not_exists(self):
-        """Return None if FEATURES.md not found."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            artifact = tmp_path / "artifact.md"
-            artifact.write_text("# Artifact")
-            
-            result = find_artifact_path("features-manifest", artifact)
-            self.assertIsNone(result)
-
-    def test_find_overall_design_exists(self):
-        """Find DESIGN.md in architecture/."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            arch = tmp_path / "architecture"
-            arch.mkdir()
-            design = arch / "DESIGN.md"
-            design.write_text("# Design")
-            artifact = tmp_path / "some" / "path" / "artifact.md"
-            artifact.parent.mkdir(parents=True)
-            artifact.write_text("# Artifact")
-            
-            result = find_artifact_path("overall-design", artifact)
-            self.assertEqual(result, design)
-
-    def test_find_overall_design_not_exists(self):
-        """Return None if overall DESIGN.md not found."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            artifact = tmp_path / "artifact.md"
-            artifact.write_text("# Artifact")
-            
-            result = find_artifact_path("overall-design", artifact)
-            self.assertIsNone(result)
-
-    def test_find_prd_exists(self):
-        """Find PRD.md in architecture/."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            arch = tmp_path / "architecture"
-            arch.mkdir()
-            prd = arch / "PRD.md"
-            prd.write_text("# PRD")
-            artifact = tmp_path / "some" / "path" / "artifact.md"
-            artifact.parent.mkdir(parents=True)
-            artifact.write_text("# Artifact")
-            
-            result = find_artifact_path("prd", artifact)
-            self.assertEqual(result, prd)
-
-    def test_find_prd_not_exists(self):
-        """Return None if PRD.md not found."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            artifact = tmp_path / "artifact.md"
-            artifact.write_text("# Artifact")
-            
-            result = find_artifact_path("prd", artifact)
-            self.assertIsNone(result)
-
-    def test_find_adr_exists(self):
-        """Find ADR directory in architecture/."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            arch = tmp_path / "architecture"
-            arch.mkdir()
-            adr = arch / "ADR"
-            adr.mkdir()
-            artifact = tmp_path / "some" / "path" / "artifact.md"
-            artifact.parent.mkdir(parents=True)
-            artifact.write_text("# Artifact")
-            
-            result = find_artifact_path("adr", artifact)
-            self.assertEqual(result, adr)
-
-    def test_find_adr_not_exists(self):
-        """Return None if ADR directory not found."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            artifact = tmp_path / "artifact.md"
-            artifact.write_text("# Artifact")
-            
-            result = find_artifact_path("adr", artifact)
-            self.assertIsNone(result)
-
-    def test_find_unknown_artifact_kind(self):
-        """Return None for unknown artifact kind."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            artifact = tmp_path / "artifact.md"
-            artifact.write_text("# Artifact")
-            
-            result = find_artifact_path("unknown-kind", artifact)
-            self.assertIsNone(result)
-
-
 class TestResolveDependencies(unittest.TestCase):
     """Test dependency resolution."""
 
@@ -172,9 +55,22 @@ class TestResolveDependencies(unittest.TestCase):
         """prd has no dependencies."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
-            prd = tmp_path / "PRD.md"
-            prd.write_text("# PRD")
-            
+
+            (tmp_path / ".git").mkdir()
+            adapter_dir = tmp_path / "adapter"
+            arch = tmp_path / "architecture"
+            arch.mkdir()
+            prd = arch / "PRD.md"
+            prd.write_text("# PRD", encoding="utf-8")
+
+            _write_registry(
+                project_root=tmp_path,
+                adapter_dir=adapter_dir,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+                ],
+            )
+
             result = resolve_dependencies("prd", prd)
             self.assertEqual(result, {})
 
@@ -182,30 +78,55 @@ class TestResolveDependencies(unittest.TestCase):
         """ADR depends on prd."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
+
+            (tmp_path / ".git").mkdir()
+            adapter_dir = tmp_path / "adapter"
             arch = tmp_path / "architecture"
             arch.mkdir()
             adr = arch / "ADR"
             prd = arch / "PRD.md"
             adr.mkdir()
-            prd.write_text("# PRD")
-            
+            prd.write_text("# PRD", encoding="utf-8")
+
+            _write_registry(
+                project_root=tmp_path,
+                adapter_dir=adapter_dir,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+                    {"kind": "ADR", "system": "Test", "path": "architecture/ADR", "format": "FDD"},
+                ],
+            )
+
             result = resolve_dependencies("adr", adr)
             self.assertIn("prd", result)
-            self.assertEqual(result["prd"], prd)
+            self.assertEqual(result["prd"].resolve(), prd.resolve())
 
     def test_resolve_overall_design_full_chain(self):
         """overall-design depends on prd and adr."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
+
+            (tmp_path / ".git").mkdir()
+            adapter_dir = tmp_path / "adapter"
             arch = tmp_path / "architecture"
             arch.mkdir()
             design = arch / "DESIGN.md"
             prd = arch / "PRD.md"
             adr = arch / "ADR"
-            design.write_text("# Design")
-            prd.write_text("# PRD")
+            design.write_text("# Design", encoding="utf-8")
+            prd.write_text("# PRD", encoding="utf-8")
             adr.mkdir()
-            
+
+            _write_registry(
+                project_root=tmp_path,
+                adapter_dir=adapter_dir,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+                    {"kind": "ADR", "system": "Test", "path": "architecture/ADR", "format": "FDD"},
+                    {"kind": "DESIGN", "system": "Test", "path": "architecture/DESIGN.md", "format": "FDD"},
+                ],
+            )
+
             result = resolve_dependencies("overall-design", design)
             self.assertIn("prd", result)
             self.assertIn("adr", result)
@@ -214,17 +135,30 @@ class TestResolveDependencies(unittest.TestCase):
         """Dependencies already resolved are skipped."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
+
+            (tmp_path / ".git").mkdir()
+            adapter_dir = tmp_path / "adapter"
             arch = tmp_path / "architecture"
             arch.mkdir()
             design = arch / "DESIGN.md"
             prd = arch / "PRD.md"
-            design.write_text("# Design")
-            prd.write_text("# PRD")
-            
-            # Pre-populate resolved
+            adr = arch / "ADR"
+            design.write_text("# Design", encoding="utf-8")
+            prd.write_text("# PRD", encoding="utf-8")
+            adr.mkdir()
+
+            _write_registry(
+                project_root=tmp_path,
+                adapter_dir=adapter_dir,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+                    {"kind": "ADR", "system": "Test", "path": "architecture/ADR", "format": "FDD"},
+                    {"kind": "DESIGN", "system": "Test", "path": "architecture/DESIGN.md", "format": "FDD"},
+                ],
+            )
+
             existing = {"prd": prd}
             result = resolve_dependencies("overall-design", design, resolved=existing)
-            # Should still have prd from pre-populated
             self.assertIn("prd", result)
 
 
@@ -235,42 +169,92 @@ class TestValidateWithDependencies(unittest.TestCase):
         """Validate prd with no dependencies."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
-            prd = tmp_path / "PRD.md"
-            prd.write_text("""---
-fdd: true
-type: prd
-name: Test PRD
-version: "1.0"
-purpose: Test
----
 
-# FDD: Test PRD
+            (tmp_path / ".git").mkdir()
+            adapter_dir = tmp_path / "adapter"
+            arch = tmp_path / "architecture"
+            arch.mkdir()
+            prd = arch / "PRD.md"
 
-## Overview
+            prd.write_text(
+                "\n".join(
+                    [
+                        "# PRD",
+                        "",
+                        "## A. Vision",
+                        "",
+                        "**Purpose**: Test.",
+                        "",
+                        "Second paragraph.",
+                        "",
+                        "**Target Users**:",
+                        "- User",
+                        "",
+                        "**Key Problems Solved**:",
+                        "- Problem",
+                        "",
+                        "**Success Criteria**:",
+                        "- Criterion",
+                        "",
+                        "**Capabilities**:",
+                        "- Capability",
+                        "",
+                        "## B. Actors",
+                        "",
+                        "### Human Actors",
+                        "",
+                        "#### User",
+                        "",
+                        "**ID**: `fdd-test-actor-user`",
+                        "**Role**: User",
+                        "",
+                        "### System Actors",
+                        "",
+                        "#### System",
+                        "",
+                        "**ID**: `fdd-test-actor-system`",
+                        "**Role**: System",
+                        "",
+                        "## C. Functional Requirements",
+                        "",
+                        "#### Requirement A",
+                        "",
+                        "**ID**: `fdd-test-fr-a`",
+                        "- Does something",
+                        "- **Actors**: `fdd-test-actor-user`",
+                        "",
+                        "## D. Use Cases",
+                        "",
+                        "#### UC-001: Example",
+                        "",
+                        "**ID**: `fdd-test-usecase-a`",
+                        "**Actor**: `fdd-test-actor-user`",
+                        "**Preconditions**: Ready",
+                        "**Flow**:",
+                        "1. Step",
+                        "**Postconditions**: Done",
+                        "",
+                        "## E. Non-functional requirements",
+                        "",
+                        "#### Security",
+                        "",
+                        "**ID**: `fdd-test-nfr-security`",
+                        "- Authentication MUST be required.",
+                        "",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
 
-Test overview.
+            _write_registry(
+                project_root=tmp_path,
+                adapter_dir=adapter_dir,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+                ],
+            )
 
-## Actors
-
-### Actor: Test Actor
-
-**ID**: `fdd-test-actor-user`
-
-**Description**: Test user actor.
-
-## Capabilities
-
-### Capability: Test Capability
-
-**ID**: `fdd-test-capability-main`
-
-Provided by `fdd-test-actor-user`.
-
-## Use Cases
-
-None yet.
-""")
-            
             report = validate_with_dependencies(prd, skip_fs_checks=True)
             self.assertEqual(report["artifact_kind"], "prd")
             self.assertNotIn("dependency_validation", report)
@@ -279,6 +263,9 @@ None yet.
         """Validation fails if dependency fails."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
+
+            (tmp_path / ".git").mkdir()
+            adapter_dir = tmp_path / "adapter"
             arch = tmp_path / "architecture"
             arch.mkdir()
             
@@ -315,29 +302,16 @@ Chosen option: \"A\", because test.
 - `fdd-test-actor-user`
 """, encoding="utf-8")
 
-            adr_text = """---
-fdd: true
-type: adr
-name: Test ADR
-version: "1.0"
-purpose: Test
----
 
-# FDD: Test ADR
+            _write_registry(
+                project_root=tmp_path,
+                adapter_dir=adapter_dir,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+                    {"kind": "ADR", "system": "Test", "path": "architecture/ADR", "format": "FDD"},
+                ],
+            )
 
-## Overview
-
-Test overview.
-
-## Context and Problem Statement
-
-None.
-
-## Superseded ADRs
-
-None.
-"""
-            
             report = validate_with_dependencies(adr, skip_fs_checks=True)
             # ADR validation should fail due to failing prd dependency
             self.assertIn("dependency_validation", report)
@@ -348,6 +322,8 @@ class TestCrossArtifactIdentifierStatuses(unittest.TestCase):
     def test_cross_artifact_status_rules_report_errors(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            (root / ".git").mkdir()
+            adapter_dir = root / "adapter"
             arch = root / "architecture"
             features_dir = arch / "features"
             feature_a_dir = features_dir / "feature-a"
@@ -431,6 +407,17 @@ class TestCrossArtifactIdentifierStatuses(unittest.TestCase):
                 )
                 + "\n",
                 encoding="utf-8",
+            )
+
+            _write_registry(
+                project_root=root,
+                adapter_dir=adapter_dir,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+                    {"kind": "DESIGN", "system": "Test", "path": "architecture/DESIGN.md", "format": "FDD"},
+                    {"kind": "ADR", "system": "Test", "path": "architecture/ADR", "format": "FDD"},
+                    {"kind": "FEATURES", "system": "Test", "path": "architecture/features/FEATURES.md", "format": "FDD"},
+                ],
             )
 
             # DESIGN.md: one requirement marked IMPLEMENTED.
@@ -540,8 +527,8 @@ class TestCrossArtifactIdentifierStatuses(unittest.TestCase):
             self.assertEqual(rep.get("status"), "FAIL")
             av = rep.get("artifact_validation")
             self.assertIsInstance(av, dict)
-            self.assertIn("cross-artifact-status", av)
-            cross = av["cross-artifact-status"]
+            self.assertIn("Test:cross-artifact-status", av)
+            cross = av["Test:cross-artifact-status"]
             errs = cross.get("errors", [])
             self.assertTrue(any("Functional requirement status is IMPLEMENTED" in e.get("message", "") for e in errs))
             self.assertTrue(any("DESIGN requirement status is IMPLEMENTED" in e.get("message", "") for e in errs))

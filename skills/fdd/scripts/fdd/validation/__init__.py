@@ -34,7 +34,6 @@ from .artifacts import (
 
 from .cascade import (
     ARTIFACT_DEPENDENCIES,
-    find_artifact_path,
     resolve_dependencies,
     validate_with_dependencies,
 )
@@ -67,7 +66,6 @@ __all__ = [
     
     # Cascade validation
     "ARTIFACT_DEPENDENCIES",
-    "find_artifact_path",
     "resolve_dependencies",
     "validate_with_dependencies",
 ]

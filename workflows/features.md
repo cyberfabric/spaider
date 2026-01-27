@@ -10,7 +10,7 @@ purpose: Create or update features manifest
 
 **Type**: Operation  
 **Role**: Architect  
-**Artifact**: `architecture/features/FEATURES.md`
+**Artifact**: Path resolved via `{adapter-dir}/artifacts.json` (kind: `FEATURES`; default: `architecture/features/FEATURES.md`)
 
 ---
 
@@ -49,10 +49,13 @@ Extract:
 ## Prerequisites
 
 **MUST validate**:
-- [ ] DESIGN.md exists - validate: Check file at `architecture/DESIGN.md`
+- [ ] DESIGN artifact exists - validate: Check file at DESIGN path from `{adapter-dir}/artifacts.json` (default: `architecture/DESIGN.md`)
 - [ ] DESIGN.md validated - validate: Score ≥90/100
 
-**If missing**: Run `design` and `design-validate` first
+**If missing**: Ask the user whether to:
+- Create/validate DESIGN via `design` + `design-validate`
+- Provide DESIGN input in another form (path, link, or pasted text in any format)
+- Proceed anyway (create FEATURES with explicit TODO-less placeholders avoided; record assumptions)
 
 ---
 
@@ -60,13 +63,13 @@ Extract:
 
 ### 1. Detect Mode
 
-Check if `architecture/features/FEATURES.md` exists:
+Check if the FEATURES manifest artifact exists (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/features/FEATURES.md`):
 - **If exists**: UPDATE mode - Add/edit/remove features
 - **If NOT exists**: CREATE mode - Decompose design into features
 
 ### 2. Read Overall Design
 
-Open `architecture/DESIGN.md`
+Open the DESIGN artifact (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/DESIGN.md`)
 
 Extract:
 - All requirements (Section B)
@@ -141,14 +144,14 @@ Ensure:
 ### 6. Create Feature Directories
 
 For each feature in list:
-- Create `architecture/features/feature-{slug}/`
+- Create feature directory under the configured features root (default: `architecture/features/feature-{slug}/`)
 - Create placeholder `DESIGN.md` with header
 
 ### 7. Summary and Confirmation
 
 Show:
-- **CREATE**: File path: `architecture/features/FEATURES.md` (new file)
-- **UPDATE**: File path: `architecture/features/FEATURES.md` (updating existing)
+- **CREATE**: File path: FEATURES manifest path from `{adapter-dir}/artifacts.json` (default: `architecture/features/FEATURES.md`) (new file)
+- **UPDATE**: File path: FEATURES manifest path from `{adapter-dir}/artifacts.json` (default: `architecture/features/FEATURES.md`) (updating existing)
 - Features: {count} ({added}/{modified}/{removed})
 - Dependencies graph
 - Requirements coverage
@@ -159,8 +162,8 @@ Ask: Proceed? [yes/no/modify]
 ### 8. Create or Update File
 
 **CREATE Mode**:
-- Create `architecture/features/` directory
-- Create `architecture/features/FEATURES.md`
+- Create the FEATURES manifest parent directory if needed (from `{adapter-dir}/artifacts.json`)
+- Create the FEATURES manifest artifact file (path from `{adapter-dir}/artifacts.json`)
 
 **UPDATE Mode**:
 - Read existing FEATURES.md

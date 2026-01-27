@@ -47,7 +47,7 @@ purpose: Define validation rules for PRD.md files
 
 **Purpose**: PRD, actors, and requirements
 
-**Location**: `architecture/PRD.md`
+**Location**: Defined by `{adapter-dir}/artifacts.json` (kind: `PRD`). Default: `architecture/PRD.md`
 
 **Contains**: 
 - Section A: Vision
@@ -76,7 +76,7 @@ purpose: Define validation rules for PRD.md files
 ### File Validation
 
 1. **File exists**
-   - File `architecture/PRD.md` exists
+   - PRD artifact path exists (resolved from `{adapter-dir}/artifacts.json`)
    - File contains ≥50 lines (recommended: 200-500 lines)
 
 ### Structure Validation

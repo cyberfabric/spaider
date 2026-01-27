@@ -40,7 +40,7 @@ purpose: Define validation rules for feature DESIGN.md files
 **Template defines**: Structure for generation (HOW to create)  
 **Workflow defines**: Process (STEP by STEP)
 
-**Location**: `architecture/features/feature-{slug}/DESIGN.md`
+**Location**: Defined by `{adapter-dir}/artifacts.json` (kind: `FEATURE`). Default: `architecture/features/feature-{slug}/DESIGN.md`
 
 **Size limits**:
 - Recommended: ≤3000 lines
@@ -62,7 +62,7 @@ purpose: Define validation rules for feature DESIGN.md files
 
 **Should not contain**:
 - Sprint/task breakdowns.
-- System-level type redefinitions (use `architecture/DESIGN.md`).
+- System-level type redefinitions (use the overall DESIGN artifact; default: `architecture/DESIGN.md`).
 - Code diffs or code snippets.
 
 ---
@@ -86,7 +86,7 @@ purpose: Define validation rules for feature DESIGN.md files
 
 ### File Validation
 
-- File exists at `architecture/features/feature-{slug}/DESIGN.md`
+- Feature DESIGN artifact path exists (resolved from `{adapter-dir}/artifacts.json`)
 - File ≤4000 lines (warning if >3000)
 
 ### Structure Validation
@@ -99,7 +99,7 @@ purpose: Define validation rules for feature DESIGN.md files
 
 **Check**:
 - [ ] No sprint/task breakdowns are authored here
-- [ ] No system-level type redefinitions are authored here (reference `architecture/DESIGN.md` instead)
+- [ ] No system-level type redefinitions are authored here (reference the overall DESIGN artifact; default: `architecture/DESIGN.md`)
 - [ ] No code diffs or code snippets are authored here
 
 ### Section Requirements

@@ -19,6 +19,24 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "fdd" / "script
 from fdd.cli import main
 
 
+def _bootstrap_registry(project_root: Path, *, entries: list) -> None:
+    (project_root / ".git").mkdir(exist_ok=True)
+    (project_root / ".fdd-config.json").write_text(
+        '{\n  "fddAdapterPath": "adapter"\n}\n',
+        encoding="utf-8",
+    )
+    adapter_dir = project_root / "adapter"
+    adapter_dir.mkdir(parents=True, exist_ok=True)
+    (adapter_dir / "AGENTS.md").write_text(
+        "# FDD Adapter: Test\n\n**Extends**: `../AGENTS.md`\n",
+        encoding="utf-8",
+    )
+    (adapter_dir / "artifacts.json").write_text(
+        json.dumps({"version": "1.0", "artifacts": entries}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
 class TestCLIValidateCommand(unittest.TestCase):
     """Test validate command variations."""
 
@@ -32,7 +50,7 @@ class TestCLIValidateCommand(unittest.TestCase):
         with redirect_stdout(stdout), redirect_stderr(stderr):
             # Should not raise SystemExit for missing argument
             # (may still fail validation but that's expected)
-            exit_code = main(["validate", "--skip-code-traceability"])
+            exit_code = main(["validate"])
             # Exit code 0 = PASS, 2 = FAIL - both are valid (not argument error)
             self.assertIn(exit_code, [0, 2])
 
@@ -82,12 +100,22 @@ class TestCLIValidateCommand(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / ".git").mkdir()
+            (root / "src").mkdir(parents=True, exist_ok=True)
             (root / "architecture" / "features" / "feature-a").mkdir(parents=True)
             (root / "architecture" / "features" / "feature-b").mkdir(parents=True)
 
             # Minimal artifacts for feature-a/feature-b so traceability runs.
             (root / "architecture" / "features" / "feature-a" / "DESIGN.md").write_text("# Feature: A\n", encoding="utf-8")
             (root / "architecture" / "features" / "feature-b" / "DESIGN.md").write_text("# Feature: B\n", encoding="utf-8")
+
+            _bootstrap_registry(
+                root,
+                entries=[
+                    {"kind": "FEATURE", "system": "Test", "path": "architecture/features/feature-a/DESIGN.md", "format": "FDD"},
+                    {"kind": "FEATURE", "system": "Test", "path": "architecture/features/feature-b/DESIGN.md", "format": "FDD"},
+                    {"kind": "SRC", "system": "Test", "path": "src", "format": "CONTEXT", "traceability_enabled": True, "extensions": [".py"]},
+                ],
+            )
 
             stdout = io.StringIO()
             with redirect_stdout(stdout):
@@ -111,10 +139,18 @@ class TestCLIValidateCommand(unittest.TestCase):
         """Cover --output branch (writes JSON report to file)."""
         with TemporaryDirectory() as tmpdir:
             td = Path(tmpdir)
+            (td / ".git").mkdir(exist_ok=True)
             art = td / "DESIGN.md"
             art.write_text("# Technical Design\n\n## A. X\n", encoding="utf-8")
             req = td / "req.md"
             req.write_text("### Section A: a\n", encoding="utf-8")
+
+            _bootstrap_registry(
+                td,
+                entries=[
+                    {"kind": "DESIGN", "system": "Test", "path": "DESIGN.md", "format": "FDD"},
+                ],
+            )
 
             out_path = td / "out.json"
             exit_code = main(["validate", "--artifact", str(art), "--requirements", str(req), "--output", str(out_path)])
@@ -129,6 +165,13 @@ class TestCLIValidateCommand(unittest.TestCase):
             (td / "architecture" / "features" / "feature-a").mkdir(parents=True)
             (td / "architecture" / "features" / "feature-a" / "DESIGN.md").write_text("# Feature: A\n", encoding="utf-8")
 
+            _bootstrap_registry(
+                td,
+                entries=[
+                    {"kind": "FEATURE", "system": "Test", "path": "architecture/features/feature-a/DESIGN.md", "format": "FDD"},
+                ],
+            )
+
             out_path = td / "out.json"
             exit_code = main(["validate", "--artifact", str(td), "--output", str(out_path), "--skip-fs-checks"])
             self.assertIn(exit_code, (0, 2))
@@ -137,9 +180,18 @@ class TestCLIValidateCommand(unittest.TestCase):
     def test_validate_feature_dir_with_design_md_runs_codebase_traceability(self):
         """Cover validate branch when --artifact is a feature directory containing DESIGN.md."""
         with TemporaryDirectory() as tmpdir:
-            feat = Path(tmpdir) / "architecture" / "features" / "feature-x"
+            root = Path(tmpdir)
+            (root / ".git").mkdir(exist_ok=True)
+            feat = root / "architecture" / "features" / "feature-x"
             feat.mkdir(parents=True)
             (feat / "DESIGN.md").write_text("# Feature: X\n", encoding="utf-8")
+
+            _bootstrap_registry(
+                root,
+                entries=[
+                    {"kind": "FEATURE", "system": "Test", "path": "architecture/features/feature-x/DESIGN.md", "format": "FDD"},
+                ],
+            )
 
             stdout = io.StringIO()
             with redirect_stdout(stdout):

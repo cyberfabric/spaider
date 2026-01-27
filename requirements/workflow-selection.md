@@ -82,7 +82,7 @@ This guide helps you select the correct FDD workflow based on:
 
 **prd.md** - Create or update PRD.md
 - **Use when**: Need to document PRD
-- **Creates**: `architecture/PRD.md`
+- **Creates**: PRD artifact (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/PRD.md`)
 - **Sections**: Vision, Actors, Capabilities
 - **Modes**: CREATE or UPDATE
 - **Next**: `prd-validate`
@@ -98,7 +98,7 @@ This guide helps you select the correct FDD workflow based on:
 
 **design.md** - Create or update overall design
 - **Use when**: Need architecture/system design
-- **Creates**: `architecture/DESIGN.md`
+- **Creates**: DESIGN artifact (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/DESIGN.md`)
 - **Sections**: Architecture, Requirements, Technical Details
 - **Modes**: CREATE or UPDATE
 - **Next**: `design-validate`
@@ -111,7 +111,7 @@ This guide helps you select the correct FDD workflow based on:
 
 **adr.md** - Create or update Architecture Decision Records
 - **Use when**: Need to document architectural decisions
-- **Creates**: `architecture/ADR/` (directory with per-record ADR files)
+- **Creates**: ADR directory (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/ADR/`) (directory with per-record ADR files)
 - **Format**: MADR with FDD extensions
 - **Modes**: CREATE (new ADR) or UPDATE (edit ADR)
 - **Next**: `adr-validate`
@@ -132,7 +132,7 @@ This guide helps you select the correct FDD workflow based on:
 
 **features.md** - Create or update features manifest
 - **Use when**: Need to plan/list features
-- **Creates**: `architecture/FEATURES.md`
+- **Creates**: FEATURES manifest artifact (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/features/FEATURES.md`)
 - **Modes**: CREATE (from DESIGN.md) or UPDATE (manual)
 - **Next**: `features-validate`
 
@@ -144,7 +144,7 @@ This guide helps you select the correct FDD workflow based on:
 
 **feature.md** - Create or update feature design
 - **Use when**: Need to design single feature
-- **Creates**: `architecture/features/feature-{slug}/DESIGN.md`
+- **Creates**: Feature design artifact (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/features/feature-{slug}/DESIGN.md`)
 - **Sections**: A-F (Overview, Actors, Algorithms, Data, API, Requirements)
 - **Modes**: CREATE or UPDATE
 - **Next**: `feature-validate`

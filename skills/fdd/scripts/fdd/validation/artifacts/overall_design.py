@@ -36,64 +36,80 @@ def validate_overall_design(
     errors: List[Dict[str, object]] = []
     placeholders = find_placeholders(artifact_text)
 
+    lines = artifact_text.splitlines()
+
+    def _line_for_match(m: Optional[re.Match]) -> int:
+        if m is None:
+            return 1
+        return artifact_text.count("\n", 0, m.start()) + 1
+
+    def _first_line_for_pattern(pattern: str) -> int:
+        m = re.search(pattern, artifact_text, re.MULTILINE)
+        return _line_for_match(m)
+
+    def _line_for_id(needle: str) -> int:
+        n = str(needle)
+        for idx, ln in enumerate(lines, start=1):
+            if n in ln:
+                return idx
+        return 1
+
     present = find_present_section_ids(artifact_text)
     needed = ["A", "B", "C"]
     missing = [s for s in needed if s not in set(present)]
     if missing:
-        errors.append({"type": "structure", "message": "Missing required top-level sections", "missing": missing})
+        errors.append({"type": "structure", "message": "Missing required top-level sections", "missing": missing, "line": 1})
 
     b_subs = [m.group(1) for m in re.finditer(r"^###\s+B\.(\d+)\s*[:.]", artifact_text, re.MULTILINE)]
     expected_b = ["1", "2"]
     if not b_subs:
-        errors.append({"type": "structure", "message": "Section B must include subsections B.1..B.2", "expected": expected_b})
+        errors.append({"type": "structure", "message": "Section B must include subsections B.1..B.2", "expected": expected_b, "line": _first_line_for_pattern(r"^##\s+B\.")})
     elif b_subs != expected_b:
-        errors.append({"type": "structure", "message": "Section B must have exactly B.1..B.2 in order", "found": b_subs, "expected": expected_b})
+        errors.append({"type": "structure", "message": "Section B must have exactly B.1..B.2 in order", "found": b_subs, "expected": expected_b, "line": _first_line_for_pattern(r"^##\s+B\.")})
 
     c_subs = [m.group(1) for m in re.finditer(r"^###\s+C\.(\d+)\s*[:.]", artifact_text, re.MULTILINE)]
     required_c = ["1", "2", "3", "4"]
     optional_c = {"5", "6", "7"}
     if not c_subs:
-        errors.append({"type": "structure", "message": "Section C must include subsections C.1..C.4", "expected": required_c})
+        errors.append({"type": "structure", "message": "Section C must include subsections C.1..C.4", "expected": required_c, "line": _first_line_for_pattern(r"^##\s+C\.")})
     else:
         if len(c_subs) < len(required_c) or c_subs[:4] != required_c:
-            errors.append({"type": "structure", "message": "Section C must include C.1..C.4 in order", "found": c_subs, "expected": required_c})
+            errors.append({"type": "structure", "message": "Section C must include C.1..C.4 in order", "found": c_subs, "expected": required_c, "line": _first_line_for_pattern(r"^##\s+C\.")})
         else:
             tail = c_subs[4:]
             bad_tail = [x for x in tail if x not in optional_c]
             if bad_tail:
-                errors.append({"type": "structure", "message": "Section C optional subsections may only include C.5..C.7", "found": tail, "bad": bad_tail})
+                errors.append({"type": "structure", "message": "Section C optional subsections may only include C.5..C.7", "found": tail, "bad": bad_tail, "line": _first_line_for_pattern(r"^##\s+C\.")})
             else:
                 ordered_tail = sorted(tail, key=lambda s: int(s))
                 if tail != ordered_tail:
-                    errors.append({"type": "structure", "message": "Section C optional subsections must be in ascending order", "found": tail})
+                    errors.append({"type": "structure", "message": "Section C optional subsections must be in ascending order", "found": tail, "line": _first_line_for_pattern(r"^##\s+C\.")})
 
     has_arch_drivers = re.search(r"^###\s+Architecture drivers\s*$", artifact_text, re.MULTILINE) is not None
     if not has_arch_drivers:
-        errors.append({"type": "structure", "message": "Section A must include '### Architecture drivers'"})
+        errors.append({"type": "structure", "message": "Section A must include '### Architecture drivers'", "line": _first_line_for_pattern(r"^##\s+A\.")})
     else:
         if re.search(r"^####\s+Product requirements\s*$", artifact_text, re.MULTILINE) is None:
-            errors.append({"type": "structure", "message": "Architecture drivers must include '#### Product requirements'"})
+            errors.append({"type": "structure", "message": "Architecture drivers must include '#### Product requirements'", "line": _first_line_for_pattern(r"^###\s+Architecture drivers\s*$")})
         header_re = re.compile(r"^\|\s*FDD ID\s*\|\s*Solution short description\s*\|\s*$", re.MULTILINE)
         if header_re.search(artifact_text) is None:
-            errors.append({"type": "structure", "message": "Product requirements must include a table with columns: FDD ID | Solution short description"})
+            errors.append({"type": "structure", "message": "Product requirements must include a table with columns: FDD ID | Solution short description", "line": _first_line_for_pattern(r"^####\s+Product requirements\s*$")})
 
     prd_actors: set = set()
     prd_usecases: set = set()
     adr_ids: set = set()
     adr_num_to_id: Dict[int, str] = {}
 
-    if not skip_fs_checks and artifact_path is not None:
-        bp = prd_path or (artifact_path.parent / "PRD.md")
-        ap = adr_path or (artifact_path.parent / "ADR")
+    if not skip_fs_checks:
+        if prd_path is not None:
+            bt, berr = load_text(prd_path)
+            if berr:
+                errors.append({"type": "cross", "message": berr, "line": 1})
+            else:
+                prd_actors, _prd_caps_to_actors, prd_usecases = parse_prd_model(bt or "")
 
-        bt, berr = load_text(bp)
-        if berr:
-            errors.append({"type": "cross", "message": berr})
-        else:
-            prd_actors, _prd_caps_to_actors, prd_usecases = parse_prd_model(bt or "")
-
-        if ap.exists() and ap.is_dir():
-            adr_entries, adr_issues = load_adr_entries(ap)
+        if adr_path is not None and adr_path.exists() and adr_path.is_dir():
+            adr_entries, adr_issues = load_adr_entries(adr_path)
             errors.extend(adr_issues)
             for e in adr_entries:
                 if "id" in e and e["id"]:
@@ -107,13 +123,13 @@ def validate_overall_design(
         referenced_actors = sorted(set(ACTOR_ID_RE.findall(artifact_text)))
         bad = [a for a in referenced_actors if a not in prd_actors]
         if bad:
-            reference_issues.append({"message": "Unknown actor IDs", "ids": bad})
+            reference_issues.append({"message": "Unknown actor IDs", "ids": bad, "line": _line_for_id(bad[0]) if bad else 1})
 
     if prd_usecases:
         referenced_usecases = sorted(set(USECASE_ID_RE.findall(artifact_text)))
         bad = [u for u in referenced_usecases if u not in prd_usecases]
         if bad:
-            reference_issues.append({"message": "Unknown use case IDs", "ids": bad})
+            reference_issues.append({"message": "Unknown use case IDs", "ids": bad, "line": _line_for_id(bad[0]) if bad else 1})
 
     if adr_ids:
         referenced_adrs: Set[str] = set(ADR_ID_RE.findall(artifact_text))
@@ -123,12 +139,12 @@ def validate_overall_design(
                 referenced_adrs.add(mapped)
         bad = sorted([a for a in referenced_adrs if a not in adr_ids])
         if bad:
-            reference_issues.append({"message": "Unknown ADR references", "ids": bad})
+            reference_issues.append({"message": "Unknown ADR references", "ids": bad, "line": _line_for_id(bad[0]) if bad else 1})
 
     passed = (len(errors) == 0) and (len(reference_issues) == 0) and (len(placeholders) == 0)
     return {
         "required_section_count": 3,
-        "missing_sections": [{"id": s, "title": ""} for s in missing],
+        "missing_sections": [{"id": s, "title": "", "line": 1} for s in missing],
         "placeholder_hits": placeholders,
         "status": "PASS" if passed else "FAIL",
         "errors": errors,

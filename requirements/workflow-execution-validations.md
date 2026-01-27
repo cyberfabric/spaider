@@ -560,7 +560,7 @@ Should be: `fdd-actor-admin`
 **Valid execution** (PASS scenario):
 ```
 1. Read validation workflow file
-2. Target: architecture/PRD.md
+2. Target: {prd_path} (resolved from `{adapter-dir}/artifacts.json`)
 3. Check file exists ✓
 4. Read requirements/prd-structure.md
 5. Extract validation criteria
@@ -602,10 +602,10 @@ Should be: `fdd-actor-admin`
 **Valid execution** (FAIL scenario):
 ```
 1. Read validation workflow file
-2. Target: architecture/DESIGN.md
+2. Target: {design_path} (resolved from `{adapter-dir}/artifacts.json`)
 3. Check file exists ✓
 4. Read requirements/overall-design-structure.md
-5. Read parent: PRD.md
+5. Read parent: PRD artifact (path resolved from `{adapter-dir}/artifacts.json`)
 
 6. Structure validation:
    - Section A missing ❌ (0 pts)

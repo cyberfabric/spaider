@@ -38,5 +38,7 @@ deck.pptx
 .coverage
 coverage.json
 .windsurf
+.claude
 fdd-agent-workflows.json
 fdd-agent-skills.json
+.tmp/

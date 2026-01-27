@@ -33,6 +33,8 @@ def validate_feature_design(
     artifact_text: str,
     *,
     artifact_path: Optional[Path] = None,
+    prd_path: Optional[Path] = None,
+    features_path: Optional[Path] = None,
     skip_fs_checks: bool = False,
 ) -> Dict[str, object]:
     """
@@ -264,29 +266,29 @@ def validate_feature_design(
                 continue
             actor_ids.append(m.group(1))
 
-        if not skip_fs_checks and artifact_path is not None:
-            bp = artifact_path.parents[2] / "PRD.md"
-            bt, berr = load_text(bp)
-            if berr:
-                errors.append({"type": "cross", "message": berr})
-            else:
-                if actor_ids:
-                    prd_actor_ids = set(re.findall(r"`(fdd-[a-z0-9-]+-actor-[a-z0-9-]+)`", bt or ""))
-                    unknown_ids = sorted([a for a in actor_ids if a not in prd_actor_ids])
-                    if prd_actor_ids and unknown_ids:
-                        errors.append({"type": "cross", "message": "Actor IDs must match PRD.md actor IDs", "section": "A", "actors": unknown_ids})
+        if not skip_fs_checks:
+            if prd_path is not None:
+                bt, berr = load_text(prd_path)
+                if berr:
+                    errors.append({"type": "cross", "message": berr})
+                else:
+                    if actor_ids:
+                        prd_actor_ids = set(re.findall(r"`(fdd-[a-z0-9-]+-actor-[a-z0-9-]+)`", bt or ""))
+                        unknown_ids = sorted([a for a in actor_ids if a not in prd_actor_ids])
+                        if prd_actor_ids and unknown_ids:
+                            errors.append({"type": "cross", "message": "Actor IDs must match PRD.md actor IDs", "section": "A", "actors": unknown_ids})
 
-            fp = artifact_path.parents[1] / "FEATURES.md"
-            ft, ferr = load_text(fp)
-            if ferr:
-                errors.append({"type": "cross", "message": ferr})
-            else:
-                feature_id = None
-                m_fid = re.search(r"\*\*Feature ID\*\*:\s*`([^`]+)`", a_text)
-                if m_fid:
-                    feature_id = m_fid.group(1).strip()
-                if feature_id and feature_id not in ft:
-                    errors.append({"type": "cross", "message": "Feature ID not found in FEATURES.md", "feature_id": feature_id})
+            if features_path is not None:
+                ft, ferr = load_text(features_path)
+                if ferr:
+                    errors.append({"type": "cross", "message": ferr})
+                else:
+                    feature_id = None
+                    m_fid = re.search(r"\*\*Feature ID\*\*:\s*`([^`]+)`", a_text)
+                    if m_fid:
+                        feature_id = m_fid.group(1).strip()
+                    if feature_id and feature_id not in ft:
+                        errors.append({"type": "cross", "message": "Feature ID not found in FEATURES.md", "feature_id": feature_id})
 
     if "E" in sections:
         e_lines = sections["E"]

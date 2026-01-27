@@ -105,10 +105,10 @@ def load_adr_entries(adr_path: Path) -> Tuple[List[Dict[str, object]], List[Dict
     """Load ADR entries from either a legacy single file or the ADR/ directory model."""
     adr_path = Path(adr_path)
     if not adr_path.exists():
-        return [], [{"type": "file", "message": f"ADR path not found: {adr_path}"}]
+        return [], [{"type": "file", "message": f"ADR path not found: {adr_path}", "line": 1}]
 
     if not adr_path.is_dir():
-        return [], [{"type": "file", "message": f"ADR path must be a directory: {adr_path}"}]
+        return [], [{"type": "file", "message": f"ADR path must be a directory: {adr_path}", "line": 1}]
 
     return scan_adr_directory(adr_path)
 
@@ -131,10 +131,10 @@ def scan_adr_directory(adr_dir: Path) -> Tuple[List[Dict[str, object]], List[Dic
     try:
         files = sorted([p for p in adr_dir.rglob("*.md") if p.is_file() and not p.name.startswith(".")])
     except Exception as e:
-        return [], [{"type": "file", "message": f"Failed to scan ADR directory: {adr_dir}: {e}"}]
+        return [], [{"type": "file", "message": f"Failed to scan ADR directory: {adr_dir}: {e}", "line": 1}]
 
     if not files:
-        return [], [{"type": "structure", "message": "No ADR files found"}]
+        return [], [{"type": "structure", "message": "No ADR files found", "line": 1}]
 
     for pth in files:
         mfn = ADR_FILENAME_RE.match(pth.name)
@@ -147,22 +147,23 @@ def scan_adr_directory(adr_dir: Path) -> Tuple[List[Dict[str, object]], List[Dic
         try:
             text = pth.read_text(encoding="utf-8")
         except Exception as e:
-            issues.append({"type": "file", "message": f"Failed to read ADR file: {e}", "path": str(pth)})
+            issues.append({"type": "file", "message": f"Failed to read ADR file: {e}", "path": str(pth), "line": 1})
             continue
 
         headings = [mm for mm in ADR_HEADING_RE.finditer(text)]
         if len(headings) != 1:
-            issues.append({"type": "structure", "message": "ADR file must contain exactly one ADR heading", "path": str(pth), "count": len(headings)})
+            issues.append({"type": "structure", "message": "ADR file must contain exactly one ADR heading", "path": str(pth), "count": len(headings), "line": 1})
             continue
 
         h = headings[0]
+        h_line = text.count("\n", 0, h.start()) + 1
         if not h.group(0).lstrip().startswith("# "):
-            issues.append({"type": "structure", "message": "ADR heading must be an H1 heading (#)", "path": str(pth), "heading": h.group(0).strip()})
+            issues.append({"type": "structure", "message": "ADR heading must be an H1 heading (#)", "path": str(pth), "heading": h.group(0).strip(), "line": h_line})
         adr_ref = h.group(1)
         adr_num = int(h.group(2))
         title = h.group(3)
         if adr_num != file_num:
-            issues.append({"type": "structure", "message": "ADR number in filename must match ADR heading", "path": str(pth), "filename": file_num, "heading": adr_num})
+            issues.append({"type": "structure", "message": "ADR number in filename must match ADR heading", "path": str(pth), "filename": file_num, "heading": adr_num, "line": h_line})
 
         # Look ahead for metadata (up to 10 lines after heading)
         date_val: Optional[str] = None
@@ -195,30 +196,30 @@ def scan_adr_directory(adr_dir: Path) -> Tuple[List[Dict[str, object]], List[Dic
                 break
 
         if adr_id is None:
-            issues.append({"type": "structure", "message": "ADR missing or invalid **ADR ID** line", "path": str(pth), "adr": adr_ref})
+            issues.append({"type": "structure", "message": "ADR missing or invalid **ADR ID** line", "path": str(pth), "adr": adr_ref, "line": heading_line_idx + 1})
         elif adr_id != file_id:
-            issues.append({"type": "structure", "message": "ADR file ID must match filename ID", "path": str(pth), "filename_id": file_id, "id": adr_id})
+            issues.append({"type": "structure", "message": "ADR file ID must match filename ID", "path": str(pth), "filename_id": file_id, "id": adr_id, "line": heading_line_idx + 1})
 
         adrs.append({"ref": adr_ref, "num": adr_num, "title": title, "date": date_val, "status": status_val, "id": adr_id, "path": str(pth)})
 
     if not adrs:
-        return [], (issues + [{"type": "structure", "message": "No ADR entries found"}])
+        return [], (issues + [{"type": "structure", "message": "No ADR entries found", "line": 1}])
 
     nums = sorted([int(a.get("num", 0)) for a in adrs])
     expected = list(range(1, len(nums) + 1))
     if nums != expected:
-        issues.append({"type": "structure", "message": "ADR numbers must be sequential starting at ADR-0001 with no gaps", "found": nums})
+        issues.append({"type": "structure", "message": "ADR numbers must be sequential starting at ADR-0001 with no gaps", "found": nums, "line": 1})
     if 1 not in nums:
-        issues.append({"type": "structure", "message": "ADR-0001 must exist"})
+        issues.append({"type": "structure", "message": "ADR-0001 must exist", "line": 1})
 
     dup_nums = sorted({n for n in nums if nums.count(n) > 1})
     if dup_nums:
-        issues.append({"type": "structure", "message": "Duplicate ADR numbers", "nums": dup_nums})
+        issues.append({"type": "structure", "message": "Duplicate ADR numbers", "nums": dup_nums, "line": 1})
 
     fdd_ids = [str(a.get("id")) for a in adrs if a.get("id")]
     dup_fdd = sorted({x for x in fdd_ids if fdd_ids.count(x) > 1})
     if dup_fdd:
-        issues.append({"type": "structure", "message": "Duplicate ADR IDs", "ids": dup_fdd})
+        issues.append({"type": "structure", "message": "Duplicate ADR IDs", "ids": dup_fdd, "line": 1})
 
     # Stable ordering: by ADR number
     adrs = sorted(adrs, key=lambda a: int(a.get("num", 0)))

@@ -198,13 +198,6 @@ FDD uses **Layered Architecture with Plugin-Based Adapter System** with the foll
 * `fdd-fdd-fr-traceability` - Enabled by ID management component
 * `fdd-fdd-fr-brownfield-support` - Enabled by incremental adoption support
 
-**Requirements**:
-* `fdd-fdd-req-executable-workflows` - Implemented by workflow engine
-* `fdd-fdd-req-deterministic-validation` - Implemented by validation engine
-* `fdd-fdd-req-adapter-configuration` - Implemented by adapter system
-* `fdd-fdd-req-design-first` - Enforced by architecture design
-* `fdd-fdd-req-traceability` - Implemented by ID management
-
 **Principles**:
 * `fdd-fdd-principle-tech-agnostic` - Core architectural principle
 * `fdd-fdd-principle-design-first` - Core architectural principle

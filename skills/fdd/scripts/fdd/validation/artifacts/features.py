@@ -13,6 +13,7 @@ from ...constants import (
     STATUS_OVERVIEW_RE,
     REQ_ID_RE,
     NFR_ID_RE,
+    PRD_FR_ID_RE,
     PRINCIPLE_ID_RE,
     CONSTRAINT_ID_RE,
 )
@@ -42,8 +43,25 @@ def validate_features_manifest(
     errors: List[Dict[str, object]] = []
 
     lines = artifact_text.splitlines()
+
+    def _line_for_literal(lit: str) -> int:
+        needle = str(lit)
+        for idx, ln in enumerate(lines, start=1):
+            if needle in ln:
+                return idx
+        return 1
+
+    def _line_for_exact(exact: str, *, limit: int = 200) -> int:
+        needle = str(exact).strip()
+        for idx, ln in enumerate(lines[:limit], start=1):
+            if ln.strip() == needle:
+                return idx
+        return 1
+
+    def _line_for_feature_list_heading() -> int:
+        return _line_for_exact("## Features List")
     if not lines:
-        errors.append({"type": "file", "message": "Empty file"})
+        errors.append({"type": "file", "message": "Empty file", "line": 1})
         return {
             "required_section_count": 0,
             "missing_sections": [],
@@ -57,19 +75,25 @@ def validate_features_manifest(
     if not re.match(r"^#\s+Features:\s+.+$", lines[0].strip()):
         errors.append({"type": "header", "message": "Missing or invalid title '# Features: {PROJECT_NAME}'", "line": 1})
 
-    overview_line = next((l for l in lines[:120] if "**Status Overview**:" in l), None)
+    overview_idx: Optional[int] = None
+    overview_line: Optional[str] = None
+    for i, l in enumerate(lines[:120], start=1):
+        if "**Status Overview**:" in l:
+            overview_idx = i
+            overview_line = l
+            break
     if overview_line is None:
-        errors.append({"type": "header", "message": "Missing '**Status Overview**:'"})
+        errors.append({"type": "header", "message": "Missing '**Status Overview**:'", "line": 1})
 
-    has_meaning = any(l.strip() == "**Meaning**:" for l in lines[:120])
-    if not has_meaning:
-        errors.append({"type": "header", "message": "Missing '**Meaning**:'"})
+    meaning_line = _line_for_exact("**Meaning**:", limit=120)
+    if meaning_line == 1 and not any(l.strip() == "**Meaning**:" for l in lines[:120]):
+        errors.append({"type": "header", "message": "Missing '**Meaning**:'", "line": 1})
 
     # Minimal meaning lines check
     meaning_block = "\n".join(lines[:160])
     for emoji in ("⏳", "📝", "📘", "🔄", "✅"):
         if emoji not in meaning_block:
-            errors.append({"type": "header", "message": f"Missing meaning entry for '{emoji}'"})
+            errors.append({"type": "header", "message": f"Missing meaning entry for '{emoji}'", "line": meaning_line})
 
     feature_indices: List[int] = []
     feature_headers: List[Dict[str, object]] = []
@@ -90,7 +114,7 @@ def validate_features_manifest(
         )
 
     if not feature_indices:
-        errors.append({"type": "structure", "message": "No feature entries found (expected '### N. [id](feature-.../) EMOJI PRIORITY')"})
+        errors.append({"type": "structure", "message": "No feature entries found (expected '### N. [id](feature-.../) EMOJI PRIORITY')", "line": _line_for_feature_list_heading()})
     else:
         nums = [h["number"] for h in feature_headers]
         expected = list(range(1, len(nums) + 1))
@@ -100,6 +124,7 @@ def validate_features_manifest(
                     "type": "structure",
                     "message": "Feature numbering must be sequential starting at 1 with no gaps",
                     "found": nums,
+                    "line": feature_headers[0]["line"] if feature_headers else 1,
                 }
             )
 
@@ -118,18 +143,24 @@ def validate_features_manifest(
     dup_ids = sorted([k for k, c in seen_ids.items() if c > 1])
     dup_paths = sorted([k for k, c in seen_paths.items() if c > 1])
     if dup_numbers:
-        errors.append({"type": "structure", "message": "Duplicate feature numbers", "numbers": dup_numbers})
+        n0 = dup_numbers[0]
+        line0 = next((int(h["line"]) for h in feature_headers if int(h.get("number", 0)) == n0), 1)
+        errors.append({"type": "structure", "message": "Duplicate feature numbers", "numbers": dup_numbers, "line": line0})
     if dup_ids:
-        errors.append({"type": "structure", "message": "Duplicate feature ids", "ids": dup_ids})
+        fid0 = dup_ids[0]
+        line0 = next((int(h["line"]) for h in feature_headers if str(h.get("id")) == fid0), 1)
+        errors.append({"type": "structure", "message": "Duplicate feature ids", "ids": dup_ids, "line": line0})
     if dup_paths:
-        errors.append({"type": "structure", "message": "Duplicate feature paths", "paths": dup_paths})
+        p0 = dup_paths[0]
+        line0 = next((int(h["line"]) for h in feature_headers if str(h.get("path")) == p0), 1)
+        errors.append({"type": "structure", "message": "Duplicate feature paths", "paths": dup_paths, "line": line0})
 
     path_set = {str(h["path"]) for h in feature_headers}
 
     if overview_line is not None:
         m_overview = STATUS_OVERVIEW_RE.search(overview_line)
         if not m_overview:
-            errors.append({"type": "header", "message": "Invalid Status Overview format"})
+            errors.append({"type": "header", "message": "Invalid Status Overview format", "line": overview_idx or 1})
         else:
             total = int(m_overview.group(1))
             implemented = int(m_overview.group(2))
@@ -158,6 +189,7 @@ def validate_features_manifest(
                                 "design_ready": actual_design_ready,
                                 "in_design": actual_in_design,
                             },
+                            "line": overview_idx or 1,
                         }
                     )
 
@@ -185,22 +217,21 @@ def validate_features_manifest(
                         "message": "Status Overview counts do not match feature entries",
                         "declared": declared,
                         "actual": actual,
+                        "line": overview_idx or 1,
                     }
                 )
 
     design_ids: Dict[str, set] = {"req": set(), "principle": set(), "constraint": set()}
     covered_ids: Dict[str, set] = {"req": set(), "principle": set(), "constraint": set()}
     dep_graph: Dict[str, List[str]] = {}
-    if not skip_fs_checks and artifact_path is not None:
-        resolved_design = design_path
-        if resolved_design is None:
-            resolved_design = artifact_path.parent.parent / "DESIGN.md"
-        if not resolved_design.exists() or not resolved_design.is_file():
-            errors.append({"type": "cross", "message": "DESIGN.md not found for cross-check", "path": str(resolved_design)})
+    if not skip_fs_checks and design_path is not None:
+        if not design_path.exists() or not design_path.is_file():
+            errors.append({"type": "cross", "message": "DESIGN.md not found for cross-check", "path": str(design_path), "line": 1})
         else:
-            dt = resolved_design.read_text(encoding="utf-8")
+            dt = design_path.read_text(encoding="utf-8")
             design_ids["req"].update(REQ_ID_RE.findall(dt))
             design_ids["req"].update(NFR_ID_RE.findall(dt))
+            design_ids["req"].update(PRD_FR_ID_RE.findall(dt))
             design_ids["principle"].update(PRINCIPLE_ID_RE.findall(dt))
             design_ids["constraint"].update(CONSTRAINT_ID_RE.findall(dt))
 
@@ -452,7 +483,7 @@ def validate_features_manifest(
         return False
 
     if dep_graph and _has_cycle(dep_graph):
-        errors.append({"type": "content", "message": "Dependency graph contains a cycle"})
+        errors.append({"type": "content", "message": "Dependency graph contains a cycle", "line": 1})
 
 
     passed = (len(errors) == 0) and (len(feature_issues) == 0) and (len(placeholders) == 0)

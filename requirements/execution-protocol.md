@@ -202,9 +202,9 @@ python3 <FDD_ROOT>/skills/fdd/scripts/fdd.py adapter-info --root <PROJECT_ROOT> 
     - [ ] YES - I will report all issues found
     - [ ] NO - ALWAYS adjust my mindset
 
-11. ⚠️ **Have I run fdd validate as Deterministic Gate and did it PASS?**
-    - [ ] YES - Deterministic Gate PASS, safe to proceed to LLM-heavy validation
-    - [ ] NO - ALWAYS run fdd validate now; if FAIL → STOP workflow
+11. ⚠️ **Have I run the Deterministic Gate (or explicitly skipped it because the input is not a readable repository file)?**
+    - [ ] YES - Deterministic Gate PASS, or Gate SKIPPED with reason documented (non-file input)
+    - [ ] NO - ALWAYS determine gate applicability now; run fdd validate if applicable; if FAIL → STOP workflow
 
 ---
 
@@ -222,6 +222,18 @@ python3 <FDD_ROOT>/skills/fdd/scripts/fdd.py adapter-info --root <PROJECT_ROOT> 
 - Manual coverage mapping (requirements ↔ code ↔ tests)
 - Manual deep review beyond what deterministic validators report
 
+### Gate Applicability (CRITICAL)
+
+**MUST** treat `fdd validate` as applicable ONLY when the validation target is a repository path (file or directory) that the agent can read with tools.
+
+**MUST SKIP** the deterministic gate when the validation target is NOT a readable file (for example: user-provided prompt text, pasted content, a URL/link, or any other non-file input).
+
+**When skipping**:
+1. The agent MUST explicitly report: `Deterministic Gate: SKIPPED`.
+2. The agent MUST include the reason (for example: `input is not a file path readable by tools`).
+3. The agent MUST proceed to the remaining workflow steps that can be performed on the provided content.
+4. The agent MUST NOT claim `PASS` for the gate when it was skipped.
+
 **MANDATORY rules**:
 1. Run `fdd validate` as early as possible for validation workflows.
 2. If `fdd validate` returns **FAIL**:
@@ -234,7 +246,7 @@ python3 <FDD_ROOT>/skills/fdd/scripts/fdd.py adapter-info --root <PROJECT_ROOT> 
    - The agent MUST NOT stop after skill completion.
    - The agent MUST proceed to remaining workflow steps (LLM-heavy/manual validation, additional checks, output generation).
    - Skill execution is part of the workflow, not the entire workflow.
-4. Only after Deterministic Gate **PASS** may the agent perform LLM-heavy/manual validation steps.
+4. Only after Deterministic Gate **PASS** (or Deterministic Gate **SKIPPED** per Gate Applicability rules) may the agent perform LLM-heavy/manual validation steps.
 
 ---
 

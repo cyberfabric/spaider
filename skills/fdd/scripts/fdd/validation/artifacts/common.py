@@ -28,6 +28,7 @@ def validate_generic_sections(artifact_text: str, requirements_path: Path) -> Di
                     "type": "requirements",
                     "message": "Could not parse required sections from requirements file (expected headings like '### Section X: ...')",
                     "requirements": str(requirements_path),
+                    "line": 1,
                 }
             ],
         }
@@ -40,6 +41,7 @@ def validate_generic_sections(artifact_text: str, requirements_path: Path) -> Di
         {
             "id": section_id,
             "title": required_sections[section_id],
+            "line": 1,
         }
         for section_id in required_sections.keys()
         if section_id not in present_ids
@@ -53,7 +55,7 @@ def validate_generic_sections(artifact_text: str, requirements_path: Path) -> Di
         counts[sid] = counts.get(sid, 0) + 1
     dup_sids = sorted([sid for sid, c in counts.items() if c > 1])
     if dup_sids:
-        errors.append({"type": "structure", "message": "Duplicate section ids in artifact", "ids": dup_sids})
+        errors.append({"type": "structure", "message": "Duplicate section ids in artifact", "ids": dup_sids, "line": 1})
 
     # Check section order
     required_order = list(required_sections.keys())
@@ -65,6 +67,7 @@ def validate_generic_sections(artifact_text: str, requirements_path: Path) -> Di
                 "message": "Sections are not in required order",
                 "required_order": required_order,
                 "found_order": present_required_in_order,
+                "line": 1,
             }
         )
     
@@ -100,18 +103,45 @@ def common_checks(
     errors: List[Dict[str, object]] = []
     placeholder_hits: List[Dict[str, object]] = []
 
+    lines = artifact_text.splitlines()
+
+    def _line_idx_for_pos(pos: int) -> int:
+        return artifact_text.count("\n", 0, pos) + 1
+
+    def _line_text(idx: int) -> str:
+        if 1 <= idx <= len(lines):
+            return lines[idx - 1].strip()
+        return ""
+
     # Find HTML comment placeholders
     for match in HTML_COMMENT_RE.finditer(artifact_text):
         comment_text = match.group(0)
+        line_idx = _line_idx_for_pos(match.start())
         for word in ["TODO", "TBD", "TBF", "TBC", "TBA", "FIXME", "XXX"]:
             if word in comment_text.upper():
-                placeholder_hits.append({"type": "html_comment", "token": word, "text": comment_text[:50]})
+                placeholder_hits.append(
+                    {
+                        "type": "html_comment",
+                        "token": word,
+                        "line": line_idx,
+                        "text": _line_text(line_idx) or comment_text[:50],
+                    }
+                )
                 break
 
     # Check for disallowed link notation
     disallowed_pattern = re.compile(r"(@/|@DESIGN\.md|@PRD\.md|@ADR\.md)")
     for match in disallowed_pattern.finditer(artifact_text):
-        errors.append({"type": "link_format", "message": "Disallowed IDE-specific link notation", "token": match.group(0)})
+        line_idx = _line_idx_for_pos(match.start())
+        errors.append(
+            {
+                "type": "link_format",
+                "message": "Disallowed IDE-specific link notation",
+                "token": match.group(0),
+                "line": line_idx,
+                "text": _line_text(line_idx),
+            }
+        )
 
     # Check file links if not skipping
     if not skip_fs_checks:
@@ -134,8 +164,6 @@ def common_checks(
 
     # Check FDD ID formatting and duplicates
     ids_seen: List[str] = []
-    lines = artifact_text.splitlines()
-
     in_fence_mask: List[bool] = [False] * len(lines)
     _fence: Optional[str] = None
     for _idx, _line in enumerate(lines):

@@ -207,21 +207,21 @@ Any check fails: 0/100
 
 #### Phase 1 Output Format:
 ```markdown
-## Validation: FDD Adapter (Bootstrap)
+## Validation Report: FDD Adapter (Bootstrap)
 
-**Location**: `{ADAPTER_DIR}`  
-**Phase**: Bootstrap (Minimal)  
-**Score**: {100 or 0}/100  
-**Status**: PASS | FAIL  
-**Threshold**: 100/100
+### Summary
+- **Status**: **PASS** ✅ | **FAIL** ❌
+- **Score**: **{100 or 0}/100**
+- **Threshold**: **100/100**
+- **Location**: `{ADAPTER_DIR}`
+- **Phase**: *Bootstrap (Minimal)*
 
 ---
 
 ### Checks
-
-✅ | ❌ AGENTS.md exists
-✅ | ❌ Project name heading present
-✅ | ❌ Extends declaration present
+- ✅ | ❌ AGENTS.md exists
+- ✅ | ❌ Project name heading present
+- ✅ | ❌ Extends declaration present
 
 ---
 
@@ -237,66 +237,67 @@ Specs will be added through:
 
 ### Next Steps
 
-**If PASS**: Continue with FDD workflows (prd, design)
-**If FAIL**: Fix AGENTS.md structure
+- **If PASS**: ✅ Continue with FDD workflows (prd, design)
+- **If FAIL**: ❌ Fix AGENTS.md structure, then re-run `adapter-validate`
 ```
 
 #### Phase 2 Output Format:
 ```markdown
-## Validation: FDD Adapter (Evolved)
+## Validation Report: FDD Adapter (Evolved)
 
-**Location**: `{ADAPTER_DIR}`  
-**Phase**: Evolved (With Specs)  
-**Score**: {X}/100  
-**Status**: PASS | FAIL  
-**Threshold**: ≥80/100
+### Summary
+- **Status**: **PASS** ✅ | **FAIL** ❌
+- **Score**: **{X}/100**
+- **Threshold**: **≥80/100**
+- **Location**: `{ADAPTER_DIR}`
+- **Phase**: *Evolved (With Specs)*
 
 ---
 
 ### Findings
 
-**AGENTS.md Structure** ({X}/10):
-✅ | ❌ Extension declaration
-✅ | ❌ Version and Last Updated
-✅ | ❌ Tech Stack summary
+#### 1) AGENTS.md Structure — **{X}/10**
+- ✅ | ❌ Extension declaration
+- ✅ | ❌ Version and Last Updated
+- ✅ | ❌ Tech Stack summary
 
-**MUST Rules Consistency** ({X}/10):
-✅ | ❌ All specs have MUST rules
-✅ | ❌ No orphaned MUST rules
+#### 2) MUST Rules Consistency — **{X}/10**
+- ✅ | ❌ All specs have MUST rules
+- ✅ | ❌ No orphaned MUST rules
 
-**Spec Files** ({X}/65):
-✅ | ❌ tech-stack.md ({X}/15)
-✅ | ❌ domain-model.md ({X}/15)
-✅ | ❌ api-contracts.md ({X}/15)
-✅ | ❌ patterns.md ({X}/10)
-✅ | ❌ conventions.md ({X}/10)
+#### 3) Spec Files — **{X}/65**
+- ✅ | ❌ tech-stack.md (**{X}/15**)
+- ✅ | ❌ domain-model.md (**{X}/15**)
+- ✅ | ❌ api-contracts.md (**{X}/15**)
+- ✅ | ❌ patterns.md (**{X}/10**)
+- ✅ | ❌ conventions.md (**{X}/10**)
 
-**Traceability** ({X}/10):
-✅ | ❌ All specs have source references
+#### 4) Traceability — **{X}/10**
+- ✅ | ❌ All specs have source references
 
-**Quality** ({X}/5):
-✅ | ❌ No placeholders
-✅ | ❌ Cross-platform commands
+#### 5) Quality — **{X}/5**
+- ✅ | ❌ No placeholders
+- ✅ | ❌ Cross-platform commands
 
 ---
 
 ### Recommendations
 
-**Critical** (blocking issues):
-1. {Fix}
+#### Critical *(blocking issues)*
+1. **{Fix}**
 
-**High Priority**:
-1. {Fix}
+#### High Priority
+1. **{Fix}**
 
-**Medium Priority**:
-1. {Improvement}
+#### Medium Priority
+1. **{Improvement}**
 
 ---
 
 ### Next Steps
 
-**If PASS**: Continue with FDD workflows
-**If FAIL**: Fix issues, re-run adapter-validate
+- **If PASS**: ✅ Continue with FDD workflows
+- **If FAIL**: ❌ Fix issues above, then re-run `adapter-validate`
 ```
 
 ---

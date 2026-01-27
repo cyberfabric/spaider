@@ -138,7 +138,7 @@ git clone https://github.com/cyberfabric/fdd FDD
 ```markdown
 # Project AI Agent Instructions
 
-ALWAYS open and follow `/FDD/AGENTS.md`
+ALWAYS open and follow `FDD/AGENTS.md`
 ```
 
 **Result**: Root `AGENTS.md` created with FDD reference
@@ -154,6 +154,10 @@ python3 FDD/skills/fdd/scripts/fdd.py init
 python3 FDD/skills/fdd/scripts/fdd.py agent-workflows --agent windsurf
 python3 FDD/skills/fdd/scripts/fdd.py agent-skills --agent windsurf
 ```
+
+After initialization, create and populate `{adapter-dir}/artifacts.json`.
+`fdd init` currently creates `.fdd-config.json` and the adapter `AGENTS.md`, but it does not create the artifacts registry.
+Artifact locations are resolved via this registry (defaults may be `architecture/...`).
 
 **After this step, you can use FDD directly from your agent chat**:
 

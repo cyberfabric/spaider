@@ -11,6 +11,7 @@ from typing import Dict
 # === PROJECT CONFIGURATION ===
 
 PROJECT_CONFIG_FILENAME = ".fdd-config.json"
+ARTIFACTS_REGISTRY_FILENAME = "artifacts.json"
 
 # === ARTIFACT STRUCTURE PATTERNS ===
 

@@ -7,9 +7,9 @@ File I/O, project root discovery, adapter detection, path resolution.
 import json
 import re
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-from ..constants import PROJECT_CONFIG_FILENAME
+from ..constants import ARTIFACTS_REGISTRY_FILENAME, PROJECT_CONFIG_FILENAME
 
 
 def cfg_get_str(cfg: object, *keys: str) -> Optional[str]:
@@ -232,6 +232,33 @@ def load_adapter_config(adapter_dir: Path) -> Dict[str, object]:
         config["specs"] = sorted(spec_files)
     
     return config
+
+
+def load_artifacts_registry(adapter_dir: Path) -> Tuple[Optional[dict], Optional[str]]:
+    path = adapter_dir / ARTIFACTS_REGISTRY_FILENAME
+    if not path.is_file():
+        return None, f"Missing artifacts registry: {path}"
+    try:
+        raw = path.read_text(encoding="utf-8")
+        cfg = json.loads(raw)
+    except Exception as e:
+        return None, f"Failed to read artifacts registry {path}: {e}"
+    if not isinstance(cfg, dict):
+        return None, f"Invalid artifacts registry (expected JSON object): {path}"
+    if not isinstance(cfg.get("artifacts"), list):
+        return None, f"Invalid artifacts registry (missing 'artifacts' list): {path}"
+    return cfg, None
+
+
+def iter_registry_entries(registry: dict) -> List[dict]:
+    items = registry.get("artifacts")
+    if not isinstance(items, list):
+        return []
+    out: List[dict] = []
+    for it in items:
+        if isinstance(it, dict):
+            out.append(it)
+    return out
 
 
 def fdd_root_from_this_file() -> Path:

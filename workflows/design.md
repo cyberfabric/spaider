@@ -10,7 +10,7 @@ purpose: Create or update overall design document
 
 **Type**: Operation  
 **Role**: Architect  
-**Artifact**: `architecture/DESIGN.md`
+**Artifact**: Path resolved via `{adapter-dir}/artifacts.json` (kind: `DESIGN`; default: `architecture/DESIGN.md`)
 
 ---
 
@@ -48,10 +48,13 @@ Extract:
 ## Prerequisites
 
 **MUST validate**:
-- [ ] PRD.md exists - validate: Check file at `architecture/PRD.md`
+- [ ] PRD artifact exists - validate: Check file at PRD path from `{adapter-dir}/artifacts.json` (default: `architecture/PRD.md`)
 - [ ] PRD.md validated - validate: Score ≥90/100
 
-**If missing**: Run `prd` and `prd-validate` first
+**If missing**: Ask the user whether to:
+- Create PRD via `prd` + `prd-validate`
+- Provide PRD input in another form (path, link, or pasted text in any format)
+- Proceed without PRD (skip PRD-based cross-references; document assumptions explicitly)
 
 ---
 
@@ -61,13 +64,13 @@ Extract:
  
 ### 1. Determine Mode
 
-Check if `architecture/DESIGN.md` exists:
+Check if the DESIGN artifact exists (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/DESIGN.md`):
 - **If exists**: UPDATE mode - Read and propose changes
 - **If NOT exists**: CREATE mode - Generate from scratch
 
 ### 2. Read PRD
 
-Open `architecture/PRD.md`
+Open the PRD artifact (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/PRD.md`)
 
 Extract:
 - Vision (Section A)
@@ -150,8 +153,8 @@ Ensure:
 ### 7. Summary and Confirmation
 
 Show:
-- **CREATE**: File path: `architecture/DESIGN.md` (new file)
-- **UPDATE**: File path: `architecture/DESIGN.md` (updating existing)
+- **CREATE**: File path: DESIGN path from `{adapter-dir}/artifacts.json` (default: `architecture/DESIGN.md`) (new file)
+- **UPDATE**: File path: DESIGN path from `{adapter-dir}/artifacts.json` (default: `architecture/DESIGN.md`) (updating existing)
 - Architecture style (if changed)
 - Components: {count} ({added}/{modified}/{removed})
 - Requirements: {count} ({added}/{modified}/{removed})
@@ -164,7 +167,7 @@ Ask: Proceed? [yes/no/modify]
 ### 8. Create or Update File
 
 **CREATE Mode**:
-- Create `architecture/DESIGN.md`
+- Create the DESIGN artifact file (path from `{adapter-dir}/artifacts.json`)
 
 **UPDATE Mode**:
 - Read existing DESIGN.md
@@ -199,7 +202,7 @@ After operation:
 
 ## Creating Initial ADR
 
-Creating ADR-0001 under `architecture/ADR/general/`...
+Creating ADR-0001 under ADR directory from `{adapter-dir}/artifacts.json` (default category path: `architecture/ADR/general/`)...
 ```
 
 ---

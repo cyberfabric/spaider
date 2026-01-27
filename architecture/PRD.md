@@ -22,13 +22,11 @@ In this project, “FDD” means **Flow-Driven Development**: the project is dev
 - **Validation Complexity**: Manual design reviews are time-consuming and miss structural issues
 
 **Success Criteria**:
-- Teams can adopt FDD incrementally in new or existing codebases without reorganizing the repository
-- Users can start from any stage (PRD, design, implementation, validation) and still make progress
-- PRD, ADRs, and designs stay discoverable, consistent, and auditable over time
-- Deterministic validation catches structural and semantic issues early (before manual review)
-- Traceability is practical and maintainable (IDs in docs, tags in code when enabled)
-- The methodology works with any tech stack through adapters (no forced technology choices)
-- AI-assisted execution is predictable and repeatable (users can reproduce results)
+- A new user can complete adapter initialization and reach a first passing PRD validation (`fdd validate --artifact architecture/PRD.md`) in ≤ 60 minutes.
+- Deterministic validation of the PRD completes in ≤ 3 seconds on a typical developer laptop.
+- 100% of `fdd-fdd-actor-*` IDs defined in the PRD are resolvable via deterministic search (`fdd where-defined`) without ambiguity.
+- CI validation feedback for PRD changes is produced in ≤ 2 minutes from push to default branch.
+- Users can apply a small PRD update (single section change) via `/fdd-prd` in ≤ 10 minutes end-to-end, including re-validation.
 
 **Capabilities**:
 - Execute workflows to create/update/validate artifacts
@@ -39,7 +37,7 @@ In this project, “FDD” means **Flow-Driven Development**: the project is dev
 
 ## B. Actors
 
-**Human Actors**:
+### Human Actors
 
 #### Product Manager
 
@@ -137,8 +135,9 @@ In this project, “FDD” means **Flow-Driven Development**: the project is dev
 **ID**: `fdd-fdd-actor-release-manager`  
 <!-- fdd-id-content -->
 **Role**: Manages releases and tracks feature readiness using FDD artifacts (for example via a Feature Manifest when used)
+<!-- fdd-id-content -->
 
-**System Actors**:
+### System Actors
 
 <!-- fdd-id-content -->
 #### AI Coding Assistant
@@ -429,8 +428,10 @@ In this project, “FDD” means **Flow-Driven Development**: the project is dev
 - Code lens showing traceability status
 
 **Actors**: `fdd-fdd-actor-developer`, `fdd-fdd-actor-architect`, `fdd-fdd-actor-devops-engineer`
-
 <!-- fdd-id-content -->
+
+---
+
 ## D. Use Cases
  
 #### UC-001: Bootstrap New Project with FDD
@@ -491,7 +492,7 @@ In this project, “FDD” means **Flow-Driven Development**: the project is dev
  4. Architect runs `/fdd-feature-validate`; the system validates the Feature Design deterministically (uses capability `fdd-fdd-fr-validation`)
  5. Validation reports 100/100 score (required for feature design)
  
- **Postconditions**: Feature Design validated at 100/100, ready for implementation planning via `fdd-fdd-usecase-plan-implementation`
+ **Postconditions**: Feature Design validated at 100/100, ready for implementation
  
  ---
  
@@ -741,10 +742,10 @@ In this project, “FDD” means **Flow-Driven Development**: the project is dev
  
  **Flow**:
   1. Architect and Project Manager review Overall Design to identify feature boundaries
-  2. Team defines feature list and assigns initial statuses (NOT_STARTED, IN_DESIGN)
-  3. Architect designs features iteratively (IN_DESIGN → DESIGNED → READY)
-  4. Developers code features (IN_PROGRESS → DONE)
-  5. Validation is run after each meaningful update (uses capability `fdd-fdd-fr-validation`)
+ 2. Team defines feature list and assigns initial statuses (NOT_STARTED, IN_DESIGN)
+ 3. Architect designs features iteratively (IN_DESIGN → DESIGNED → READY)
+ 4. Developers code features (IN_PROGRESS → DONE)
+ 5. Validation is run after each meaningful update (uses capability `fdd-fdd-fr-validation`)
  
  **Postconditions**: Clear visibility into feature progress, automated status tracking, dependency validation, historical metrics for planning
  
@@ -862,7 +863,7 @@ In this project, “FDD” means **Flow-Driven Development**: the project is dev
  **Flow**:
   1. Project Manager opens a feature manifest to review current status (uses capability `fdd-fdd-fr-feature-lifecycle`)
   2. Project Manager sees feature statuses: ⏳ NOT_STARTED, 🔄 IN_PROGRESS, ✅ DONE
-  3. Developer marks feature as 🔄 IN_PROGRESS when starting implementation work
+ 3. Developer marks feature as 🔄 IN_PROGRESS when starting implementation work
  4. System validates feature has Feature Design at 100/100 before allowing IN_PROGRESS status
  5. As developer completes implementation work, system suggests status update
  6. Developer runs final validation before marking feature ✅ DONE (uses capability `fdd-fdd-fr-validation`)
@@ -1026,18 +1027,45 @@ In this project, “FDD” means **Flow-Driven Development**: the project is dev
 #### Validation performance
 
 **ID**: `fdd-fdd-nfr-validation-performance`
+ 
+ <!-- fdd-id-content -->
+ - Deterministic validation SHOULD complete in ≤ 10 seconds for typical repositories (≤ 50k LOC).
+ - Validation output MUST be clear and actionable.
+ <!-- fdd-id-content -->
+ 
+#### Security and integrity
 
-<!-- fdd-id-content -->
-- Deterministic validation SHOULD complete quickly for typical repositories.
-- Validation output MUST be clear and actionable.
-<!-- fdd-id-content -->
+**ID**: `fdd-fdd-nfr-security-integrity`
+ 
+ <!-- fdd-id-content -->
+ - Validation MUST NOT execute untrusted code from artifacts.
+ - Validation MUST produce deterministic results given the same repository state.
+ <!-- fdd-id-content -->
+ 
+#### Reliability and recoverability
 
-## F. Additional context
+**ID**: `fdd-fdd-nfr-reliability-recoverability`
+ 
+ <!-- fdd-id-content -->
+ - Validation failures MUST include enough context to remediate without reverse-engineering the validator.
+ - The system SHOULD provide actionable guidance for common failure modes (missing sections, invalid IDs, missing cross-references).
+ <!-- fdd-id-content -->
+ 
+#### Adoption and usability
 
-#### Terminology
+**ID**: `fdd-fdd-nfr-adoption-usability`
+ 
+ <!-- fdd-id-content -->
+ - Workflow instructions SHOULD be executable by a new user without prior FDD context, with ≤ 3 clarifying questions per workflow on average.
+ - Documentation SHOULD prioritize discoverability of next steps and prerequisites.
+ <!-- fdd-id-content -->
+ 
+ ## F. Additional context
+ 
+ #### Terminology
 
 **ID**: `fdd-fdd-prd-context-terminology`
-
-<!-- fdd-id-content -->
-- This PRD uses “FDD” to mean Flow-Driven Development.
-<!-- fdd-id-content -->
+ 
+ <!-- fdd-id-content -->
+ - This PRD uses “FDD” to mean Flow-Driven Development.
+ <!-- fdd-id-content -->

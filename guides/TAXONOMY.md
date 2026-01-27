@@ -126,7 +126,7 @@ AGENTS/Adapter
 - The source of truth for where to find domain model, API contracts, conventions, and validation expectations.
 
 **What it is not**:
-- Not the overall system design (that lives in `architecture/DESIGN.md`).
+- Not the overall system design (that lives in the DESIGN artifact; default: `architecture/DESIGN.md`).
 - Not a dumping ground for general documentation.
 - Not a replacement for ADRs.
 
@@ -139,7 +139,7 @@ AGENTS/Adapter
   - Validation/CI expectations.
 
 **Should not contain**:
-- PRD (use `architecture/PRD.md`).
+- PRD (use the PRD artifact; default: `architecture/PRD.md`).
 - Architecture decisions rationale (use ADRs).
 - Feature specs or implementation plans.
 
@@ -153,7 +153,7 @@ AGENTS/Adapter
 ## PRD.md
 
 **Path**:
-- `architecture/PRD.md`
+- Defined by `{adapter-dir}/artifacts.json` (kind: `PRD`). Default: `architecture/PRD.md`
 
 **Template**:
 - [templates/PRD.template.md](../templates/PRD.template.md)
@@ -179,7 +179,7 @@ AGENTS/Adapter
 - Business vocabulary that downstream artifacts can reference without reinterpretation.
 
 **Should not contain**:
-- Technical architecture (use `architecture/DESIGN.md`).
+- Technical architecture (use the DESIGN artifact; default: `architecture/DESIGN.md`).
 - Implementation steps or tasks.
 - API endpoint specs or schemas.
 
@@ -200,7 +200,7 @@ AGENTS/Adapter
 ## DESIGN.md
 
 **Path**:
-- `architecture/DESIGN.md`
+- Defined by `{adapter-dir}/artifacts.json` (kind: `DESIGN`). Default: `architecture/DESIGN.md`
 
 **Template**:
 - [templates/DESIGN.template.md](../templates/DESIGN.template.md)
@@ -248,7 +248,7 @@ AGENTS/Adapter
 ## ADR
 
 **Path**:
-- `architecture/ADR/**`
+- Defined by `{adapter-dir}/artifacts.json` (kind: `ADR`). Default: `architecture/ADR/**`
 
 **Template**:
 - [templates/ADR.template.md](../templates/ADR.template.md)
@@ -265,7 +265,7 @@ AGENTS/Adapter
 - A durable rationale that future changes can reference.
 
 **What it is not**:
-- Not the primary place to describe architecture (use `architecture/DESIGN.md`).
+- Not the primary place to describe architecture (use the DESIGN artifact; default: `architecture/DESIGN.md`).
 - Not meeting notes or a scratchpad.
 - Not a feature spec.
 
@@ -276,7 +276,7 @@ AGENTS/Adapter
 - Links to related design elements (IDs).
 
 **Should not contain**:
-- Full architecture description (keep that in `architecture/DESIGN.md`).
+- Full architecture description (keep that in the DESIGN artifact; default: `architecture/DESIGN.md`).
 - Detailed implementation steps.
 - Broad product requirements.
 
@@ -293,7 +293,7 @@ AGENTS/Adapter
 ## FEATURES.md
 
 **Path**:
-- `architecture/features/FEATURES.md`
+- Defined by `{adapter-dir}/artifacts.json` (kind: `FEATURES`). Default: `architecture/features/FEATURES.md`
 
 **Template**:
 - [templates/FEATURES.template.md](../templates/FEATURES.template.md)
@@ -338,7 +338,7 @@ AGENTS/Adapter
 ## Feature DESIGN.md
 
 **Path**:
-- `architecture/features/feature-{slug}/DESIGN.md`
+- Defined by `{adapter-dir}/artifacts.json` (kind: `FEATURE`). Default: `architecture/features/feature-{slug}/DESIGN.md`
 
 **Template**:
 - [templates/feature-DESIGN.template.md](../templates/feature-DESIGN.template.md)
@@ -370,7 +370,7 @@ AGENTS/Adapter
 
 **Should not contain**:
 - Sprint/task breakdowns.
-- System-level type redefinitions (use `architecture/DESIGN.md`).
+- System-level type redefinitions (use the DESIGN artifact; default: `architecture/DESIGN.md`).
 - Code diffs or code snippets.
 
 **Where SCENARIOS live**:
@@ -389,8 +389,8 @@ AGENTS/Adapter
 
 FDD does not require you to create BRD/PRD as separate artifacts.
 
-- **BRD/PRD**: typically maps to `architecture/PRD.md` and the requirements/principles part of `architecture/DESIGN.md`.
-- **ADR**: maps to `architecture/ADR/**`.
+- **BRD/PRD**: typically maps to the PRD artifact + the requirements/principles part of the DESIGN artifact (defaults: `architecture/PRD.md`, `architecture/DESIGN.md`).
+- **ADR**: maps to the ADR artifact directory (default: `architecture/ADR/**`).
 - **SCENARIOS**: live inside feature `DESIGN.md` (feature-level acceptance criteria and edge cases).
 
 ---
@@ -418,11 +418,11 @@ Use templates for **authoritative structure** and examples for **minimal valid c
 - Feature DESIGN: [valid](../examples/requirements/feature-design/valid.md), [invalid](../examples/requirements/feature-design/invalid.md)
 
 **Real artifacts in this repository (as reference implementations)**:
-- PRD: [architecture/PRD.md](../architecture/PRD.md)
-- Overall DESIGN: [architecture/DESIGN.md](../architecture/DESIGN.md)
-- ADRs: [architecture/ADR/general/](../architecture/ADR/general/)
-- Features manifest: [architecture/features/FEATURES.md](../architecture/features/FEATURES.md)
-- Example feature (DESIGN):
+- PRD (FDD repo default): [architecture/PRD.md](../architecture/PRD.md)
+- Overall DESIGN (FDD repo default): [architecture/DESIGN.md](../architecture/DESIGN.md)
+- ADRs (FDD repo default): [architecture/ADR/general/](../architecture/ADR/general/)
+- Features manifest (FDD repo default): [architecture/features/FEATURES.md](../architecture/features/FEATURES.md)
+- Example feature DESIGN (FDD repo default):
   - [architecture/features/feature-init-structure/DESIGN.md](../architecture/features/feature-init-structure/DESIGN.md)
 
 ---

@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 from pathlib import Path
 import importlib.util
 import io
@@ -22,7 +23,19 @@ from fdd.validation.traceability import (
     paired_inst_tags_in_text,
 )
 
-from fdd.validation.artifacts import validate as validate_artifact
+from fdd.validation.artifacts import validate as validate_artifact, validate_content_only
+
+from fdd.validation.cascade import validate_all_artifacts, validate_with_dependencies
+
+from fdd.validation import cascade as cascade_mod
+
+from fdd.utils.files import (
+    find_adapter_directory,
+    find_project_root,
+    load_artifacts_registry,
+    load_project_config,
+    load_text,
+)
 
 from fdd.validation.artifacts.common import (
     common_checks,
@@ -33,6 +46,24 @@ from fdd.validation.artifacts.common import (
 )
 
 from fdd import cli as fdd_cli
+
+
+def _bootstrap_registry(project_root: Path, *, entries: list) -> None:
+    (project_root / ".git").mkdir(exist_ok=True)
+    (project_root / ".fdd-config.json").write_text(
+        '{\n  "fddAdapterPath": "adapter"\n}\n',
+        encoding="utf-8",
+    )
+    adapter_dir = project_root / "adapter"
+    adapter_dir.mkdir(parents=True, exist_ok=True)
+    (adapter_dir / "AGENTS.md").write_text(
+        "# FDD Adapter: Test\n\n**Extends**: `../AGENTS.md`\n",
+        encoding="utf-8",
+    )
+    (adapter_dir / "artifacts.json").write_text(
+        json.dumps({"version": "1.0", "artifacts": entries}, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 def _load_fdd_module():
     tests_dir = Path(__file__).resolve().parent
@@ -200,7 +231,7 @@ class TestFeaturesManifestValidation(unittest.TestCase):
             req = root / "req.md"
             req.write_text("### Section A: a\n", encoding="utf-8")
 
-            report = validate_artifact(art, req, "features-manifest", skip_fs_checks=False)
+            report = validate_artifact(art, req, "features-manifest", design_path=design, skip_fs_checks=False)
             self.assertEqual(report.get("status"), "FAIL")
             self.assertTrue(
                 any(
@@ -726,7 +757,7 @@ class TestFeatureDesignValidation(unittest.TestCase):
             req = root / "req.md"
             req.write_text("### Section A: a\n", encoding="utf-8")
 
-            report = VA.validate(art, req, "feature-design", skip_fs_checks=False)
+            report = VA.validate(art, req, "feature-design", prd_path=bp, features_path=fp, skip_fs_checks=False)
             self.assertEqual(report["status"], "FAIL")
             self.assertTrue(any(e.get("type") == "cross" for e in report.get("errors", [])))
             self.assertTrue(any(e.get("type") == "cross" and e.get("message") == "Feature ID not found in FEATURES.md" for e in report.get("errors", [])))
@@ -872,7 +903,7 @@ class TestFeatureDesignValidation(unittest.TestCase):
             req = root / "req.md"
             req.write_text("### Section A: a\n", encoding="utf-8")
 
-            report = VA.validate(art, req, "feature-design", skip_fs_checks=False)
+            report = VA.validate(art, req, "feature-design", prd_path=prd, skip_fs_checks=False)
             self.assertEqual(report["status"], "FAIL")
             self.assertTrue(any(e.get("type") == "cross" and "Actor IDs" in e.get("message", "") for e in report.get("errors", [])))
 
@@ -2236,7 +2267,7 @@ class TestFeaturesValidation(unittest.TestCase):
             )
 
             text = _features_header("Example") + entry
-            report = VA.validate_features_manifest(text, artifact_path=features_path, skip_fs_checks=False)
+            report = VA.validate_features_manifest(text, artifact_path=features_path, design_path=root / "DESIGN.md", skip_fs_checks=False)
             self.assertEqual(report["status"], "FAIL")
             self.assertEqual(len(report.get("feature_issues", [])), 1)
             issue = report["feature_issues"][0]
@@ -2318,15 +2349,28 @@ class TestMain(unittest.TestCase):
         Validates valid artifact, expects exit code 0.
         """
         with TemporaryDirectory() as td:
-            td_path = Path(td)
-            req = td_path / "req.md"
-            art = td_path / "artifact.md"
-            req.write_text(_req_text("A"), encoding="utf-8")
-            art.write_text(_artifact_text("A"), encoding="utf-8")
+            root = Path(td)
+            prd = root / "architecture" / "PRD.md"
+            prd.parent.mkdir(parents=True, exist_ok=True)
+            repo_root = Path(__file__).resolve().parent.parent
+            example_text = (repo_root / "examples" / "requirements" / "prd" / "valid.md").read_text(encoding="utf-8")
+            prd.write_text(example_text, encoding="utf-8")
+
+            _bootstrap_registry(
+                root,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+                ],
+            )
 
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
-                code = VA.main(["--artifact", str(art), "--requirements", str(req)])
+                code = fdd_cli.main([
+                    "validate",
+                    "--artifact",
+                    str(prd),
+                    "--skip-fs-checks",
+                ])
             self.assertEqual(code, 0)
 
     def test_main_exit_code_fail(self):
@@ -2335,15 +2379,26 @@ class TestMain(unittest.TestCase):
         Validates artifact with missing section, expects exit code 1.
         """
         with TemporaryDirectory() as td:
-            td_path = Path(td)
-            req = td_path / "req.md"
-            art = td_path / "artifact.md"
-            req.write_text(_req_text("A", "B"), encoding="utf-8")
-            art.write_text(_artifact_text("A"), encoding="utf-8")
+            root = Path(td)
+            prd = root / "architecture" / "PRD.md"
+            prd.parent.mkdir(parents=True, exist_ok=True)
+            prd.write_text("# Empty PRD\n", encoding="utf-8")
+
+            _bootstrap_registry(
+                root,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+                ],
+            )
 
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
-                code = VA.main(["--artifact", str(art), "--requirements", str(req)])
+                code = fdd_cli.main([
+                    "validate",
+                    "--artifact",
+                    str(prd),
+                    "--skip-fs-checks",
+                ])
             self.assertEqual(code, 2)
 
 
@@ -2408,6 +2463,22 @@ class TestRequirementExamples(unittest.TestCase):
                 else:
                     artifact_path.write_text(example_text, encoding="utf-8")
 
+                kind_map = {
+                    "prd": "PRD",
+                    "overall-design": "DESIGN",
+                    "adr": "ADR",
+                    "features-manifest": "FEATURES",
+                    "feature-design": "FEATURE",
+                }
+                reg_kind = kind_map[slug]
+
+                _bootstrap_registry(
+                    td_path,
+                    entries=[
+                        {"kind": reg_kind, "system": "Test", "path": rel_artifact_path.as_posix(), "format": "FDD"},
+                    ],
+                )
+
                 # Run the same CLI entrypoint used by end-users.
                 buf = io.StringIO()
                 with contextlib.redirect_stdout(buf):
@@ -2440,3 +2511,370 @@ class TestTraceabilityHelpers(unittest.TestCase):
         )
         tags = paired_inst_tags_in_text(text)
         self.assertEqual(tags, set())
+
+
+class TestArtifactsDispatcherCoverage(unittest.TestCase):
+    def test_validate_content_only_missing_and_empty_and_placeholder(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            missing = root / "missing.md"
+            rep = validate_content_only(missing)
+            self.assertEqual(rep.get("status"), "FAIL")
+
+            empty = root / "empty.md"
+            empty.write_text("\n", encoding="utf-8")
+            rep = validate_content_only(empty)
+            self.assertEqual(rep.get("status"), "FAIL")
+
+            ph = root / "ph.md"
+            ph.write_text("TODO\n", encoding="utf-8")
+            rep = validate_content_only(ph)
+            self.assertEqual(rep.get("status"), "FAIL")
+
+    def test_validate_dispatcher_routes_all_kinds_and_generic(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+
+            req = root / "req.md"
+            req.write_text(_req_text("A"), encoding="utf-8")
+
+            art = root / "a.md"
+            art.write_text("# X\n\n## A. Something\n\n", encoding="utf-8")
+
+            for kind in [
+                "features-manifest",
+                "prd",
+                "adr",
+                "feature-design",
+                "overall-design",
+                "unknown",
+            ]:
+                rep = validate_artifact(art, req, kind, skip_fs_checks=True)
+                self.assertIn(rep.get("status"), {"PASS", "FAIL"})
+
+    def test_validate_empty_file_short_circuits(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            req = root / "req.md"
+            req.write_text(_req_text("A"), encoding="utf-8")
+            art = root / "a.md"
+            art.write_text("\n", encoding="utf-8")
+            rep = validate_artifact(art, req, "prd", skip_fs_checks=True)
+            self.assertEqual(rep.get("status"), "FAIL")
+
+
+class TestCascadeCoverage(unittest.TestCase):
+    def test_validate_with_dependencies_skips_unregistered(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            reg_entries = [
+                {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "FDD"},
+            ]
+            _bootstrap_registry(root, entries=reg_entries)
+
+            unreg = root / "architecture" / "UNREGISTERED.md"
+            unreg.parent.mkdir(parents=True, exist_ok=True)
+            unreg.write_text("# x\n", encoding="utf-8")
+
+            rep = validate_with_dependencies(unreg, skip_fs_checks=True)
+            self.assertEqual(rep.get("status"), "PASS")
+            self.assertTrue(rep.get("skipped"))
+            self.assertEqual(rep.get("artifact_kind"), "unregistered")
+
+    def test_validate_with_dependencies_non_fdd_format_uses_content_only(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            art = root / "architecture" / "PRD.md"
+            art.parent.mkdir(parents=True, exist_ok=True)
+            art.write_text("TODO\n", encoding="utf-8")
+
+            _bootstrap_registry(
+                root,
+                entries=[
+                    {"kind": "PRD", "system": "Test", "path": "architecture/PRD.md", "format": "MD"},
+                ],
+            )
+
+            rep = validate_with_dependencies(art, skip_fs_checks=True)
+            self.assertIn(rep.get("artifact_kind"), {"content-only", "prd"})
+
+    def test_validate_with_dependencies_unsupported_registry_kind_fails(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            art = root / "architecture" / "SRC"
+            art.parent.mkdir(parents=True, exist_ok=True)
+            art.write_text("x\n", encoding="utf-8")
+
+            _bootstrap_registry(
+                root,
+                entries=[
+                    {"kind": "SRC", "system": "Test", "path": "architecture/SRC", "format": "FDD"},
+                ],
+            )
+
+            rep = validate_with_dependencies(art, skip_fs_checks=True)
+            self.assertEqual(rep.get("status"), "FAIL")
+            self.assertTrue(any(e.get("type") == "registry" for e in rep.get("errors", [])))
+
+    def test_validate_with_dependencies_missing_dependencies_is_reported(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            feat = root / "architecture" / "features" / "feature-x" / "DESIGN.md"
+            feat.parent.mkdir(parents=True, exist_ok=True)
+            feat.write_text("# Feature\n\n## A. Overview\n\n", encoding="utf-8")
+
+            _bootstrap_registry(
+                root,
+                entries=[
+                    {"kind": "FEATURE", "system": "Test", "path": "architecture/features/feature-x/DESIGN.md", "format": "FDD"},
+                ],
+            )
+
+            rep = validate_with_dependencies(feat, skip_fs_checks=True)
+            dep_errors = [e for e in rep.get("errors", []) if e.get("type") == "dependency"]
+            self.assertGreaterEqual(len(dep_errors), 1)
+
+    def test_validate_all_artifacts_fails_without_project_root(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            rep = validate_all_artifacts(root, skip_fs_checks=True)
+            self.assertEqual(rep.get("status"), "FAIL")
+
+
+class TestCascadeCoverageMore(unittest.TestCase):
+    def test_cascade_helper_functions(self):
+        self.assertIsNone(cascade_mod._suggest_workflow_for_registry_kind(None))
+        self.assertEqual(cascade_mod._suggest_workflow_for_registry_kind("PRD"), "workflows/prd.md")
+        self.assertEqual(cascade_mod._norm_registry_path("./a/b"), "a/b")
+        self.assertEqual(cascade_mod._norm_registry_path("a/b"), "a/b")
+
+        self.assertFalse(cascade_mod._traceability_enabled(None))
+        self.assertTrue(cascade_mod._traceability_enabled({"kind": "PRD"}))
+        self.assertFalse(cascade_mod._traceability_enabled({"kind": "PRD", "traceability_enabled": False}))
+
+        parents = {"Child": "Parent", "Parent": ""}
+        self.assertEqual(cascade_mod._system_chain("Child", parents), ["Child", "Parent"])
+
+    def test_cross_validate_identifier_statuses_early_returns(self):
+        self.assertEqual(
+            cascade_mod._cross_validate_identifier_statuses(
+                prd_path=None,
+                design_path=None,
+                features_path=None,
+                skip_fs_checks=False,
+            ),
+            [],
+        )
+        self.assertEqual(
+            cascade_mod._cross_validate_identifier_statuses(
+                prd_path=Path("/does/not/exist"),
+                design_path=Path("/does/not/exist"),
+                features_path=Path("/does/not/exist"),
+                skip_fs_checks=True,
+            ),
+            [],
+        )
+
+    def test_validate_all_artifacts_exercises_branches(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            (root / ".git").mkdir(exist_ok=True)
+
+            # Adapter config + registry
+            (root / ".fdd-config.json").write_text('{"fddAdapterPath": "adapter"}\n', encoding="utf-8")
+            adapter_dir = root / "adapter"
+            adapter_dir.mkdir(parents=True, exist_ok=True)
+            (adapter_dir / "AGENTS.md").write_text("# FDD Adapter: Test\n\n**Extends**: `../AGENTS.md`\n", encoding="utf-8")
+
+            arch = root / "architecture"
+            (arch / "ADR" / "general").mkdir(parents=True, exist_ok=True)
+            (arch / "ADR" / "general" / "0001-fdd-test-adr-x.md").write_text(
+                "\n".join(
+                    [
+                        "# ADR-0001: Test",
+                        "",
+                        "**Date**: 2024-01-01",
+                        "",
+                        "**Status**: Accepted",
+                        "",
+                        "**ADR ID**: `fdd-test-adr-x`",
+                        "",
+                        "## Context and Problem Statement",
+                        "",
+                        "Context.",
+                        "",
+                        "## Considered Options",
+                        "",
+                        "- A",
+                        "",
+                        "## Decision Outcome",
+                        "",
+                        "Chosen option.",
+                        "",
+                        "## Related Design Elements",
+                        "",
+                        "- `fdd-test-actor-user`",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            # PRD is non-FDD to cover content-only branch.
+            (arch / "PRD.md").write_text("TODO\n", encoding="utf-8")
+
+            # DESIGN + FEATURES are FDD and exist so core discovery works.
+            (arch / "DESIGN.md").write_text(
+                "\n".join(
+                    [
+                        "# Technical Design",
+                        "",
+                        "## B. Requirements",
+                        "",
+                        "### FR-001: Test",
+                        "",
+                        "**ID**: `fdd-test-req-a`",
+                        "**Status**: IMPLEMENTED",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            features_dir = arch / "features"
+            features_dir.mkdir(parents=True, exist_ok=True)
+            (features_dir / "FEATURES.md").write_text(
+                "\n".join(
+                    [
+                        _features_header("Example", completed=0, in_progress=1, not_started=0),
+                        "---",
+                        "",
+                        "## Features List",
+                        "",
+                        "### 1. [fdd-test-feature-a](feature-a/) 🔄 HIGH",
+                        "- **Purpose**: Purpose a",
+                        "- **Status**: IN_PROGRESS",
+                        "- **Depends On**: None",
+                        "- **Blocks**: None",
+                        "- **Phases**:",
+                        "  - `ph-1`: 🔄 IN_PROGRESS — Default phase",
+                        "- **Scope**:",
+                        "  - scope-item",
+                        "- **Requirements Covered**:",
+                        "  - `fdd-test-req-a`",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            # Feature-design loop branches: missing path, non-existing file, and non-FDD format.
+            non_fdd_feat = features_dir / "feature-a" / "DESIGN.md"
+            non_fdd_feat.parent.mkdir(parents=True, exist_ok=True)
+            non_fdd_feat.write_text("TODO\n", encoding="utf-8")
+
+            entries = [
+                {"kind": "PRD", "system": "Parent", "path": "architecture/PRD.md", "format": "MD"},
+                {"kind": "ADR", "system": "Parent", "path": "architecture/ADR", "format": "FDD"},
+                {"kind": "DESIGN", "system": "Parent", "path": "architecture/DESIGN.md", "format": "FDD"},
+                {"kind": "FEATURES", "system": "Parent", "path": "architecture/features/FEATURES.md", "format": "FDD"},
+                {"kind": "FEATURE", "system": "Parent", "path": "", "format": "FDD"},
+                {"kind": "FEATURE", "system": "Parent", "path": "architecture/features/feature-missing/DESIGN.md", "format": "FDD"},
+                {"kind": "FEATURE", "system": "Parent", "path": "architecture/features/feature-a/DESIGN.md", "format": "MD"},
+                # Child system inherits PRD from Parent via parent chain.
+                {"kind": "DESIGN", "system": "Child", "parent": "Parent", "path": "architecture/DESIGN.md", "format": "FDD"},
+            ]
+            (adapter_dir / "artifacts.json").write_text(json.dumps({"version": "1.0", "artifacts": entries}, indent=2) + "\n", encoding="utf-8")
+
+            rep = validate_all_artifacts(root, skip_fs_checks=False)
+            self.assertIn(rep.get("status"), {"PASS", "FAIL"})
+
+            # Ensure PRD got content-only handling.
+            av = rep.get("artifact_validation", {}) or {}
+            prd_rep = av.get("Parent:prd")
+            self.assertIsInstance(prd_rep, dict)
+            self.assertEqual(prd_rep.get("artifact_kind"), "content-only")
+
+            # Ensure a directory artifact (ADR) is resolved/validated.
+            adr_rep = av.get("Parent:adr")
+            self.assertIsInstance(adr_rep, dict)
+            self.assertIn(adr_rep.get("artifact_kind"), {"adr", "content-only"})
+
+    def test_parse_feature_coverage_and_status_in_progress_normalizes(self):
+        txt = "\n".join(
+            [
+                _features_header("Example"),
+                "---",
+                "",
+                "## Features List",
+                "",
+                "### 1. [fdd-example-feature-x](feature-x/) 🔄 HIGH",
+                "- **Purpose**: Purpose x",
+                "- **Status**: IN_PROGRESS",
+                "- **Depends On**: None",
+                "- **Blocks**: None",
+                "- **Phases**:",
+                "  - `ph-1`: 🔄 IN_PROGRESS — Default phase",
+                "- **Scope**:",
+                "  - scope-item",
+                "- **Requirements Covered**:",
+                "  - `fdd-example-req-1`",
+                "",
+            ]
+        )
+        statuses, _ = cascade_mod._parse_feature_coverage_and_status(txt)
+        self.assertEqual(statuses.get("feature-x/"), "IN_DEVELOPMENT")
+
+
+class TestFilesUtilsCoverage(unittest.TestCase):
+    def test_find_project_root_none_when_no_markers(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            self.assertIsNone(find_project_root(root))
+
+    def test_load_project_config_invalid_json_returns_none(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            (root / ".fdd-config.json").write_text("{bad", encoding="utf-8")
+            self.assertIsNone(load_project_config(root))
+
+    def test_find_adapter_directory_returns_none_when_config_path_invalid(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            (root / ".git").mkdir(exist_ok=True)
+            (root / ".fdd-config.json").write_text('{"fddAdapterPath": "missing-adapter"}', encoding="utf-8")
+            self.assertIsNone(find_adapter_directory(root))
+
+    def test_load_artifacts_registry_error_branches(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            adapter = root / "adapter"
+            adapter.mkdir(parents=True, exist_ok=True)
+
+            reg, err = load_artifacts_registry(adapter)
+            self.assertIsNone(reg)
+            self.assertIsNotNone(err)
+
+            (adapter / "artifacts.json").write_text("not-json", encoding="utf-8")
+            reg, err = load_artifacts_registry(adapter)
+            self.assertIsNone(reg)
+            self.assertIsNotNone(err)
+
+            (adapter / "artifacts.json").write_text(json.dumps([1, 2, 3]), encoding="utf-8")
+            reg, err = load_artifacts_registry(adapter)
+            self.assertIsNone(reg)
+            self.assertIsNotNone(err)
+
+            (adapter / "artifacts.json").write_text(json.dumps({"version": "1.0", "artifacts": []}), encoding="utf-8")
+            reg, err = load_artifacts_registry(adapter)
+            self.assertIsNotNone(reg)
+            self.assertIsNone(err)
+
+    def test_load_text_not_a_file(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            d = root / "dir"
+            d.mkdir()
+            text, err = load_text(d)
+            self.assertEqual(text, "")
+            self.assertIsNotNone(err)

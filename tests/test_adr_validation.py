@@ -1020,7 +1020,7 @@ class TestADRFileSystemChecks(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            report = validate_adr("", artifact_path=arch / "ADR", skip_fs_checks=False)
+            report = validate_adr("", artifact_path=arch / "ADR", prd_path=arch / "PRD.md", skip_fs_checks=False)
             
             # Should have cross-reference error for missing PRD.md
             cross_errors = [e for e in report["errors"] if e.get("type") == "cross"]
@@ -1071,7 +1071,12 @@ class TestADRFileSystemChecks(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            report = validate_adr("", artifact_path=arch / "ADR", skip_fs_checks=False)
+            report = validate_adr(
+                "",
+                artifact_path=arch / "ADR",
+                design_path=arch / "DESIGN.md",
+                skip_fs_checks=False,
+            )
             
             # Should have cross-reference error for missing DESIGN.md
             cross_errors = [e for e in report["errors"] if e.get("type") == "cross"]
@@ -1511,6 +1516,8 @@ class TestADRCoverageBranches(unittest.TestCase):
             report = validate_adr(
                 adr_text,
                 artifact_path=adr_file,
+                prd_path=arch / "PRD.md",
+                design_path=arch / "DESIGN.md",
                 skip_fs_checks=False,
             )
             self.assertEqual(report["status"], "FAIL")
@@ -1574,6 +1581,8 @@ class TestADRCoverageBranches(unittest.TestCase):
             report = validate_adr(
                 adr_text,
                 artifact_path=adr_file,
+                prd_path=arch / "PRD.md",
+                design_path=arch / "DESIGN.md",
                 skip_fs_checks=False,
             )
             self.assertEqual(report["status"], "FAIL")

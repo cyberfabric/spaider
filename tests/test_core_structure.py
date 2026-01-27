@@ -13,7 +13,21 @@ Validates that the FDD project itself follows FDD conventions:
 import re
 from pathlib import Path
 
-import pytest
+try:
+    import pytest  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover
+    import unittest
+
+    class _PytestShim:
+        @staticmethod
+        def skip(message: str = "") -> None:
+            raise unittest.SkipTest(message)
+
+        @staticmethod
+        def fail(message: str = "") -> None:
+            raise AssertionError(message)
+
+    pytest = _PytestShim()  # type: ignore
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 

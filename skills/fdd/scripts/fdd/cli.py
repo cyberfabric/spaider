@@ -30,6 +30,8 @@ from .utils.files import (
     load_project_config,
     find_adapter_directory,
     load_adapter_config,
+    load_artifacts_registry,
+    iter_registry_entries,
 )
 from .utils.document import detect_artifact_kind
 from .utils.markdown import (
@@ -399,19 +401,7 @@ def _list_fdd_workflows(fdd_root: Path) -> List[str]:
     workflows_dir = fdd_root / "workflows"
     if not workflows_dir.is_dir():
         raise SystemExit(f"FDD workflows dir not found: {workflows_dir}")
-
-    names: List[str] = []
-    for pth in sorted(workflows_dir.glob("*.md")):
-        if pth.name in ("AGENTS.md", "README.md"):
-            continue
-        try:
-            head = "\n".join(pth.read_text(encoding="utf-8").splitlines()[:30])
-        except Exception:
-            continue
-        if "type: workflow" not in head:
-            continue
-        names.append(pth.stem)
-    return names
+    return [Path(p).stem for p in _list_workflow_files(fdd_root)]
 
 
 def _cmd_agent_workflows(argv: List[str]) -> int:
@@ -519,7 +509,8 @@ def _cmd_agent_workflows(argv: List[str]) -> int:
         return 2
 
     workflow_dir = (project_root / workflow_dir_rel).resolve()
-    fdd_workflow_names = _list_fdd_workflows(fdd_root)
+    fdd_workflow_files = _list_workflow_files(fdd_root)
+    fdd_workflow_names = [Path(p).stem for p in fdd_workflow_files]
 
     desired: Dict[str, Dict[str, str]] = {}
     for wf_name in fdd_workflow_names:
@@ -961,6 +952,31 @@ def _resolve_user_path(raw: str, base: Path) -> Path:
     return p.resolve()
 
 
+def _list_workflow_files(fdd_root: Path) -> List[str]:
+    workflows_dir = (fdd_root / "workflows").resolve()
+    if not workflows_dir.is_dir():
+        return []
+    out: List[str] = []
+    try:
+        for p in workflows_dir.iterdir():
+            if not p.is_file():
+                continue
+            if p.suffix.lower() != ".md":
+                continue
+            if p.name in {"AGENTS.md", "README.md"}:
+                continue
+            try:
+                head = "\n".join(p.read_text(encoding="utf-8").splitlines()[:30])
+            except Exception:
+                continue
+            if "type: workflow" not in head:
+                continue
+            out.append(p.name)
+    except Exception:
+        return []
+    return sorted(set(out))
+
+
 def _cmd_init(argv: List[str]) -> int:
     p = argparse.ArgumentParser(prog="init", description="Initialize FDD config and minimal adapter")
     p.add_argument("--project-root", default=None, help="Project root directory to create .fdd-config.json in")
@@ -1001,12 +1017,23 @@ def _cmd_init(argv: List[str]) -> int:
     extends_rel = _safe_relpath_from_dir(extends_target, adapter_dir)
 
     project_name = str(args.project_name).strip() if args.project_name else project_root.name
+
+    workflow_files = _list_workflow_files(fdd_root)
+    workflow_list = ", ".join(workflow_files)
+    artifacts_when = f"ALWAYS open and follow `artifacts.json` WHEN executing workflows: {workflow_list}" if workflow_list else "ALWAYS open and follow `artifacts.json` WHEN executing workflows"
     desired_agents = "\n".join([
         f"# FDD Adapter: {project_name}",
         "",
         f"**Extends**: `{extends_rel}`",
         "",
+        artifacts_when,
+        "",
     ])
+
+    desired_registry = {
+        "version": "1.0",
+        "artifacts": [],
+    }
 
     desired_cfg = _default_project_config(core_rel, adapter_rel)
 
@@ -1061,6 +1088,22 @@ def _cmd_init(argv: List[str]) -> int:
             agents_path.write_text(desired_agents, encoding="utf-8")
         actions["adapter_agents"] = "updated" if agents_existed_before else "created"
 
+    registry_path = (adapter_dir / "artifacts.json").resolve()
+    registry_existed_before = registry_path.exists()
+    if registry_existed_before and not registry_path.is_file():
+        errors.append({"path": registry_path.as_posix(), "error": "ARTIFACTS_REGISTRY_NOT_A_FILE"})
+    elif registry_existed_before and not args.force:
+        existing_reg = _load_json_file(registry_path)
+        if existing_reg == desired_registry:
+            actions["artifacts_registry"] = "unchanged"
+        else:
+            errors.append({"path": registry_path.as_posix(), "error": "ARTIFACTS_REGISTRY_CONFLICT"})
+    else:
+        if not args.dry_run:
+            adapter_dir.mkdir(parents=True, exist_ok=True)
+            _write_json_file(registry_path, desired_registry)
+        actions["artifacts_registry"] = "updated" if registry_existed_before else "created"
+
     if errors:
         print(json.dumps({
             "status": "ERROR",
@@ -1098,28 +1141,70 @@ def _cmd_validate(argv: List[str]) -> int:
     p.add_argument("--prd", default=None, help="Path to PRD.md for cross-references")
     p.add_argument("--adr", default=None, help="Path to architecture/ADR/ for cross-references")
     p.add_argument("--skip-fs-checks", action="store_true", help="Skip filesystem checks")
-    p.add_argument("--skip-code-traceability", action="store_true", help="Skip code traceability validation (only validate artifacts)")
     p.add_argument("--verbose", action="store_true", help="Print full report (default: summary with errors only)")
     p.add_argument("--output", default=None, help="Write report to file instead of stdout")
     p.add_argument("--features", default=None, help="Comma-separated feature slugs for code-root traceability")
     args = p.parse_args(argv)
 
     artifact_path = Path(args.artifact).resolve()
-    
-    # Check .fdd-config.json for skip-code-traceability setting
-    skip_code_traceability = args.skip_code_traceability
-    config_path = artifact_path / ".fdd-config.json" if artifact_path.is_dir() else artifact_path.parent / ".fdd-config.json"
-    if not skip_code_traceability and config_path.exists():
-        try:
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-            skip_code_traceability = config.get("skipCodeTraceability", False)
-        except (json.JSONDecodeError, OSError):
-            pass
+
+    if args.requirements:
+        requirements_path = Path(args.requirements).resolve()
+        if not requirements_path.exists() or not requirements_path.is_file():
+            raise SystemExit(f"Requirements file not found: {requirements_path}")
+
+    if artifact_path.is_dir() and (artifact_path / "DESIGN.md").exists() and args.features:
+        raise SystemExit("--features is only supported when --artifact is a code root directory")
+
+    start_dir = artifact_path if artifact_path.is_dir() else artifact_path.parent
+    project_root = find_project_root(start_dir)
+    if project_root is None:
+        print(json.dumps({"status": "ERROR", "message": "Project root not found"}, indent=2, ensure_ascii=False))
+        return 1
+    adapter_dir = find_adapter_directory(project_root)
+    if adapter_dir is None:
+        print(json.dumps({"status": "ERROR", "message": "Adapter directory not found"}, indent=2, ensure_ascii=False))
+        return 1
+    reg, reg_err = load_artifacts_registry(adapter_dir)
+    if reg_err or reg is None:
+        print(json.dumps({"status": "ERROR", "message": reg_err or "Missing artifacts registry"}, indent=2, ensure_ascii=False))
+        return 1
+
+    def _traceability_enabled(entry: Optional[Dict[str, object]]) -> bool:
+        if not isinstance(entry, dict):
+            return False
+        v = entry.get("traceability_enabled")
+        if v is False:
+            return False
+        # Default: enabled
+        return True
+
+    def _src_scan_root(registry: Dict[str, object]) -> Tuple[Optional[Path], bool]:
+        artifacts = registry.get("artifacts")
+        if not isinstance(artifacts, list):
+            return None, False
+        for a in artifacts:
+            if not isinstance(a, dict):
+                continue
+            if a.get("kind") != "SRC":
+                continue
+            enabled = _traceability_enabled(a)
+            p = a.get("path")
+            if not isinstance(p, str) or not p.strip():
+                continue
+            base = Path(p)
+            abs_path = base if base.is_absolute() else (project_root / base)
+            return abs_path.resolve(), enabled
+        return None, False
+
+    src_scan_root, src_traceability_enabled = _src_scan_root(reg)
+
+    if args.features and not src_traceability_enabled:
+        raise SystemExit("--features requires SRC traceability_enabled=true in artifacts.json")
 
     if artifact_path.is_dir():
         from .validation.cascade import validate_all_artifacts
         
-        # ADR directory mode (artifact is architecture/ADR/ or named ADR)
         if artifact_path.name == "ADR" or (artifact_path / "general").exists():
             from .validation.cascade import validate_with_dependencies
             report = validate_with_dependencies(
@@ -1132,35 +1217,85 @@ def _cmd_validate(argv: List[str]) -> int:
                 Path(args.output).write_text(out, encoding="utf-8")
             else:
                 print(out, end="")
-            return 0 if report["status"] == "PASS" else 2
+            return 0 if report.get("status") == "PASS" else 2
         
-        # Backwards-compatible: feature directory mode (artifact contains DESIGN.md).
         if (artifact_path / "DESIGN.md").exists():
-            if args.features:
-                raise SystemExit("--features is only supported when --artifact is a code root directory")
-            if skip_code_traceability:
-                # Only validate the artifact, skip code traceability
-                from .validation.cascade import validate_with_dependencies
-                report = validate_with_dependencies(
-                    artifact_path / "DESIGN.md",
-                    skip_fs_checks=bool(args.skip_fs_checks),
-                )
-            else:
-                report = validate_codebase_traceability(
+            from .validation.cascade import validate_with_dependencies
+
+            feature_design_path = Path(args.design).resolve() if args.design else (artifact_path / "DESIGN.md")
+            artifacts_report = validate_with_dependencies(
+                feature_design_path,
+                skip_fs_checks=bool(args.skip_fs_checks),
+            )
+
+            # Code traceability is a cross-artifact check between SRC and FEATURE.
+            # It runs only when both sides have traceability_enabled=true.
+            feature_entry = None
+            try:
+                rel = feature_design_path.resolve().relative_to(project_root.resolve()).as_posix()
+            except Exception:
+                rel = ""
+            for e in iter_registry_entries(reg):
+                p = e.get("path")
+                if isinstance(p, str) and p.strip() and p.strip().lstrip("./") == rel.lstrip("./"):
+                    feature_entry = e
+                    break
+
+            feature_traceability_enabled = _traceability_enabled(feature_entry)
+
+            if src_traceability_enabled and feature_traceability_enabled and src_scan_root is not None:
+                code_report = validate_codebase_traceability(
                     artifact_path,
-                    feature_design_path=Path(args.design).resolve() if args.design else None,
+                    feature_design_path=feature_design_path,
+                    scan_root_override=src_scan_root,
                     skip_fs_checks=bool(args.skip_fs_checks),
                 )
-            report["artifact_kind"] = "codebase-trace"
+                report = {
+                    "status": "PASS" if (artifacts_report.get("status") == "PASS" and code_report.get("status") == "PASS") else "FAIL",
+                    "artifact_kind": "codebase-trace",
+                    "artifact_validation": artifacts_report,
+                    "code_traceability": code_report.get("traceability"),
+                    "errors": (artifacts_report.get("errors", []) or []) + (code_report.get("errors", []) or []),
+                }
+            else:
+                report = {
+                    "status": artifacts_report.get("status"),
+                    "artifact_kind": "codebase-trace",
+                    "artifact_validation": artifacts_report,
+                    "code_traceability_skipped": True,
+                }
         else:
             # First validate all FDD artifacts
             artifacts_report = validate_all_artifacts(
                 artifact_path,
                 skip_fs_checks=bool(args.skip_fs_checks),
             )
-            
-            if skip_code_traceability:
-                # Only artifact validation, no code traceability
+
+            # Code traceability (code tags) is a cross-artifact check between SRC and FEATURE.
+            # It runs only when SRC traceability is enabled AND at least one FEATURE artifact has traceability_enabled.
+            feature_slugs_from_registry: List[str] = []
+            for e in iter_registry_entries(reg):
+                if not isinstance(e, dict):
+                    continue
+                if e.get("kind") != "FEATURE":
+                    continue
+                if not _traceability_enabled(e):
+                    continue
+                if e.get("format") != "FDD":
+                    continue
+                p = e.get("path")
+                if not isinstance(p, str):
+                    continue
+                parts = [x for x in p.replace("\\", "/").split("/") if x]
+                slug = next((seg[len("feature-") :] for seg in parts if seg.startswith("feature-")), "")
+                if slug:
+                    feature_slugs_from_registry.append(slug)
+
+            wanted_slugs: Optional[List[str]] = None
+            if args.features:
+                wanted_slugs = [x.strip() for x in str(args.features).split(",") if x.strip()]
+
+            if not src_traceability_enabled or src_scan_root is None:
                 report = {
                     "status": artifacts_report.get("status", "PASS"),
                     "artifact_kind": "codebase-trace",
@@ -1168,24 +1303,30 @@ def _cmd_validate(argv: List[str]) -> int:
                     "code_traceability_skipped": True,
                 }
             else:
-                # Then validate codebase traceability
-                slugs: Optional[List[str]] = None
-                if args.features:
-                    slugs = [x.strip() for x in str(args.features).split(",") if x.strip()]
-                trace_report = validate_code_root_traceability(
-                    artifact_path,
-                    feature_slugs=slugs,
-                    skip_fs_checks=bool(args.skip_fs_checks),
-                )
-                
-                # Combine reports
-                report = trace_report
-                report["artifact_kind"] = "codebase-trace"
-                report["artifact_validation"] = artifacts_report.get("artifact_validation", {})
-                
-                # Overall status fails if either fails
-                if artifacts_report.get("status") != "PASS":
-                    report["status"] = "FAIL"
+                slugs = feature_slugs_from_registry
+                if wanted_slugs is not None:
+                    wanted_set = {s[len("feature-") :] if s.startswith("feature-") else s for s in wanted_slugs}
+                    slugs = [s for s in slugs if s in wanted_set]
+
+                if not slugs:
+                    report = {
+                        "status": artifacts_report.get("status", "PASS"),
+                        "artifact_kind": "codebase-trace",
+                        "artifact_validation": artifacts_report.get("artifact_validation", {}),
+                        "code_traceability_skipped": True,
+                    }
+                else:
+                    trace_report = validate_code_root_traceability(
+                        src_scan_root,
+                        feature_slugs=slugs,
+                        skip_fs_checks=bool(args.skip_fs_checks),
+                    )
+
+                    report = trace_report
+                    report["artifact_kind"] = "codebase-trace"
+                    report["artifact_validation"] = artifacts_report.get("artifact_validation", {})
+                    if artifacts_report.get("status") != "PASS":
+                        report["status"] = "FAIL"
 
         out_report = report if args.verbose else _summarize_validate_report(report)
         out = json.dumps(out_report, indent=2, ensure_ascii=False) + "\n"
@@ -1196,27 +1337,75 @@ def _cmd_validate(argv: List[str]) -> int:
 
         return 0 if report["status"] == "PASS" else 2
 
-    # If custom requirements provided, use direct validation (no cascading)
     if args.requirements:
         requirements_path = Path(args.requirements).resolve()
-        if not requirements_path.exists() or not requirements_path.is_file():
-            raise SystemExit(f"Requirements file not found: {requirements_path}")
-        
-        artifact_kind, _ = detect_requirements(artifact_path) if artifact_path.name in (
-            "PRD.md", "ADR", "FEATURES.md", "DESIGN.md"
-        ) else ("custom", None)
-        
-        report = validate(
-            artifact_path,
-            requirements_path,
-            artifact_kind,
-            skip_fs_checks=bool(args.skip_fs_checks),
-        )
-        report["artifact_kind"] = artifact_kind
+        entries = iter_registry_entries(reg)
+        entry = None
+        try:
+            rel = artifact_path.resolve().relative_to(project_root.resolve()).as_posix()
+        except Exception:
+            rel = ""
+        for e in entries:
+            p = e.get("path")
+            if isinstance(p, str) and p.strip() and p.strip().lstrip("./") == rel.lstrip("./"):
+                entry = e
+                break
+
+        # Unix-way: if an artifact is not registered, validation MUST be skipped.
+        # The tool must not report FAIL for unregistered artifacts.
+        if entry is None:
+            report = {
+                "status": "PASS",
+                "artifact_kind": "unregistered",
+                "skipped": True,
+                "skipped_reason": "Artifact is not registered in artifacts.json",
+                "path": str(artifact_path),
+                "placeholder_hits": [],
+                "missing_sections": [],
+                "required_section_count": 0,
+            }
+        # If the artifact is registered but not format=FDD, ignore the requirements file
+        # and only perform content-only validation.
+        elif entry.get("format") != "FDD":
+            from .validation.artifacts import validate_content_only
+
+            report = validate_content_only(artifact_path, skip_fs_checks=bool(args.skip_fs_checks))
+            report["artifact_kind"] = "content-only"
+            report["registry_format"] = entry.get("format")
+            report.setdefault("errors", [])
+            report["errors"].append(
+                {
+                    "type": "registry",
+                    "message": "Artifact registry entry is not format=FDD; performed content-only validation",
+                    "path": str(artifact_path),
+                    "format": entry.get("format"),
+                }
+            )
+        else:
+            # Determine artifact kind from registry.
+            k = entry.get("kind")
+            m = {"PRD": "prd", "ADR": "adr", "DESIGN": "overall-design", "FEATURES": "features-manifest", "FEATURE": "feature-design"}
+            artifact_kind = m.get(k) if isinstance(k, str) else None
+            if artifact_kind is None:
+                raise SystemExit("Unsupported artifact kind in artifacts.json")
+
+            design_path = Path(args.design).resolve() if args.design else None
+            prd_path = Path(args.prd).resolve() if args.prd else None
+            adr_path = Path(args.adr).resolve() if args.adr else None
+
+            report = validate(
+                artifact_path,
+                requirements_path,
+                artifact_kind,
+                design_path=design_path,
+                prd_path=prd_path,
+                adr_path=adr_path,
+                skip_fs_checks=bool(args.skip_fs_checks),
+            )
+            report["artifact_kind"] = artifact_kind
     else:
-        # Use core cascading validation - automatically discovers and validates all dependencies
         from .validation.cascade import validate_with_dependencies
-        
+
         report = validate_with_dependencies(
             artifact_path,
             skip_fs_checks=bool(args.skip_fs_checks),

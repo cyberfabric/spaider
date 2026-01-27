@@ -3,7 +3,7 @@ fdd: true
 type: workflow
 name: Code Validate
 version: 1.0
-purpose: Validate code implementation against feature design
+purpose: Validate code implementation against an FDD artifact
 ---
 
 # Validate Code
@@ -35,9 +35,7 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 - [ ] ✅ Open and follow `../requirements/workflow-execution-validations.md` (Validation specifics)
 
 **Workflow-Specific Requirements**:
-- [ ] ✅ Open and follow `../requirements/feature-design-structure.md` (Feature design requirements)
-- [ ] ✅ Open and follow adapter specs/testing.md (Test requirements)
-- [ ] ✅ Open and follow adapter specs/feature-status-validation.md (Status validation)
+- [ ] ✅ Open and follow the requirements file for the selected artifact kind (when `format: FDD`)
 - [ ] ✅ Check adapter initialization (FDD-Adapter/AGENTS.md exists)
 - [ ] ✅ Validate all prerequisites from Prerequisites section below
 
@@ -55,27 +53,19 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 
 ## Overview
 
-**Purpose**: Validate complete feature implementation against feature design
+**Purpose**: Validate implementation against an FDD artifact
 
-**Scope**: 
-- All code implementing requirements marked as implemented in feature DESIGN.md
-- All test scenarios from feature DESIGN.md Section F
-- Complete feature codebase quality
+**Scope**:
+- Code and tests relevant to the selected artifact scope
 
-**Key Principle**: Validate the ENTIRE feature code against the feature design, not individual changes
+**Key Principle**: Validate implementation against the selected artifact input and report gaps deterministically
 
 ---
 
 ## Requirements
 
-**ALWAYS open and follow**:
-- `../requirements/feature-design-structure.md` (feature design structure)
-- `{adapter-directory}/specs/testing.md` (test requirements)
-- `{adapter-directory}/specs/feature-status-validation.md` (status validation)
-
 Extract:
-- Testing scenario requirements from feature DESIGN.md
-- Requirements marked as implemented in feature DESIGN.md
+- The artifact IDs and checkboxes/statuses that represent "implemented" scope (when applicable)
 - Adapter build and test commands
 - Code quality requirements
 
@@ -84,35 +74,37 @@ Extract:
 ## Prerequisites
 
 **MUST validate**:
-- [ ] Feature DESIGN.md exists and validated (100/100 + 100%)
 - [ ] Adapter exists - validate: Required for validation
+
+**If missing**: Ask the user whether to:
+- Create/validate prerequisites via the corresponding workflows
+- Provide inputs in another form (path, link, or pasted text in any format)
+- Proceed anyway (reduce scope to content-only checks and report missing cross-references)
 
 ---
 
 ## Steps
 
-### 1. Identify Feature Scope
+### 1. Identify Validation Scope
 
-**Read feature artifacts**:
-1. Open feature DESIGN.md
-2. Extract feature slug from paths
+Ask the user for the artifact input as one of:
+- Registered artifact path (preferred)
+- Link
+- Pasted text
 
-**Extract validation scope**:
-- All requirements from DESIGN.md Section F
-- All testing scenarios from DESIGN.md Section F
+If the artifact cannot be validated as an FDD artifact (registry says `format != "FDD"` or user provides non-FDD input):
+- Perform content-only checks
+- Suggest converting to FDD via the appropriate workflow
 
 ### 2. Build Codebase Map
 
-**Locate feature code by tags**:
-- Search for all `@fdd-` tags corresponding to the feature DESIGN.md scope across the codebase scope defined by the adapter:
-  - `@fdd-flow:`, `@fdd-algo:`, `@fdd-state:`, `@fdd-req:`, `@fdd-test:`
-- Collect all files containing these tags.
+Locate relevant code by IDs/tags (when available):
+- If the selected artifact is an FDD artifact with IDs: search for matching `@fdd-*` tags in the codebase scope defined by the adapter
+- Otherwise: ask the user for target directories/files to validate
 
-**Result**: Complete list of files implementing this feature
+### 3. Validate Implementation Coverage
 
-### 3. Validate Requirements Implementation
-
-**For each requirement in DESIGN.md Section F marked as IMPLEMENTED**:
+For each selected ID/scope marked as implemented (when applicable):
 
 **Verify code exists**:
 - Verify code is not placeholder/stub (no TODO/FIXME/unimplemented!)
@@ -122,14 +114,9 @@ Extract:
 - ✅ No TODO/FIXME in implementation code
 - ✅ No unimplemented!() in business logic
 
-### 4. Validate Design Conformance (Flows / Algorithms / States / Technical Details)
+### 4. Validate Conformance (When IDs Exist)
 
-**Collect design IDs**:
-- Flows: Section B IDs (`fdd-{project}-feature-{feature-slug}-flow-*`)
-- Algorithms: Section C IDs (`...-algo-*`)
-- States (if present): Section D IDs (`...-state-*`)
-- Requirements & tests: Section F IDs (`...-req-*`, `...-test-*`)
-- Phases: `ph-{N}` from requirement `**Phases**` lists in feature DESIGN.md and from FDL step lines
+Collect artifact IDs (when present) and validate that they are represented in code and tests.
 
 **Check implementation and non-deviation**:
 - Search the codebase for all `@fdd-` tags and verify EVERY occurrence includes a phase postfix `:ph-{N}` (N is an integer).
@@ -145,14 +132,12 @@ Extract:
 - ✅ No missing or extra endpoints/paths versus design Section E
 - ✅ No placeholder/stub code in mapped implementations
 
-### 5. Validate Test Scenarios Implementation
+### 5. Validate Test Scenarios (When Present)
 
-**CRITICAL**: All testing scenarios from DESIGN.md Section F MUST be implemented
-
-**For each testing scenario in DESIGN.md Section F**:
+If the selected artifact defines test scenarios, verify they are implemented.
 
 **Check test exists**:
-1. Extract testing scenario ID: `fdd-{project}-feature-{feature-slug}-test-{scenario-name}`
+1. Extract testing scenario ID(s) from the selected artifact
 2. Search for test referencing this scenario ID:
     - Search within test locations defined by the adapter (unit, integration, e2e).
 
@@ -210,11 +195,11 @@ Extract:
 ### 9. Code Quality Validation
 
 **Check for incomplete work**:
-- Search the feature code set (identified via feature DESIGN.md IDs and `@fdd-*` tags) for incomplete work markers: `TODO`, `FIXME`, `XXX`, `HACK`.
-- Search feature business logic code (domain/service layers per adapter) for incomplete implementation markers: `unimplemented!`, `todo!`.
+- Search the relevant code set for incomplete work markers: `TODO`, `FIXME`, `XXX`, `HACK`.
+- Search business logic code (domain/service layers per adapter) for incomplete implementation markers: `unimplemented!`, `todo!`.
 - Search test code for ignored tests (e.g. `#[ignore]`) and validate justification per adapter rules.
 
-**Check per adapter feature-status-validation.md**:
+**Check per adapter conventions.md**:
 - No TODO/FIXME in domain/service layers
 - No unimplemented!() in business logic
 - No bare unwrap() or panic in production code
@@ -311,99 +296,176 @@ Extract:
 
 **Format**:
 ```markdown
-## Validation: Feature Code ({feature-slug})
+## Validation Report: Code ({artifact-scope})
 
-**Score**: {X}/150  
-**Status**: PASS | FAIL  
-**Threshold**: ≥128/150
+### Summary
+- **Status**: **PASS** ✅ | **FAIL** ❌
+- **Score**: **{X}/150**
+- **Threshold**: **≥128/150**
 
 ---
 
 ### Findings
 
-**Requirements Implementation** ({X}/30):
-✅ | ❌ Requirement {req-id}: {status} (Change {change-id}: {change-status})
+#### 1) Requirements Implementation — **{X}/30**
+- ✅ | ❌ Requirement {req-id}: {status} (Change {change-id}: {change-status})
 
-**Test Scenarios Implementation** ({X}/20):
-✅ | ❌ Test scenario {test-id}: {implemented | NOT IMPLEMENTED}
+#### 2) Test Scenarios Implementation — **{X}/20**
+- ✅ | ❌ Test scenario {test-id}: {implemented | NOT IMPLEMENTED}
   - Test file: {path} or NOT FOUND
   - Test status: {pass | fail | ignored | placeholder}
 
-**Build Status** ({X}/15):
-✅ | ❌ Build: {success | failed}
-✅ | ❌ Compiler warnings: {count}
+#### 3) Build Status — **{X}/15**
+- ✅ | ❌ Build: {success | failed}
+- ✅ | ❌ Compiler warnings: {count}
 
-**Linter Status** ({X}/10):
-✅ | ❌ Linter: {success | failed}
-✅ | ❌ Linter warnings: {count}
+#### 4) Linter Status — **{X}/10**
+- ✅ | ❌ Linter: {success | failed}
+- ✅ | ❌ Linter warnings: {count}
 
-**Test Execution** ({X}/30):
-✅ | ❌ Unit tests: {X}/{total} passed
-✅ | ❌ Integration tests: {X}/{total} passed
-✅ | ❌ E2E tests: {X}/{total} passed
-✅ | ❌ Coverage: {X}% (threshold: {Y}%)
+#### 5) Test Execution — **{X}/30**
+- ✅ | ❌ Unit tests: {X}/{total} passed
+- ✅ | ❌ Integration tests: {X}/{total} passed
+- ✅ | ❌ E2E tests: {X}/{total} passed
+- ✅ | ❌ Coverage: {X}% (threshold: {Y}%)
 
-**Code Quality** ({X}/15):
-✅ | ❌ No TODO/FIXME in domain/service: {found count}
-✅ | ❌ No unimplemented! in business logic: {found count}
-✅ | ❌ No ignored tests without reason: {found count}
-✅ | ❌ Error handling complete
-✅ | ❌ Engineering best practices followed (TDD, SOLID, DRY, KISS, YAGNI)
+#### 6) Code Quality — **{X}/15**
+- ✅ | ❌ No TODO/FIXME in domain/service: {found count}
+- ✅ | ❌ No unimplemented! in business logic: {found count}
+- ✅ | ❌ No ignored tests without reason: {found count}
+- ✅ | ❌ Error handling complete
+- ✅ | ❌ Engineering best practices followed *(TDD, SOLID, DRY, KISS, YAGNI)*
 
-**Code Logic Consistency** ({X}/20):
-✅ | ❌ Requirements logic matches design specifications
-✅ | ❌ Flow execution matches design steps
-✅ | ❌ Algorithm implementation matches design specifications
-✅ | ❌ Technical details match Section E specifications
-✅ | ❌ No CRITICAL divergences found
+#### 7) Code Logic Consistency — **{X}/20**
+- ✅ | ❌ Requirements logic matches design specifications
+- ✅ | ❌ Flow execution matches design steps
+- ✅ | ❌ Algorithm implementation matches design specifications
+- ✅ | ❌ Technical details match Section E specifications
+- ✅ | ❌ No **CRITICAL** divergences found
   - List of divergences: {CRITICAL: [...] | MINOR: [...]}
 
-**Code Tagging** ({X}/10):
-✅ | ❌ All feature code tagged with relevant feature DESIGN.md IDs (phase is always a postfix, no standalone phase tags):
-   - @fdd-flow:{flow-id}:ph-{N}, @fdd-algo:{algo-id}:ph-{N}, @fdd-state:{state-id}:ph-{N}, @fdd-req:{req-id}:ph-{N}, @fdd-test:{test-id}:ph-{N}
+#### 8) Code Tagging — **{X}/10**
+- ✅ | ❌ All relevant code tagged with artifact IDs when applicable (phase is always a postfix, no standalone phase tags):
+  - @fdd-flow:{flow-id}:ph-{N}, @fdd-algo:{algo-id}:ph-{N}, @fdd-state:{state-id}:ph-{N}, @fdd-req:{req-id}:ph-{N}, @fdd-test:{test-id}:ph-{N}
 
 ---
 
 ### Recommendations
 
-**Critical**:
-1. {Fix}
+#### Critical
+1. **{Fix}**
 
-**High Priority**:
-1. {Fix}
+#### High Priority
+1. **{Fix}**
 
-**Medium Priority**:
-1. {Fix}
+#### Medium Priority
+1. **{Fix}**
 
 ---
 
 ### Next Steps
 
-**If PASS**:
-✅ Feature code validated! Update feature status as COMPLETE in FEATURES.md
-✅ Proceed to next feature
+#### If PASS
+- ✅ Feature code validated! Update feature status as COMPLETE in FEATURES.md
+- ✅ Proceed to next feature
 
-**If FAIL**: Fix issues above, re-run `code-validate`
+#### If FAIL
+- ❌ Fix issues above, then re-run `code-validate`
 
 ---
 
 ### Self-Test Confirmation
 
 **Agent confirms**:
-✅ Read execution-protocol.md before starting
-✅ Read all required files from pre-flight checklist
-✅ Checked EVERY requirement individually
-✅ Checked EVERY test scenario individually
-✅ Ran build, lint, and test commands
-✅ Checked for TODO/FIXME/unimplemented systematically
-✅ Verified code logic consistency with design specifications
-✅ Analyzed code for contradictions with design
-✅ Used adapter commands for systematic verification
-✅ Completed self-test before reporting
+- ✅ Read execution-protocol.md before starting
+- ✅ Read all required files from pre-flight checklist
+- ✅ Checked EVERY requirement individually
 
 Self-test passed: YES
 
 ---
+```
+
+### 13. Semantic Expert Review (Always)
+
+Run an expert panel review of the codebase changes and implementation quality after producing the validation output.
+
+If a design artifact is available (registered `format: FDD` artifact path, or provided as a path/link/text by the user), experts MUST also evaluate design-to-code alignment.
+
+**Critical requirement**: This step MUST produce an explicit section in chat titled `### Semantic Expert Review` that confirms the review was executed.
+
+**Experts**:
+- Developer
+- QA Engineer
+- Security Expert
+- Performance Engineer
+- DevOps Engineer
+- Architect
+- DCO Engineer
+- Monitoring Engineer
+- UX Engineer
+- Product Manager
+- Legal Counsel
+- Compliance Engineer
+- Data Engineer
+- Cloud Engineer
+- Infrastructure Engineer
+- Database Architect
+- Data Engineer
+- Legal Counsel
+- Compliance Engineer
+- UX Engineer
+
+**Instructions (MANDATORY)**:
+- [ ] Execute this checklist for EACH expert listed above (do not skip any expert)
+- [ ] Adopt the role of the current expert (write: `Role assumed: {expert}`)
+- [ ] Review the actual code and tests changed/added in this validation scope
+- [ ] If a design artifact was provided or is available:
+  - [ ] Evaluate design-to-code alignment (no invented semantics)
+  - [ ] If design is missing/insufficient for current behavior, propose updating design before changing behavior
+- [ ] Identify issues (list each item explicitly):
+  - [ ] Contradictions vs design intent (when design exists)
+  - [ ] Missing behavior (requirements/tests)
+  - [ ] Unclear intent (naming/structure)
+  - [ ] Unnecessary complexity (YAGNI, premature abstraction)
+  - [ ] Missing non-functional concerns (security/perf/observability) when required by design/adapter specs
+- [ ] Provide concrete proposals:
+  - [ ] What to remove (dead code, unused abstractions)
+  - [ ] What to add (tests, error handling, validation, observability)
+  - [ ] What to rewrite (simpler structure, clearer naming, separation of concerns)
+- [ ] Propose the corrective workflow:
+  - [ ] If design must change: `feature` or `design` (UPDATE mode)
+  - [ ] If only code must change: `code` (continue implementation)
+
+**Required output format** (append to chat):
+```markdown
+### Semantic Expert Review
+
+**Review status**: **COMPLETED** ✅  
+**Reviewed artifact**: `Code ({artifact-scope})`  
+**Experts reviewed**: *Developer, QA Engineer, Security Expert, Performance Engineer, DevOps Engineer*
+
+*Rule*: For EACH expert listed in the workflow, include a `#### Expert: {expert}` section below. Do not omit any expert.
+
+#### Expert: {expert}
+- **Role assumed**: {expert}
+- **Checklist completed**: **YES** ✅
+- **Findings**:
+  - **Contradictions**: ...
+  - **Missing behavior**: ...
+  - **Unclear intent**: ...
+  - **Unnecessary complexity**: ...
+- **Proposed edits**:
+  - **Remove**: "..." → **Reason**: ...
+  - **Add**: ...
+  - **Rewrite**: "..." → "..."
+ 
+*Repeat the `#### Expert: {expert}` block for each expert above.*
+
+---
+ 
+**Recommended corrective workflow**: `{feature | design | code}` *(choose per findings)*
+```
 
 ## Validation
 
@@ -443,8 +505,4 @@ Self-validating workflow
 
 ## References
 
-- ALWAYS execute `feature-validate.md` WHEN validating a feature DESIGN.md before code work
-- ALWAYS execute `code.md` WHEN implementing directly from feature DESIGN.md
-- ALWAYS open and follow `feature-design-structure.md` WHEN interpreting feature DESIGN.md IDs and sections
-- ALWAYS open and follow `{adapter-directory}/specs/testing.md` WHEN executing tests
-- ALWAYS open and follow `{adapter-directory}/specs/feature-status-validation.md` WHEN validating code quality/status consistency
+None

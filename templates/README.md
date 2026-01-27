@@ -19,11 +19,11 @@ This directory contains templates for all FDD artifacts. Templates define the **
 
 | Template | Artifact | Location |
 |----------|----------|----------|
-| `PRD.template.md` | PRD | `architecture/PRD.md` |
-| `DESIGN.template.md` | Overall Design | `architecture/DESIGN.md` |
-| `ADR.template.md` | Architecture Decision Records | `architecture/ADR/` |
-| `FEATURES.template.md` | Features Manifest | `architecture/features/FEATURES.md` |
-| `feature-DESIGN.template.md` | Feature Design | `architecture/features/feature-{slug}/DESIGN.md` |
+| `PRD.template.md` | PRD | Defined by `{adapter-dir}/artifacts.json` (default: `architecture/PRD.md`) |
+| `DESIGN.template.md` | Overall Design | Defined by `{adapter-dir}/artifacts.json` (default: `architecture/DESIGN.md`) |
+| `ADR.template.md` | Architecture Decision Records | Defined by `{adapter-dir}/artifacts.json` (default: `architecture/ADR/`) |
+| `FEATURES.template.md` | Features Manifest | Defined by `{adapter-dir}/artifacts.json` (default: `architecture/features/FEATURES.md`) |
+| `feature-DESIGN.template.md` | Feature Design | Defined by `{adapter-dir}/artifacts.json` (default: `architecture/features/feature-{slug}/DESIGN.md`) |
 | `adapter-AGENTS.template.md` | Adapter AGENTS | `{adapter-directory}/AGENTS.md` |
 
 ---

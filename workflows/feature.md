@@ -10,7 +10,7 @@ purpose: Create or update feature design document
 
 **Type**: Operation  
 **Role**: Solution Architect  
-**Artifact**: `architecture/features/feature-{slug}/DESIGN.md`
+**Artifact**: Path resolved via `{adapter-dir}/artifacts.json` (kind: `FEATURE`; default: `architecture/features/feature-{slug}/DESIGN.md`)
 
 ---
 
@@ -48,11 +48,14 @@ Extract:
 ## Prerequisites
 
 **MUST validate**:
-- [ ] FEATURES.md exists - validate: Check file at `architecture/features/FEATURES.md`
+- [ ] FEATURES manifest exists - validate: Check file at FEATURES path from `{adapter-dir}/artifacts.json` (default: `architecture/features/FEATURES.md`)
 - [ ] FEATURES.md validated - validate: Score ≥90/100
 - [ ] Feature exists in FEATURES.md - validate: Feature ID present
 
-**If missing**: Run prerequisite workflows
+**If missing**: Ask the user whether to:
+- Create/validate FEATURES via `features` + `features-validate`
+- Provide the feature list/manifest in another form (path, link, or pasted text in any format)
+- Proceed anyway (design a feature with minimal dependencies; record assumptions and missing links)
 
 ---
 
@@ -70,13 +73,13 @@ Store feature ID and slug
 
 ### 2. Detect Mode
 
-Check if `architecture/features/feature-{slug}/DESIGN.md` exists:
+Check if the feature design artifact exists (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/features/feature-{slug}/DESIGN.md`):
 - **If exists**: UPDATE mode - Read and propose changes
 - **If NOT exists**: CREATE mode - Generate from scratch
 
 ### 3. Read Context
 
-Open `architecture/DESIGN.md` and `architecture/features/FEATURES.md`
+Open the DESIGN artifact and FEATURES manifest (paths resolved via `{adapter-dir}/artifacts.json`; defaults: `architecture/DESIGN.md`, `architecture/features/FEATURES.md`)
 
 Extract:
 - Requirements assigned to this feature
@@ -140,7 +143,7 @@ Ask: Create file? [yes/no/modify]
 ### 6. Create File
 
 After confirmation:
-- Create/update `architecture/features/feature-{slug}/DESIGN.md`
+- Create/update the feature design artifact (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/features/feature-{slug}/DESIGN.md`)
 - Verify creation
 
 ---

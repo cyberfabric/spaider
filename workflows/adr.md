@@ -10,7 +10,7 @@ purpose: Create or update Architecture Decision Records
 
 **Type**: Operation  
 **Role**: Architect  
-**Artifact**: `architecture/ADR/` (directory)
+**Artifact**: Path resolved via `{adapter-dir}/artifacts.json` (kind: `ADR`; default: `architecture/ADR/`) (directory)
 
 ---
 
@@ -47,10 +47,13 @@ Extract:
 ## Prerequisites
 
 **MUST validate**:
-- [ ] DESIGN.md exists - validate: Check file at `architecture/DESIGN.md`
-- [ ] PRD.md exists - validate: Check file at `architecture/PRD.md`
+- [ ] DESIGN artifact exists - validate: Check file at DESIGN path from `{adapter-dir}/artifacts.json` (default: `architecture/DESIGN.md`)
+- [ ] PRD artifact exists - validate: Check file at PRD path from `{adapter-dir}/artifacts.json` (default: `architecture/PRD.md`)
 
-**If missing**: Run `design` workflow first
+**If missing**: Ask the user whether to:
+- Create missing artifacts via `prd`/`design` workflows first
+- Provide inputs in another form (path, link, or pasted text in any format)
+- Proceed with ADR creation anyway (reduce cross-reference scope; record assumptions)
 
 ---
 
@@ -58,13 +61,13 @@ Extract:
 
 ### 1. Detect Mode
 
-Check if `architecture/ADR/` exists and contains ADR files:
-- **If architecture/ADR/ has no ADR files**: CREATE mode - Create `architecture/ADR/general/0001-<adr-fdd-id>.md`
-- **If architecture/ADR/ contains ADR files**: UPDATE mode - Add a new ADR file or edit an existing ADR file
+Check if the ADR directory exists and contains ADR files (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/ADR/`):
+- **If ADR directory has no ADR files**: CREATE mode - Create `general/0001-<adr-fdd-id>.md` under the ADR directory
+- **If ADR directory contains ADR files**: UPDATE mode - Add a new ADR file or edit an existing ADR file
 
 ### 2. Read Design Context
 
-Open `architecture/DESIGN.md` and `architecture/PRD.md`
+Open the DESIGN and PRD artifacts (paths resolved via `{adapter-dir}/artifacts.json`; defaults: `architecture/DESIGN.md`, `architecture/PRD.md`)
 
 Extract:
 - Architecture style and key decisions from DESIGN.md
@@ -76,12 +79,12 @@ Extract:
 ### 3. Mode-Specific Actions
 
 **CREATE Mode** (no ADR files exist):
-- Will create directory `architecture/ADR/general/` if needed
+- Will create the ADR category directory (default: `general/`) under the ADR directory if needed
 - First ADR will be ADR-0001 (Initial Architecture)
 - Proceed to Step 4 for ADR-0001 creation
 
 **UPDATE Mode** (ADR files exist):
-- Read existing ADR files under `architecture/ADR/`
+- Read existing ADR files under the ADR directory
 - Find highest ADR number (ADR-NNNN) across all files
 - Ask user: Add new ADR or edit existing ADR?
 
@@ -249,7 +252,7 @@ Extract:
 ### 8. Summary and Confirmation
 
 Show:
-- **CREATE**: File path: `architecture/ADR/general/0001-<adr-fdd-id>.md` (new file)
+- **CREATE**: File path: ADR path under ADR directory from `{adapter-dir}/artifacts.json` (default: `architecture/ADR/general/0001-<adr-fdd-id>.md`) (new file)
 - **ADD**: ADR number: ADR-{NNNN} (new entry)
 - **EDIT**: ADR number: ADR-{NNNN} (updating existing)
 - Title: {ADR_TITLE}
@@ -262,13 +265,13 @@ Ask: Proceed? [yes/no/modify]
 ### 9. Create or Update File
 
 **CREATE Mode** (no ADR files exist):
-- Create `architecture/ADR/general/` directory if needed
-- Create `architecture/ADR/general/0001-<adr-fdd-id>.md`
+- Create `general/` directory under the ADR directory if needed
+- Create `general/0001-<adr-fdd-id>.md` under the ADR directory
 
 **ADD Mode** (create new ADR file):
 - Determine ADR number = highest + 1
 - Ask user for category (default: `general`)
-- Create `architecture/ADR/{category}/{NNNN}-<adr-fdd-id>.md`
+- Create `{category}/{NNNN}-<adr-fdd-id>.md` under the ADR directory
 
 **EDIT Mode** (update existing ADR file):
 - Read the selected ADR file

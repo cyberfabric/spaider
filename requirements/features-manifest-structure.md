@@ -43,7 +43,7 @@ purpose: Define validation rules for FEATURES.md files
 
 **Purpose**: Central manifest tracking all features in the project
 
-**Location**: `architecture/features/FEATURES.md`
+**Location**: Defined by `{adapter-dir}/artifacts.json` (kind: `FEATURES`). Default: `architecture/features/FEATURES.md`
 
 ---
 
@@ -65,7 +65,7 @@ purpose: Define validation rules for FEATURES.md files
 
 ### File Validation
 
-1. **File exists**: `architecture/features/FEATURES.md` exists
+1. **File exists**: FEATURES manifest path exists (resolved from `{adapter-dir}/artifacts.json`)
 2. **Header present**: Project name in title, status overview present
 
 ### Structure Validation
@@ -128,7 +128,7 @@ purpose: Define validation rules for FEATURES.md files
 ### Content Validation
 
 1. **Feature directories exist**
-   - Each feature has: `architecture/features/feature-{slug}/`
+   - Each feature has a directory under the FEATURES manifest directory: `feature-{slug}/`
    - DESIGN.md exists if status ≠ NOT_STARTED
 
 2. **Dependencies valid**

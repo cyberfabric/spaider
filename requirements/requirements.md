@@ -23,11 +23,7 @@ This file defines requirements that are shared across multiple `*-structure.md` 
 
 **Applies to**:
 - Artifact docs:
-  - `architecture/PRD.md`
-  - `architecture/DESIGN.md`
-  - `architecture/ADR/`
-  - `architecture/features/FEATURES.md`
-  - `architecture/features/feature-{slug}/DESIGN.md`
+  - FDD artifacts registered in `{adapter-dir}/artifacts.json` (default locations include: `architecture/PRD.md`, `architecture/DESIGN.md`, `architecture/ADR/`, `architecture/features/FEATURES.md`, `architecture/features/feature-{slug}/DESIGN.md`)
 - Adapter spec docs:
   - `{adapter-directory}/specs/*.md`
 

@@ -51,7 +51,7 @@ purpose: Define validation rules for DESIGN.md files
 
 **Purpose**: Technical requirements, principles, and architecture
 
-**Location**: `architecture/DESIGN.md`
+**Location**: Defined by `{adapter-dir}/artifacts.json` (kind: `DESIGN`). Default: `architecture/DESIGN.md`
 
 **Contains**: 
 - Section A: Architecture Overview
@@ -80,7 +80,7 @@ purpose: Define validation rules for DESIGN.md files
 ### File Validation
 
 1. **File exists**
-   - File `architecture/DESIGN.md` exists
+   - DESIGN artifact path exists (resolved from `{adapter-dir}/artifacts.json`)
    - File contains ≥200 lines (recommended: 500-2000 lines)
 
 ### Structure Validation
@@ -186,13 +186,13 @@ purpose: Define validation rules for DESIGN.md files
    - If DESIGN.md references any use case IDs, each referenced use case ID MUST exist in PRD.md
 
 3. **ADR References (MANDATORY)**
-   - If DESIGN.md references any ADR IDs, each referenced ADR ID MUST exist in `architecture/ADR/`
+   - If DESIGN references any ADR IDs, each referenced ADR ID MUST exist in the ADR directory (resolved from `{adapter-dir}/artifacts.json`; default: `architecture/ADR/`)
 
 ### Validation Checks
 
 - All referenced actor IDs exist in PRD.md
 - All referenced use case IDs exist in PRD.md
-- All referenced ADR IDs exist in `architecture/ADR/` (when ADR directory exists)
+- All referenced ADR IDs exist in the ADR directory (resolved from `{adapter-dir}/artifacts.json`)
 
 ---
 

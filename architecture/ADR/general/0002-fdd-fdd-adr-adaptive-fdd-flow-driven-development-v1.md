@@ -101,12 +101,6 @@ Scopes MUST support inheritance:
 * `fdd-fdd-fr-brownfield-support` - Brownfield adoption and incremental onboarding is a core capability
 * `fdd-fdd-fr-adapter-config` - Project-specific structure and conventions live in adapters
 
-**Requirements**:
-* `fdd-fdd-req-executable-workflows` - Users can start from any workflow step and still progress
-* `fdd-fdd-req-deterministic-validation` - Validators remain deterministic and provide structured reports
-* `fdd-fdd-req-migration` - Must support incremental adoption for existing projects
-* `fdd-fdd-req-adapter-configuration` - Adapter remains the extension point for project specifics
-
 **Principles**:
 * `fdd-fdd-principle-tech-agnostic` - Core remains portable; structure knowledge belongs to adapter/config
 * `fdd-fdd-principle-machine-readable` - `artifacts.json` is machine-readable for tools and agents

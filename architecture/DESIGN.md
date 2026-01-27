@@ -38,7 +38,7 @@ AI agent integration is achieved through machine-readable specifications (AGENTS
 | `fdd-fdd-fr-brownfield-support` | Support legacy projects via `workflows/adapter-from-sources.md` + `workflows/adapter-auto.md` (discovery) and allow validating artifacts without rigid repo layout using `adapter-info` + adapter-owned structure rules. |
 | `fdd-fdd-fr-fdl` | Use FDL markers in feature design (scope `**ID**` line + numbered steps with `ph-N`/`inst-*` tokens); parse via `skills/fdd/scripts/fdd/validation/fdl.py` and validate instruction/code alignment via traceability validation. |
 | `fdd-fdd-fr-ide-integration` | Generate agent integrations via `python3 skills/fdd/scripts/fdd.py agent-workflows` and `agent-skills`; rely on `.windsurf/skills/fdd/SKILL.md` proxies and `AGENTS.md` navigation to map IDE actions to workflows/validators. |
-| `fdd-fdd-nfr-validation-performance` | Keep validation fast via regex-based parsing in `skills/fdd/scripts/fdd/constants.py`, scoped filesystem scanning (include/exclude/max-bytes in `scan-ids`/`where-used`), and optional config to skip code traceability (`.fdd-config.json` / `--skip-code-traceability`). |
+| `fdd-fdd-nfr-validation-performance` | Keep validation fast via regex-based parsing in `skills/fdd/scripts/fdd/constants.py`, scoped filesystem scanning (include/exclude/max-bytes in `scan-ids`/`where-used`), and registry-driven control of code traceability scanning via `{adapter-dir}/artifacts.json` (kind: `SRC` + `traceability_enabled`). |
 
 ### Architecture Layers
 
@@ -176,16 +176,17 @@ All FDD artifacts (PRD, Overall Design, ADRs, Feature Manifest, etc.) MUST be pl
 FDD assumes Git version control for artifact history and collaboration. Change tracking relies on Git commits and diffs. Feature branches and pull requests are the collaboration model. This constraint aligns FDD with modern development practices but requires Git knowledge from users.
 
 <!-- fdd-id-content -->
+
 #### Constraint 4: No Forced Tool Dependencies
 
 **ID**: `fdd-fdd-constraint-no-forced-tools`
 
 <!-- fdd-id-content -->
 FDD core MUST NOT require specific IDEs, editors, or development tools. Validation MUST run from command line without GUI tools. IDE integrations are optional enhancements, not requirements. This constraint ensures FDD works in any development environment (local, remote, CI/CD, etc.).
+<!-- fdd-id-content -->
 
 ---
  
-<!-- fdd-id-content -->
 ## C. Technical Architecture
 
 ### C.1: Domain Model
@@ -492,52 +493,53 @@ sequenceDiagram
 <!-- fdd-id-content -->
 
 ---
- 
+  
 ## D. Additional Context
-
+ 
 **ID**: `fdd-fdd-design-context-notes`
+ 
 <!-- fdd-id-content -->
  
 Additional notes and rationale for the FDD overall design.
-
+ 
 ### Technology Selection Rationale
-
+ 
 **Python 3 Standard Library Only**: Chosen for maximum portability and zero installation complexity. Python 3.6+ is available on most development machines. Standard library ensures no dependency management or version conflicts.
-
+ 
 **Markdown for Artifacts**: Universal format compatible with all editors, version control systems, and documentation platforms. Plain text ensures longevity and accessibility. Syntax highlighting and rendering available in all modern development tools.
-
+ 
 **CLISPEC for API**: Command-line interface is most compatible with CI/CD pipelines, remote development, and automation scripts. JSON output enables machine consumption and integration with other tools.
-
+ 
 **GTS for FDD's Own Domain Model**: While FDD supports any domain model format via adapters, FDD itself uses GTS (Global Type System) for domain type definitions as a demonstration of machine-readable specifications.
-
+ 
 ### Implementation Considerations
-
+ 
 **Incremental Adoption Path**:
-1. Start with adapter (minimal: just Extends line)
-2. Add PRD
-3. Add Overall Design
-4. Optionally add ADRs (decisions)
-5. Add Feature Manifest and Feature Designs
-6. Implement features using the primary implementation workflow
-7. Evolve adapter as patterns emerge
-
+ 1. Start with adapter (minimal: just Extends line)
+ 2. Add PRD
+ 3. Add Overall Design
+ 4. Optionally add ADRs (decisions)
+ 5. Add Feature Manifest and Feature Designs
+ 6. Implement features using the primary implementation workflow
+ 7. Evolve adapter as patterns emerge
+ 
 **Migration from Existing Projects**:
-- Use `adapter-from-sources` workflow to auto-detect tech stack
-- Reverse-engineer PRD content from existing requirements
-- Extract Overall Design patterns from code structure and documentation
-- Add traceability incrementally (new code first, legacy later)
-
+ - Use `adapter-from-sources` workflow to auto-detect tech stack
+ - Reverse-engineer PRD content from existing requirements
+ - Extract Overall Design patterns from code structure and documentation
+ - Add traceability incrementally (new code first, legacy later)
+ 
 **AI Agent Best Practices**:
-- Always run `fdd adapter-info` before starting any workflow
-- Use deterministic gate (fdd validate) before manual validation
-- Follow execution-protocol.md for all workflow executions
-- Use fdd skill for artifact search and ID lookup
-- Never skip prerequisites validation
-
+ - Always run `fdd adapter-info` before starting any workflow
+ - Use deterministic gate (fdd validate) before manual validation
+ - Follow execution-protocol.md for all workflow executions
+ - Use fdd skill for artifact search and ID lookup
+ - Never skip prerequisites validation
+ 
 ### Artifact Lifecycle Map
-
+ 
 The following table summarizes which workflows create/update which artifacts, and which templates/examples are expected to be used during generation.
-
+ 
 | Artifact | Canonical location | Create/update workflows | Validation workflows | Template | Example |
 |---|---|---|---|---|---|
 | PRD | `architecture/PRD.md` | `workflows/prd.md` | `workflows/prd-validate.md` | `templates/PRD.template.md` | `examples/requirements/prd/valid.md` |
@@ -545,40 +547,40 @@ The following table summarizes which workflows create/update which artifacts, an
 | ADRs | `architecture/ADR/` | `workflows/adr.md` | `workflows/adr-validate.md` | `templates/ADR.template.md` | `examples/requirements/adr/valid.md` |
 | Feature Manifest | `architecture/features/FEATURES.md` | `workflows/features.md` | `workflows/features-validate.md` | `templates/FEATURES.template.md` | `examples/requirements/features-manifest/valid.md` |
 | Feature Design | `architecture/features/feature-{slug}/DESIGN.md` | `workflows/feature.md` | `workflows/feature-validate.md` | `templates/feature-DESIGN.template.md` | `examples/requirements/feature-design/valid.md` |
-
+ 
 ### Global Specification Contracts
-
+ 
 FDD avoids duplicating requirements across artifacts. The following files are the authoritative contracts that workflows and artifacts MUST follow:
-
-- Workflow execution: [requirements/workflow-execution.md](../requirements/workflow-execution.md)
-- Operation workflows: [requirements/workflow-execution-operations.md](../requirements/workflow-execution-operations.md)
-- Validation workflows: [requirements/workflow-execution-validations.md](../requirements/workflow-execution-validations.md)
-- PRD structure: [requirements/prd-structure.md](../requirements/prd-structure.md)
-- Overall design structure: [requirements/overall-design-structure.md](../requirements/overall-design-structure.md)
-- Shared structural rules: [requirements/requirements.md](../requirements/requirements.md)
-
+ 
+ - Workflow execution: [requirements/workflow-execution.md](../requirements/workflow-execution.md)
+ - Operation workflows: [requirements/workflow-execution-operations.md](../requirements/workflow-execution-operations.md)
+ - Validation workflows: [requirements/workflow-execution-validations.md](../requirements/workflow-execution-validations.md)
+ - PRD structure: [requirements/prd-structure.md](../requirements/prd-structure.md)
+ - Overall design structure: [requirements/overall-design-structure.md](../requirements/overall-design-structure.md)
+ - Shared structural rules: [requirements/requirements.md](../requirements/requirements.md)
+ 
 ### Future Technical Improvements
-
+ 
 **Performance Optimizations**:
-- Caching for repository-wide ID scans (currently re-scans on each query)
-- Incremental validation (only validate changed sections)
-- Parallel processing for multi-artifact validation
-
+ - Caching for repository-wide ID scans (currently re-scans on each query)
+ - Incremental validation (only validate changed sections)
+ - Parallel processing for multi-artifact validation
+ 
 **Enhanced Traceability**:
-- Visual traceability graphs (actor → capability → requirement → code)
-- Impact analysis UI (show all affected artifacts when changing design)
-- Coverage metrics dashboard (% of requirements implemented, tested)
-
+ - Visual traceability graphs (actor → capability → requirement → code)
+ - Impact analysis UI (show all affected artifacts when changing design)
+ - Coverage metrics dashboard (% of requirements implemented, tested)
+ 
 **IDE Integration Enhancements**:
-- Language server protocol (LSP) for real-time validation
-- Quick fixes for common validation errors
-- Hover tooltips showing ID definitions
-- Auto-completion for FDD IDs and references
-
+ - Language server protocol (LSP) for real-time validation
+ - Quick fixes for common validation errors
+ - Hover tooltips showing ID definitions
+ - Auto-completion for FDD IDs and references
+ 
 **Adapter Ecosystem**:
-- Public adapter registry for common tech stacks
-- Adapter composition (extend multiple adapters)
-- Adapter versioning and compatibility checking
-- Community-contributed patterns and templates
-
-<!-- fdd-id-content -->
+ - Public adapter registry for common tech stacks
+ - Adapter composition (extend multiple adapters)
+ - Adapter versioning and compatibility checking
+ - Community-contributed patterns and templates
+ 
+ <!-- fdd-id-content -->

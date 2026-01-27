@@ -11,11 +11,12 @@ Create a validated baseline (PRD + architecture) before writing code.
 
 ## What You Will Produce
 
-- `architecture/PRD.md` ([taxonomy](TAXONOMY.md#prdmd))
-- `architecture/DESIGN.md` ([taxonomy](TAXONOMY.md#designmd))
-- `architecture/ADR/**` ([taxonomy](TAXONOMY.md#adr))
-- `architecture/features/FEATURES.md` ([taxonomy](TAXONOMY.md#featuresmd))
-- `architecture/features/feature-{slug}/DESIGN.md` ([taxonomy](TAXONOMY.md#feature-designmd))
+- FDD artifacts registered in `{adapter-dir}/artifacts.json` ([taxonomy](TAXONOMY.md))
+  - PRD (default: `architecture/PRD.md`)
+  - Overall DESIGN (default: `architecture/DESIGN.md`)
+  - ADR directory (default: `architecture/ADR/**`)
+  - FEATURES manifest (default: `architecture/features/FEATURES.md`)
+  - Feature DESIGN (default: `architecture/features/feature-{slug}/DESIGN.md`)
 
 ## How to Provide Context in Prompts
 
@@ -26,7 +27,7 @@ Recommended context to include:
 - Links/paths to existing docs (README, specs, diagrams)
 - Constraints (security, compliance, performance)
 - Non-goals and out-of-scope items
-- For validation workflows: what artifact/path you want to validate (defaults are standard FDD locations)
+- For validation workflows: what artifact/path you want to validate (resolve via `{adapter-dir}/artifacts.json`; defaults may be `architecture/...`)
 
 Example format:
 ```text
@@ -52,7 +53,7 @@ The agent should:
 ### 1. `/fdd-prd`
 
 **What it does**:
-- Creates or updates `architecture/PRD.md` ([taxonomy](TAXONOMY.md#prdmd)).
+- Creates or updates the PRD artifact ([taxonomy](TAXONOMY.md#prdmd)).
 
 **Provide context**:
 - Product vision, target users, key capabilities
@@ -70,7 +71,7 @@ Context:
 ### 2. `/fdd-prd-validate`
 
 **What it does**:
-- Validates `architecture/PRD.md` deterministically.
+- Validates the PRD artifact deterministically (path resolved from `{adapter-dir}/artifacts.json`; default: `architecture/PRD.md`).
 
 **Provide context**:
 - If your PRD artifact is not in the standard location, provide the exact path to validate
@@ -86,8 +87,8 @@ Prompt example:
 ### 3. `/fdd-design` (ADR + Overall Design)
 
 **What it does**:
-- Creates or updates `architecture/DESIGN.md` ([taxonomy](TAXONOMY.md#designmd)).
-- Creates or updates `architecture/ADR/**` as needed ([taxonomy](TAXONOMY.md#adr)).
+- Creates or updates the overall design artifact ([taxonomy](TAXONOMY.md#designmd)).
+- Creates or updates ADR artifacts as needed ([taxonomy](TAXONOMY.md#adr)).
 
 **Provide context**:
 - Architecture constraints (cloud/on-prem, multi-tenant, auth model)
@@ -114,7 +115,7 @@ If you need to create a new ADR or edit an existing ADR explicitly, use the dedi
 ### 4. `/fdd-design-validate`
 
 **What it does**:
-- Validates `architecture/DESIGN.md` and related ADRs.
+- Validates the overall design artifact and related ADRs (paths resolved from `{adapter-dir}/artifacts.json`; defaults: `architecture/DESIGN.md`, `architecture/ADR/**`).
 
 **Provide context**:
 - If you want to validate a specific ADR first, provide the ADR file path
@@ -140,7 +141,7 @@ Context:
 ### 5. `/fdd-features`
 
 **What it does**:
-- Creates or updates `architecture/features/FEATURES.md` ([taxonomy](TAXONOMY.md#featuresmd)) from the overall design.
+- Creates or updates the FEATURES manifest artifact ([taxonomy](TAXONOMY.md#featuresmd)) from the overall design.
 
 **Provide context**:
 - Any feature boundaries you want (what should be separate features)
@@ -168,7 +169,7 @@ Prompt example:
 ### 7. `/fdd-feature`
 
 **What it does**:
-- Creates or updates a feature design: `architecture/features/feature-{slug}/DESIGN.md` ([taxonomy](TAXONOMY.md#feature-designmd)).
+- Creates or updates a feature design artifact ([taxonomy](TAXONOMY.md#feature-designmd)).
 
 **Where SCENARIOS live**:
 - Define feature-level test scenarios inside the feature `DESIGN.md`.
@@ -203,7 +204,7 @@ Context:
 ### 9. `/fdd-code`
 
 **What it does**:
-- Implements the feature directly from `DESIGN.md` (default path).
+- Implements the feature directly from the feature design artifact (path resolved from `{adapter-dir}/artifacts.json`; default: `architecture/features/feature-{slug}/DESIGN.md`).
 
 **Provide context**:
 - Feature slug

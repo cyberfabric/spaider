@@ -1,0 +1,65 @@
+{
+  "version": "1.0",
+  "artifacts": [
+    {
+      "kind": "PRD",
+      "system": "FDD",
+      "path": "architecture/PRD.md",
+      "format": "FDD",
+      "traceability_enabled": true 
+    },
+    {
+      "kind": "DESIGN",
+      "system": "FDD",
+      "path": "architecture/DESIGN.md",
+      "format": "FDD",
+      "traceability_enabled": true
+    },
+    {
+      "kind": "ADR",
+      "system": "FDD",
+      "path": "architecture/ADR",
+      "format": "FDD",
+      "traceability_enabled": true
+    },
+    {
+      "kind": "FEATURES",
+      "system": "FDD",
+      "path": "architecture/features/FEATURES.md",
+      "format": "FDD",
+      "traceability_enabled": true
+    },
+    {
+      "kind": "SRC",
+      "system": "FDD",
+      "path": "skills/fdd",
+      "format": "CONTEXT",
+      "traceability_enabled": false,
+      "extensions": [".py"]
+    },
+    {
+      "kind": "SRC",
+      "system": "FDD",
+      "path": "tests",
+      "format": "CONTEXT",
+      "traceability_enabled": false,
+      "extensions": [".py"]
+    },
+    {
+      "kind": "SRC",
+      "system": "FDD",
+      "path": "workflows",
+      "format": "CONTEXT",
+      "traceability_enabled": false,
+      "extensions": [".md"]
+    },
+    {
+      "kind": "SRC",
+      "system": "FDD",
+      "path": "requirements",
+      "format": "CONTEXT",
+      "traceability_enabled": false,
+      "extensions": [".md"]
+    }
+  ]
+}

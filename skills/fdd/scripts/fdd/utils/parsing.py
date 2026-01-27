@@ -79,14 +79,46 @@ def split_by_section_letter(text: str, section_re: re.Pattern) -> Tuple[List[str
     return found_order, sections
 
 
+def split_by_section_letter_with_offsets(
+    text: str, section_re: re.Pattern
+) -> Tuple[List[str], Dict[str, List[str]], Dict[str, int]]:
+    lines = text.splitlines()
+    found_order: List[str] = []
+    sections: Dict[str, List[str]] = {}
+    offsets: Dict[str, int] = {}
+
+    current: Optional[str] = None
+    for idx, line in enumerate(lines, start=1):
+        m = section_re.match(line.strip())
+        if m:
+            current = m.group(1).upper()
+            if current not in sections:
+                found_order.append(current)
+                sections[current] = []
+                offsets[current] = idx + 1
+            continue
+        if current is not None:
+            sections[current].append(line)
+
+    return found_order, sections, offsets
+
+
 def split_by_feature_section_letter(text: str) -> Tuple[List[str], Dict[str, List[str]]]:
     """Split feature DESIGN.md by section letters (A-F)."""
     return split_by_section_letter(text, SECTION_FEATURE_RE)
 
 
+def split_by_feature_section_letter_with_offsets(text: str) -> Tuple[List[str], Dict[str, List[str]], Dict[str, int]]:
+    return split_by_section_letter_with_offsets(text, SECTION_FEATURE_RE)
+
+
 def split_by_prd_section_letter(text: str) -> Tuple[List[str], Dict[str, List[str]]]:
     """Split PRD.md by section letters (A-E)."""
     return split_by_section_letter(text, SECTION_PRD_RE)
+
+
+def split_by_prd_section_letter_with_offsets(text: str) -> Tuple[List[str], Dict[str, List[str]], Dict[str, int]]:
+    return split_by_section_letter_with_offsets(text, SECTION_PRD_RE)
 
 
 def field_block(lines: List[str], field_name: str) -> Optional[Dict[str, object]]:

@@ -3,10 +3,10 @@ fdd: true
 type: workflow
 name: Code
 version: 1.0
-purpose: Implement code directly from feature design
+purpose: Implement code directly from an FDD artifact
 ---
 
-# Implement Code (Directly From Feature Design)
+# Implement Code (Directly From FDD Artifact)
 
 **Type**: Operation  
 **Role**: Developer  
@@ -24,11 +24,11 @@ purpose: Implement code directly from feature design
 
 ## Overview
 
-Implement a feature directly from feature `DESIGN.md`.
+Implement work directly from an FDD artifact (feature design, overall design, ADR, PRD, or other registered FDD artifact).
 
 This workflow enforces **iterative** design ↔ code synchronization:
 - Add instruction-level tags while implementing each step
-- Update feature `DESIGN.md` checkboxes and requirement statuses during coding (not only at validation time)
+- Update artifact checkboxes and statuses during coding when applicable (not only at validation time)
 
 ---
 
@@ -37,11 +37,10 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 ## Requirements
 
 **ALWAYS open and follow**:
-- `../requirements/feature-design-structure.md` (feature design structure: flows/algos/states/tests with checkboxes)
 - `{adapter-directory}/AGENTS.md` (code conventions)
 
 Extract:
-- Feature design checkbox semantics (FDL steps, requirement statuses, phases)
+- Artifact checkbox semantics and IDs (when applicable)
 - Code conventions from adapter
 - Testing requirements from adapter
 
@@ -71,46 +70,44 @@ Apply these practices while implementing each work package.
 ## Prerequisites
 
 **MUST validate**:
-- [ ] Feature DESIGN.md exists and validated - validate: Score 100/100 + 100% completeness
-- [ ] Adapter exists - validate: Check adapter AGENTS.md (REQUIRED for development)
+- [ ] Adapter exists - validate: Check adapter AGENTS.md
 
-**If adapter missing**: STOP, run `adapter` workflow first
+**If adapter missing**: Ask the user whether to:
+- Create/validate adapter via the corresponding workflows
+- Proceed with limited scope (use repository conventions as-is and document assumptions)
 
 ---
 
 ## Steps
 
-### 1. Select Feature
+### 1. Select Artifact
 
 Ask user:
-- What is the feature scope?
-  - Project-level feature
-  - Module-level feature
-- Which feature to implement? (feature slug)
-- Where is the feature directory?
-  - Project-level default: `architecture/features/feature-{slug}/`
-  - Module-level example: `src/modules/{module}/architecture/features/feature-{slug}/`
+- Which artifact drives this implementation?
+  - Feature design
+  - Overall design
+  - ADR
+  - PRD
+  - Other
+- Provide the artifact input as one of:
+  - A registered artifact path (preferred)
+  - A link
+  - Pasted text
 - What is the implementation scope?
-  - Full feature
-  - Subset of requirements (provide requirement IDs)
+  - Full artifact
+  - Subset (provide ID list)
 
 Store:
-- Feature slug
-- Feature directory path
-- Scope (full or selected requirement IDs)
+- Artifact path (or link/text)
+- Scope (full or selected ID list)
 
-### 2. Read Feature Design (Traceability Source)
+### 2. Read Artifact (Traceability Source)
 
-Open `{feature-dir}/DESIGN.md`.
+Open the selected artifact input.
 
-Extract the authoritative IDs you must keep in sync while coding:
-- Flow IDs (Section B)
-- Algorithm IDs (Section C)
-- State IDs (Section D)
-- Requirement IDs + Status/Phases (Section F)
-- Test scenario IDs (Section G)
+Extract the authoritative IDs you must keep in sync while coding.
 
-**Rule**: You MUST update these checkboxes and statuses iteratively during implementation (not only during `code-validate`).
+**Rule**: If the artifact uses checkboxes/statuses, you MUST update them iteratively during implementation (not only during `code-validate`).
 
 ### 3. Read Adapter Conventions
 

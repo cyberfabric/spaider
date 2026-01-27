@@ -72,19 +72,36 @@ Extract:
 ## Prerequisites
 
 **MUST validate**:
-- [ ] ADR directory exists - validate: Check directory at `architecture/ADR/`
-- [ ] DESIGN.md exists - validate: Check file at `architecture/DESIGN.md`
-- [ ] PRD.md exists - validate: Check file at `architecture/PRD.md`
+- [ ] ADR directory exists - validate: Check ADR directory from `{adapter-dir}/artifacts.json` (default: `architecture/ADR/`)
+- [ ] DESIGN artifact exists - validate: Check file at DESIGN path from `{adapter-dir}/artifacts.json` (default: `architecture/DESIGN.md`)
+- [ ] PRD artifact exists - validate: Check file at PRD path from `{adapter-dir}/artifacts.json` (default: `architecture/PRD.md`)
 
-**If missing**: Run prerequisite workflows first
+**If missing**: Ask the user whether to:
+- Create/validate prerequisites via the corresponding workflows
+- Provide inputs in another form (path, link, or pasted text in any format)
+- Proceed anyway (reduce scope to content-only checks and report missing cross-references)
 
 ---
 
 ## Steps
 
-### 1. Read Dependencies
+### 1. Run Deterministic Gate (FDD Structure + IDs)
 
-Open `architecture/PRD.md` and `architecture/DESIGN.md`
+Run `fdd validate` for the ADR directory.
+
+If the ADR artifact is registered in `{adapter-dir}/artifacts.json` and `format: FDD`, this gate performs structural validation.
+
+If the ADR artifact is not registered or registered with a non-FDD format, the gate is expected to return `PASS` with `skipped: true`.
+
+If the output includes `skipped: true`, do NOT execute Step 3 (FDD-format-only scoring). Report `Status: SKIPPED` for structural validation and continue to Step 5 (Semantic Expert Review) as a content-only review.
+
+**Meaning**: This ADR artifact is not a registered `format: FDD` artifact, so structure/ID validation MUST NOT be executed by this workflow.
+
+**Fix**: Register the ADR artifact in `{adapter-dir}/artifacts.json` with `format: FDD`, then re-run `adr-validate`.
+
+### 2. Read Dependencies
+
+Open the PRD and DESIGN artifacts (paths resolved via `{adapter-dir}/artifacts.json`; defaults: `architecture/PRD.md`, `architecture/DESIGN.md`)
 
 Extract:
 - All actor IDs (from PRD.md Section B)
@@ -92,7 +109,9 @@ Extract:
 - All requirement IDs (from DESIGN.md Section B)
 - All principle IDs (from DESIGN.md Section B)
 
-### 2. Execute Validation
+### 3. Execute Validation (FDD Format Only)
+
+ONLY execute this step if Step 1 did NOT return `skipped: true`. If Step 1 returned `skipped: true`, skip to Step 5.
 
 Follow validation criteria from `adr-structure.md`:
 - File Structure (15 pts): ADR directory exists, ADR-0001 exists
@@ -103,49 +122,113 @@ Follow validation criteria from `adr-structure.md`:
 
 Calculate total score
 
-### 3. Output Results to Chat
+### 4. Output Results to Chat
 
 **Format**:
 ```markdown
-## Validation: ADR/
+## Validation Report: ADR/
 
-**Score**: {X}/100  
-**Status**: PASS | FAIL  
-**Threshold**: ≥90/100
+### Summary
+- **Status**: **PASS** ✅ | **FAIL** ❌
+- **Score**: **{X}/100**
+- **Threshold**: **≥90/100**
 
 ---
 
 ### Findings
 
-**File Structure** ({X}/15):
-✅ | ❌ {item}
+#### 1) File Structure — **{X}/15**
+- ✅ | ❌ {item}
 
-**ADR Numbering** ({X}/15):
-✅ | ❌ {item}
+#### 2) ADR Numbering — **{X}/15**
+- ✅ | ❌ {item}
 
-**Required Sections** ({X}/30):
-✅ | ❌ {item}
+#### 3) Required Sections — **{X}/30**
+- ✅ | ❌ {item}
 
-**Content Quality** ({X}/25):
-✅ | ❌ {item}
+#### 4) Content Quality — **{X}/25**
+- ✅ | ❌ {item}
 
-**FDD Integration** ({X}/15):
-✅ | ❌ {item}
+#### 5) FDD Integration — **{X}/15**
+- ✅ | ❌ {item}
 
 ---
 
 ### Recommendations
 
-**High Priority**:
-1. {Fix}
+#### High Priority
+1. **{Fix}**
 
 ---
 
 ### Next Steps
 
-{If PASS}: ✅ ADRs validated, proceed with feature development
+- **If PASS**: ✅ ADRs validated, proceed with feature development
+- **If FAIL**: ❌ Fix issues above, then re-run `adr-validate`
+```
 
-{If FAIL}: ❌ Fix issues, re-run validation
+### 5. Semantic Expert Review (Always)
+
+Run an expert panel review of ADR content after producing the validation output.
+
+**Critical requirement**: This step MUST produce an explicit section in chat titled `### Semantic Expert Review` that confirms the review was executed.
+
+**Experts**:
+- Architect
+- Security Expert
+- Developer
+- Performance Expert
+- QA Expert
+
+**Instructions (MANDATORY)**:
+- [ ] Execute this checklist for EACH expert listed above (do not skip any expert)
+- [ ] Adopt the role of the current expert (write: `Role assumed: {expert}`)
+- [ ] Review the entire ADR set (read each ADR file, not only filenames)
+- [ ] Enforce semantic boundaries:
+  - [ ] ADRs record decisions and rationale, not broad system design
+  - [ ] Each ADR MUST include alternatives and consequences
+  - [ ] ADRs MUST NOT restate PRD requirements as decisions
+- [ ] Identify issues (list each item explicitly):
+  - [ ] Contradictions between ADRs and DESIGN/PRD
+  - [ ] Missing decision rationale
+  - [ ] Missing alternatives
+  - [ ] Missing consequences
+  - [ ] Misplaced content (belongs in DESIGN)
+- [ ] Provide concrete proposals:
+  - [ ] What to remove (quote the exact fragment)
+  - [ ] What to add (provide the missing content)
+  - [ ] What to rewrite (provide suggested phrasing)
+- [ ] Propose the corrective workflow: `adr` (UPDATE mode)
+
+**Required output format** (append to chat):
+```markdown
+### Semantic Expert Review
+
+**Review status**: **COMPLETED** ✅  
+**Reviewed artifact**: `ADR/`  
+**Experts reviewed**: *Architect, Security Expert, Developer*
+
+*Rule*: For EACH expert listed in the workflow, include a `#### Expert: {expert}` section below. Do not omit any expert.
+
+#### Expert: {expert}
+- **Role assumed**: {expert}
+- **Checklist completed**: **YES** ✅
+- **Findings**:
+  - **Contradictions**: ...
+  - **Missing decision rationale**: ...
+  - **Missing alternatives**: ...
+  - **Missing consequences**: ...
+  - **Misplaced content**: ...
+- **Proposed edits**:
+  - **Remove**: "..." → **Reason**: ...
+  - **Add**: ...
+  - **Rewrite**: "..." → "..."
+
+*Repeat the `#### Expert: {expert}` block for each expert above.*
+
+---
+ 
+**Recommended corrective workflow**: `adr` *(UPDATE mode)*
 ```
 
 ---

@@ -13,7 +13,7 @@ ALWAYS open and follow `../requirements/workflow-execution.md` WHEN executing th
 
 **Type**: Operation  
 **Role**: Product Manager  
-**Artifact**: `architecture/PRD.md`
+**Artifact**: Path resolved via `{adapter-dir}/artifacts.json` (kind: `PRD`; default: `architecture/PRD.md`)
 
 ---
 
@@ -52,7 +52,7 @@ Extract:
 
 **MUST validate**:
 - [ ] Project repository exists - validate: Check .git directory
-- [ ] Architecture directory exists - validate: Check `architecture/` directory or create
+- [ ] PRD artifact parent directory exists - validate: Check parent directory of PRD path from `{adapter-dir}/artifacts.json` (default: `architecture/`)
 
 **No dependencies** - This is typically second workflow after adapter
 
@@ -63,7 +63,7 @@ Extract:
 Determine Mode.
  
 ### 1. Determine Mode
-Check if `architecture/PRD.md` exists:
+Check if the PRD artifact exists (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/PRD.md`):
 - **If exists**: UPDATE mode - Read and propose changes
 - **If NOT exists**: CREATE mode - Generate from scratch
 
@@ -176,8 +176,8 @@ Ensure:
 ### 6. Summary and Confirmation
 
 Show:
-- **CREATE**: File path: `architecture/PRD.md` (new file)
-- **UPDATE**: File path: `architecture/PRD.md` (updating existing)
+- **CREATE**: File path: PRD path from `{adapter-dir}/artifacts.json` (default: `architecture/PRD.md`) (new file)
+- **UPDATE**: File path: PRD path from `{adapter-dir}/artifacts.json` (default: `architecture/PRD.md`) (updating existing)
 - Vision statement (if changed)
 - Actors: {count} ({added}/{modified}/{removed})
 - Capabilities: {count} ({added}/{modified}/{removed})
@@ -190,8 +190,8 @@ Ask: Proceed? [yes/no/modify]
 ### 7. Create or Update File
 
 **CREATE Mode**:
-- Create `architecture/` directory if needed
-- Create `architecture/PRD.md`
+- Create the PRD artifact parent directory if needed (from `{adapter-dir}/artifacts.json`)
+- Create the PRD artifact file (path from `{adapter-dir}/artifacts.json`)
 
 **UPDATE Mode**:
 - Read existing PRD.md

@@ -71,26 +71,45 @@ Extract:
 ## Prerequisites
 
 **MUST validate**:
-- [ ] DESIGN.md exists - validate: Check file at `architecture/DESIGN.md`
-- [ ] PRD.md exists - validate: Check file at `architecture/PRD.md`
+- [ ] DESIGN artifact exists - validate: Check file at DESIGN path from `{adapter-dir}/artifacts.json` (default: `architecture/DESIGN.md`)
+- [ ] PRD artifact exists - validate: Check file at PRD path from `{adapter-dir}/artifacts.json` (default: `architecture/PRD.md`)
 - [ ] PRD.md validated - validate: Score ≥90/100
 
-**If missing**: Run prerequisite workflows first
+**If missing**: Ask the user whether to:
+- Create/validate prerequisites via the corresponding workflows
+- Provide inputs in another form (path, link, or pasted text in any format)
+- Proceed anyway (reduce scope to content-only checks and report missing cross-references)
 
 ---
 
 ## Steps
 
-### 1. Read Dependencies
+### 1. Run Deterministic Gate (FDD Structure + IDs)
 
-Open `architecture/PRD.md`
+Run `fdd validate` for the DESIGN artifact.
+
+If the artifact is registered in `{adapter-dir}/artifacts.json` and `format: FDD`, this gate performs structural validation.
+
+If the artifact is not registered or registered with a non-FDD format, the gate is expected to return `PASS` with `skipped: true`.
+
+If the output includes `skipped: true`, do NOT execute Step 3 (FDD-format-only scoring). Report `Status: SKIPPED` for structural validation and continue to Step 6 (Semantic Expert Review) as a content-only review.
+
+**Meaning**: This DESIGN is not a registered `format: FDD` artifact, so structure/ID validation MUST NOT be executed by this workflow.
+
+**Fix**: Register the DESIGN in `{adapter-dir}/artifacts.json` with `format: FDD`, then re-run `design-validate`.
+
+### 2. Read Dependencies
+
+Open the PRD artifact (path resolved via `{adapter-dir}/artifacts.json`; default: `architecture/PRD.md`)
 
 Extract:
 - All actor IDs
 - All use case IDs
 - Vision statement
 
-### 2. Execute Validation
+### 3. Execute Validation (FDD Format Only)
+
+ONLY execute this step if Step 1 did NOT return `skipped: true`. If Step 1 returned `skipped: true`, skip to Step 6.
 
 Follow validation criteria from `overall-design-structure.md`:
 - Structure: Required sections/subsections present, correct order
@@ -100,63 +119,129 @@ Follow validation criteria from `overall-design-structure.md`:
 
 Calculate total score
 
-### 3. Output Results to Chat
+### 4. Output Results to Chat
 
 **Format**:
 ```markdown
-## Validation: DESIGN.md
+## Validation Report: DESIGN.md
 
-**Score**: {X}/100  
-**Status**: PASS | FAIL  
-**Threshold**: ≥90/100
+### Summary
+- **Status**: **PASS** ✅ | **FAIL** ❌
+- **Score**: **{X}/100**
+- **Threshold**: **≥90/100**
 
 ---
 
 ### Findings
 
-**Structure** ({X}/20):
-✅ | ❌ {item}
+#### 1) Structure — **{X}/20**
+- ✅ | ❌ {item}
 
-**Completeness** ({X}/25):
-✅ | ❌ {item}
+#### 2) Completeness — **{X}/25**
+- ✅ | ❌ {item}
 
-**Cross-References** ({X}/{points}):
-✅ | ❌ {item}
+#### 3) Cross-References — **{X}/{points}**
+- ✅ | ❌ {item}
 
-**Domain Model & API Contracts** ({X}/{points}):
-✅ | ❌ {item}
+#### 4) Domain Model & API Contracts — **{X}/{points}**
+- ✅ | ❌ {item}
 
 ---
 
 ### Recommendations
 
-**High Priority**:
-1. {Fix}
+#### High Priority
+1. **{Fix}**
 
 ---
 
 ### Next Steps
 
-{If PASS}: ✅ Run `adr-validate` to validate ADRs, then proceed to `features` workflow
-
-{If FAIL}: ❌ Fix issues, re-validate
+- **If PASS**: ✅ Run `adr-validate`, then proceed to `features`
+- **If FAIL**: ❌ Fix issues above, then re-run `design-validate`
 ```
 
-### 4. Validate `architecture/ADR/` (If DESIGN.md passed)
+### 5. Validate ADR directory (If DESIGN.md passed)
 
 **If DESIGN.md validation score ≥90**:
-- Check if `architecture/ADR/` exists
+- Check if ADR directory from `{adapter-dir}/artifacts.json` exists (default: `architecture/ADR/`)
 - If exists: Run `adr-validate` workflow
 - If missing: Suggest running `adr` workflow first
 
 **Output**:
 ```markdown
 ---
-
+ 
 ## ADR Validation
+ 
+{If ADR directory exists}: Running adr-validate...
+{If ADR directory missing}: ⚠️ ADR directory not found (default: `architecture/ADR/`). Run `adr` workflow to create Architecture Decision Records.
+```
 
-{If architecture/ADR/ exists}: Running adr-validate...
-{If architecture/ADR/ missing}: ⚠️ architecture/ADR/ not found. Run `adr` workflow to create Architecture Decision Records.
+### 6. Semantic Expert Review (Always)
+
+Run an expert panel review of the DESIGN content after producing the validation output.
+
+**Critical requirement**: This step MUST produce an explicit section in chat titled `### Semantic Expert Review` that confirms the review was executed.
+
+**Experts**:
+- Architect
+- Database Architect
+- Performance Engineer
+- Security Expert
+- QA Engineer
+- Developer
+- DCO Engineer
+- DevOps Engineer
+- Monitoring Engineer
+
+**Instructions (MANDATORY)**:
+- [ ] Execute this checklist for EACH expert listed above (do not skip any expert)
+- [ ] Adopt the role of the current expert (write: `Role assumed: {expert}`)
+- [ ] Review the entire artifact content (not only headings)
+- [ ] Enforce semantic boundaries:
+  - [ ] PRD answers **WHAT**, overall design answers **HOW**
+  - [ ] ADR decisions MUST NOT be rewritten as normative requirements in DESIGN.md
+  - [ ] Feature-level details MUST NOT dominate overall design
+- [ ] Identify issues (list each item explicitly):
+  - [ ] Contradictions
+  - [ ] Missing information
+  - [ ] Unclear/ambiguous statements
+  - [ ] Misplaced content (belongs in PRD/ADR/feature designs)
+- [ ] Provide concrete proposals:
+  - [ ] What to remove (quote the exact fragment)
+  - [ ] What to add (provide the missing content)
+  - [ ] What to rewrite (provide suggested phrasing)
+- [ ] Propose the corrective workflow: `design` (UPDATE mode)
+
+**Required output format** (append to chat):
+```markdown
+### Semantic Expert Review
+
+**Review status**: **COMPLETED** ✅  
+**Reviewed artifact**: `DESIGN.md`  
+**Experts reviewed**: *Architect, Database Architect, Performance Engineer, Security Expert, QA Engineer, Developer, DCO Engineer, DevOps Engineer, Monitoring Engineer*
+
+*Rule*: For EACH expert listed in the workflow, include a `#### Expert: {expert}` section below. Do not omit any expert.
+
+#### Expert: {expert}
+- **Role assumed**: {expert}
+- **Checklist completed**: **YES** ✅
+- **Findings**:
+  - **Contradictions**: ...
+  - **Missing information**: ...
+  - **Unclear statements**: ...
+  - **Misplaced content**: ...
+- **Proposed edits**:
+  - **Remove**: "..." → **Reason**: ...
+  - **Add**: ...
+  - **Rewrite**: "..." → "..."
+
+*Repeat the `#### Expert: {expert}` block for each expert above.*
+
+---
+ 
+**Recommended corrective workflow**: `design` *(UPDATE mode)*
 ```
 
 ---
@@ -187,6 +272,6 @@ Self-validating workflow
 
 **If DESIGN.md PASS and ADR PASS**: `features` workflow
 
-**If DESIGN.md PASS but `architecture/ADR/` missing**: `adr` workflow to create ADRs
+**If DESIGN.md PASS but ADR directory missing**: `adr` workflow to create ADRs
 
 **If DESIGN.md FAIL**: Fix DESIGN.md, re-validate

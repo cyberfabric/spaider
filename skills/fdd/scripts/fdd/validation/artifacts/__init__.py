@@ -13,6 +13,56 @@ from .prd import validate_prd
 from .adr import validate_adr
 from .features import validate_features_manifest
 from .common import validate_generic_sections, common_checks
+from ...utils import find_placeholders
+
+
+def validate_content_only(
+    artifact_path: Path,
+    *,
+    skip_fs_checks: bool = False,
+) -> Dict[str, object]:
+    artifact_text = ""
+    if artifact_path.is_file():
+        artifact_text = artifact_path.read_text(encoding="utf-8")
+
+    if not artifact_path.exists():
+        return {
+            "required_section_count": 0,
+            "missing_sections": [],
+            "placeholder_hits": [],
+            "status": "FAIL",
+            "errors": [{"type": "file", "message": "File not found"}],
+        }
+
+    if artifact_path.is_file() and not artifact_text.strip():
+        return {
+            "required_section_count": 0,
+            "missing_sections": [],
+            "placeholder_hits": [],
+            "status": "FAIL",
+            "errors": [{"type": "file", "message": "Empty file"}],
+        }
+
+    placeholders = find_placeholders(artifact_text)
+    common_errors, common_placeholders = common_checks(
+        artifact_text=artifact_text,
+        artifact_path=artifact_path,
+        requirements_path=artifact_path,
+        artifact_kind="content-only",
+        skip_fs_checks=skip_fs_checks,
+    )
+
+    out_placeholders = list(placeholders)
+    out_placeholders.extend(common_placeholders)
+
+    status = "PASS" if (not common_errors and not out_placeholders) else "FAIL"
+    return {
+        "required_section_count": 0,
+        "missing_sections": [],
+        "placeholder_hits": out_placeholders,
+        "status": status,
+        "errors": list(common_errors),
+    }
 
 
 def validate(
@@ -23,6 +73,7 @@ def validate(
     design_path: Optional[Path] = None,
     prd_path: Optional[Path] = None,
     adr_path: Optional[Path] = None,
+    features_path: Optional[Path] = None,
     skip_fs_checks: bool = False,
 ) -> Dict[str, object]:
     """Main validation dispatcher - routes to appropriate validator."""
@@ -52,12 +103,16 @@ def validate(
         report = validate_adr(
             artifact_text,
             artifact_path=artifact_path,
+            prd_path=prd_path,
+            design_path=design_path,
             skip_fs_checks=skip_fs_checks,
         )
     elif artifact_kind == "feature-design":
         report = validate_feature_design(
             artifact_text,
             artifact_path=artifact_path,
+            prd_path=prd_path,
+            features_path=features_path,
             skip_fs_checks=skip_fs_checks,
         )
     elif artifact_kind == "overall-design":
@@ -98,6 +153,7 @@ def validate(
 
 __all__ = [
     "validate",
+    "validate_content_only",
     "validate_feature_design",
     "validate_overall_design",
     "validate_prd",

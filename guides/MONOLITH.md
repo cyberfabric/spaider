@@ -12,7 +12,7 @@ Maintain:
 - A validated **module-level architecture** for each module.
 
 In a modular monolith:
-- Project-level architecture lives in `architecture/DESIGN.md` and `architecture/ADR/**`.
+- Project-level artifacts are defined by `{adapter-dir}/artifacts.json` (defaults: `architecture/DESIGN.md`, `architecture/ADR/**`).
 - Each module MUST have its architecture isolated inside the module folder (co-located with the code).
 
 A practical convention is:
@@ -32,7 +32,7 @@ Monolith repo example:
 - `src/modules/billing/`
 - `src/modules/notifications/`
 
-FDD artifacts:
+FDD artifacts (defaults; actual paths are adapter-defined via `{adapter-dir}/artifacts.json`):
 - `architecture/PRD.md`
 - `architecture/DESIGN.md`
 - `architecture/ADR/**`
@@ -91,7 +91,7 @@ This is a two-level workflow:
 ### 1. `/fdd-prd`
 
 **What it does**:
-- Creates or updates `architecture/PRD.md` ([taxonomy](TAXONOMY.md#prdmd)).
+- Creates or updates the PRD artifact ([taxonomy](TAXONOMY.md#prdmd)).
 
 **Provide context**:
 - Product vision + actors/capabilities
@@ -115,8 +115,8 @@ Context:
 ### 3. `/fdd-design` (Project-level Overall Design + ADRs)
 
 **What it does**:
-- Creates or updates `architecture/DESIGN.md` ([taxonomy](TAXONOMY.md#designmd)).
-- Creates or updates `architecture/ADR/**` ([taxonomy](TAXONOMY.md#adr)).
+- Creates or updates the overall design artifact ([taxonomy](TAXONOMY.md#designmd)).
+- Creates or updates ADR artifacts ([taxonomy](TAXONOMY.md#adr)).
 
 **Provide context**:
 - Module list
@@ -160,7 +160,7 @@ Context:
 ### 5. `/fdd-features` (Project-level Features)
 
 **What it does**:
-- Creates or updates `architecture/features/FEATURES.md` ([taxonomy](TAXONOMY.md#featuresmd)).
+- Creates or updates the FEATURES manifest artifact ([taxonomy](TAXONOMY.md#featuresmd)).
 
 **Provide context**:
 - Project-level features (core product features, shared libraries, cross-cutting capabilities)
@@ -290,7 +290,7 @@ Context:
 ### 12. `/fdd-code`
 
 **What it does**:
-- Implements the feature directly from `DESIGN.md` (default path).
+- Implements the feature directly from the feature design artifact (default: `src/modules/{module}/architecture/features/feature-{slug}/DESIGN.md`).
 
 Prompt example:
 ```text

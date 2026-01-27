@@ -1,6 +1,6 @@
 ---
 name: fdd
-description: Unified FDD tool for validation and search. Validates FDD artifacts (PRD.md, DESIGN.md, architecture/ADR/ directory, FEATURES.md, feature DESIGN.md) against FDD requirements with cascading dependency validation. Provides read-only search and traceability for FDD artifacts and FDD/ADR IDs with repo-wide scanning capabilities. Supports optional project-level configuration via .fdd-config.json.
+description: Unified FDD tool for validation and search. Validates FDD artifacts registered in `{adapter-dir}/artifacts.json` against FDD requirements with cascading dependency validation. Provides read-only search and traceability for FDD artifacts and FDD/ADR IDs with repo-wide scanning capabilities. Supports optional project-level configuration via .fdd-config.json.
 ---
 
 # FDD Unified Tool
@@ -179,7 +179,7 @@ python3 scripts/fdd.py validate --artifact .
 
 This performs **cascading validation**:
 1. **PRD.md** — validates PRD structure
-2. **architecture/ADR/** — validates ADR structure, cross-refs to PRD.md
+2. **ADR (directory)** — validates ADR structure, cross-refs to PRD
 3. **DESIGN.md** — validates overall design, cross-refs to PRD.md and ADRs
 4. **FEATURES.md** — validates features manifest, cross-refs to DESIGN.md requirements
 5. **Feature DESIGN.md** — validates each feature design, cross-refs to overall DESIGN.md
@@ -188,18 +188,16 @@ This performs **cascading validation**:
 ### Artifact-Only Validation (Skip Code Tracing)
 
 ```bash
-# Skip code traceability, only validate artifacts and cross-references
-python3 scripts/fdd.py validate --skip-code-traceability
-
-# Or configure in .fdd-config.json:
-# { "skipCodeTraceability": true }
+# Code traceability is controlled by the artifacts registry.
+# Configure `{adapter-dir}/artifacts.json` entries (kind: SRC) using `traceability_enabled`.
+python3 scripts/fdd.py validate
 ```
 
 ### Single Artifact Validation
 
 ```bash
 # Validate specific artifact with cascading dependencies
-python3 scripts/fdd.py validate --artifact architecture/features/feature-auth/DESIGN.md
+python3 scripts/fdd.py validate --artifact {feature_design_path_from_artifacts_json}
 
 # Validate with explicit requirements file (no cascading)
 python3 scripts/fdd.py validate --artifact {path} --requirements {path}
@@ -439,7 +437,7 @@ python3 scripts/fdd.py validate
 python3 scripts/fdd.py validate --skip-code-traceability
 
 # Validate specific artifact with cascading dependencies
-python3 scripts/fdd.py validate --artifact architecture/features/feature-auth/DESIGN.md
+python3 scripts/fdd.py validate --artifact {feature_design_path_from_artifacts_json}
 
 # Validate specific features' code traceability only
 python3 scripts/fdd.py validate --features auth,payment
@@ -448,7 +446,7 @@ python3 scripts/fdd.py validate --features auth,payment
 python3 scripts/fdd.py adapter-info --root .
 
 # Find all actor IDs in PRD.md
-python3 scripts/fdd.py list-ids --artifact architecture/PRD.md --pattern "-actor-"
+python3 scripts/fdd.py list-ids --artifact {prd_path_from_artifacts_json} --pattern "-actor-"
 
 # Scan all FDD IDs in the codebase
 python3 scripts/fdd.py scan-ids --root . --kind fdd

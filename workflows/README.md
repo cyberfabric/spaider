@@ -189,24 +189,18 @@ mkdir -p src/{domain,infrastructure,api}
 
 ### Manual Execution
 
-```bash
-# 1. Open workflow
-cat /FDD/workflows/01-init-project.md
-
-# 2. Follow steps
-mkdir -p architecture/features
-cat > architecture/DESIGN.md << EOF
-...
-EOF
-
-# 3. Verify
-ls -la architecture/
+```text
+1. Open the target workflow file under `workflows/`.
+2. Follow the Steps section.
+3. When the workflow references an artifact path, resolve it via `{adapter-dir}/artifacts.json`.
+4. If `{adapter-dir}/artifacts.json` is missing, run the adapter bootstrap/migration workflow first.
+5. Validate using the deterministic gate (`fdd validate`).
 ```
 
 ### AI Agent
 
 ```python
-workflow = parse_markdown("/FDD/workflows/01-init-project.md")
+workflow = parse_markdown("workflows/{workflow}.md")
 for step in workflow.steps:
     execute(step.commands)
     validate(step.expected_result)
