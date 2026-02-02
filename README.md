@@ -67,7 +67,7 @@ python3 spider/skills/spider/scripts/spider.py agents --agent windsurf
 
 ## **Spider SDLC** Overview
 
-**Spider SDLC** is a production-ready software development life cycle (SDLC) SDD built on **Spider**. It fully leverages Spider’s capabilities — identifier-based **traceability**, reliable **workflows** that follow a strict protocol, and Weaver-defined rules and tasks, structured templates and quality checklists. Each Weaver can both generate (transform/derive) content and evaluate it: scoring semantic quality, validating artifact-to-artifact alignment (e.g., requirements → design → implementation), and enforcing structure against the templates defined in the weave.
+**Spider SDLC** is a production-ready software development life cycle (SDLC) SDD built on **Spider**. It fully leverages Spider’s capabilities — identifier-based **traceability**, reliable **workflows** that follow a strict protocol, and Weaver-defined rules and tasks, structured templates and quality checklists. Each Weaver can both generate (transform/derive) content and evaluate it: scoring semantic quality, validating artifact-to-artifact alignment (e.g., requirements → design → implementation), and enforcing structure against the templates defined in the weaver.
 
 See the [SDLC Pipeline](weavers/sdlc/README.md) for a detailed overview of the **Spider SDLC** pipeline, artifact kinds, generation and validation processes, and references to related documentation.
 
