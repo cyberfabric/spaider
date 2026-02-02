@@ -1,12 +1,12 @@
 ---
-fdd: true
+spider: true
 type: requirement
 name: Artifacts Registry
 version: 1.0
 purpose: Define structure and usage of artifacts.json for agent operations
 ---
 
-# FDD Artifacts Registry Specification
+# Spider Artifacts Registry Specification
 
 ---
 
@@ -35,13 +35,13 @@ purpose: Define structure and usage of artifacts.json for agent operations
 
 **Add to adapter AGENTS.md** (path relative to adapter directory):
 ```
-ALWAYS open and follow `{FDD}/requirements/artifacts-registry.md` WHEN working with artifacts.json
+ALWAYS open and follow `{Spider}/requirements/artifacts-registry.md` WHEN working with artifacts.json
 ```
-Where `{FDD}` is resolved from the adapter's `**Extends**:` declaration.
+Where `{Spider}` is resolved from the adapter's `**Extends**:` declaration.
 
-**ALWAYS use**: `python3 {FDD}/skills/fdd/scripts/fdd.py adapter-info` to discover adapter location
+**ALWAYS use**: `python3 {Spider}/skills/spider/scripts/spider.py adapter-info` to discover adapter location
 
-**ALWAYS use**: `fdd.py` CLI commands for artifact operations (list-ids, where-defined, where-used, validate)
+**ALWAYS use**: `spider.py` CLI commands for artifact operations (list-ids, where-defined, where-used, validate)
 
 **Prerequisite**: Agent confirms understanding before proceeding:
 - [ ] Agent has read and understood this requirement
@@ -52,7 +52,7 @@ Where `{FDD}` is resolved from the adapter's `**Extends**:` declaration.
 
 ## Overview
 
-**What**: `artifacts.json` is the FDD artifact registry - a JSON file that declares all FDD artifacts, their templates, and codebase locations.
+**What**: `artifacts.json` is the Spider artifact registry - a JSON file that declares all Spider artifacts, their templates, and codebase locations.
 
 **Location**: `{adapter-directory}/artifacts.json`
 
@@ -89,52 +89,52 @@ Schema file: `schemas/artifacts.schema.json`
 |-------|------|----------|-------------|
 | `version` | string | YES | Schema version (currently "1.0") |
 | `project_root` | string | NO | Relative path from artifacts.json to project root. Default: `".."` |
-| `rules` | object | YES | Template rules registry |
+| `weavers` | object | YES | Weaver package registry |
 | `systems` | array | YES | Root-level system nodes |
 
 ---
 
-## Rules
+## Weavers
 
-**Purpose**: Define template configurations that can be referenced by systems.
+**Purpose**: Define weaver packages that can be referenced by systems.
 
 **Structure**:
 ```json
 {
-  "rules": {
-    "rule-id": {
-      "format": "FDD",
-      "path": "rules/sdlc"
+  "weavers": {
+    "weaver-id": {
+      "format": "Spider",
+      "path": "weavers/sdlc"
     }
   }
 }
 ```
 
-### Rule Fields
+### Weaver Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `format` | string | YES | Template format. `"FDD"` = full tooling support. Other values = custom (LLM-only) |
-| `path` | string | YES | Path to rules package directory (relative to project_root). Contains `artifacts/` and `codebase/` subdirectories. |
+| `format` | string | YES | Template format. `"Spider"` = full tooling support. Other values = custom (LLM-only) |
+| `path` | string | YES | Path to weaver package directory (relative to project_root). Contains `artifacts/` and `codebase/` subdirectories. |
 
 ### Template Resolution
 
-Template file path is resolved as: `{rule.path}/artifacts/{KIND}/template.md`
+Template file path is resolved as: `{weaver.path}/artifacts/{KIND}/template.md`
 
-**Example**: For artifact with `kind: "PRD"` and rule with `path: "rules/sdlc"`:
-- Template path: `rules/sdlc/artifacts/PRD/template.md`
-- Checklist path: `rules/sdlc/artifacts/PRD/checklist.md`
-- Example path: `rules/sdlc/artifacts/PRD/examples/example.md`
+**Example**: For artifact with `kind: "PRD"` and weaver with `path: "weavers/sdlc"`:
+- Template path: `weavers/sdlc/artifacts/PRD/template.md`
+- Checklist path: `weavers/sdlc/artifacts/PRD/checklist.md`
+- Example path: `weavers/sdlc/artifacts/PRD/examples/example.md`
 
 ### Format Values
 
 | Format | Meaning |
 |--------|---------|
-| `"FDD"` | Full FDD tooling support: validation, parsing, ID extraction |
+| `"Spider"` | Full Spider tooling support: validation, parsing, ID extraction |
 | Other | Custom format: LLM-only semantic processing, no CLI validation |
 
 **Agent behavior**:
-- `format: "FDD"` → Use `fdd validate`, `list-ids`, `where-defined`, etc.
+- `format: "Spider"` → Use `spider validate`, `list-ids`, `where-defined`, etc.
 - Other format → Skip CLI validation, process semantically
 
 ---
@@ -149,7 +149,7 @@ Template file path is resolved as: `{rule.path}/artifacts/{KIND}/template.md`
   "systems": [
     {
       "name": "SystemName",
-      "rules": "rule-id",
+      "weaver": "weaver-id",
       "artifacts": [ ... ],
       "codebase": [ ... ],
       "children": [ ... ]
@@ -163,7 +163,7 @@ Template file path is resolved as: `{rule.path}/artifacts/{KIND}/template.md`
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | YES | System/subsystem/component name |
-| `rules` | string | YES | Reference to rule ID from `rules` section |
+| `weaver` | string | YES | Reference to weaver ID from `weavers` section |
 | `artifacts` | array | NO | Artifacts belonging to this node |
 | `codebase` | array | NO | Source code directories for this node |
 | `children` | array | NO | Nested child systems (subsystems, components) |
@@ -325,11 +325,11 @@ All paths in artifacts and codebase are resolved relative to `project_root`.
 
 **Example**:
 ```
-artifacts.json location: /project/.adapter/artifacts.json
+artifacts.json location: /project/.spider-adapter/artifacts.json
 project_root: ".."
 artifact path: "architecture/PRD.md"
 
-Resolved: /project/.adapter/../architecture/PRD.md
+Resolved: /project/.spider-adapter/../architecture/PRD.md
        → /project/architecture/PRD.md
 ```
 
@@ -337,38 +337,38 @@ Resolved: /project/.adapter/../architecture/PRD.md
 
 ## CLI Commands
 
-**Note**: All commands use `python3 {FDD}/skills/fdd/scripts/fdd.py` where `{FDD}` is the FDD installation path. Examples below use `fdd.py` as shorthand.
+**Note**: All commands use `python3 {Spider}/skills/spider/scripts/spider.py` where `{Spider}` is the Spider installation path. Examples below use `spider.py` as shorthand.
 
 ### Discovery
 
 ```bash
 # Find adapter and registry
-fdd.py adapter-info --root /project
+spider.py adapter-info --root /project
 ```
 
 ### Artifact Operations
 
 ```bash
-# List all IDs from registered FDD artifacts
-fdd.py list-ids
+# List all IDs from registered Spider artifacts
+spider.py list-ids
 
 # List IDs from specific artifact
-fdd.py list-ids --artifact architecture/PRD.md
+spider.py list-ids --artifact architecture/PRD.md
 
 # Find where ID is defined
-fdd.py where-defined --id "myapp-actor-user"
+spider.py where-defined --id "myapp-actor-user"
 
 # Find where ID is referenced
-fdd.py where-used --id "myapp-actor-user"
+spider.py where-used --id "myapp-actor-user"
 
 # Validate artifact against template
-fdd.py validate --artifact architecture/PRD.md
+spider.py validate --artifact architecture/PRD.md
 
 # Validate all registered artifacts
-fdd.py validate
+spider.py validate
 
-# Validate rules and templates
-fdd.py validate-rules
+# Validate weavers and templates
+spider.py validate-weavers
 ```
 
 ---
@@ -395,19 +395,19 @@ for system in registry.systems:
 ### Resolving Template Path
 
 ```python
-# For artifact with kind="PRD" in system with rules="fdd-sdlc"
-rule = registry.rules["fdd-sdlc"]
-template_path = f"{rule.path}/artifacts/{artifact.kind}/template.md"
-# → "rules/sdlc/artifacts/PRD/template.md"
+# For artifact with kind="PRD" in system with weaver="spider-sdlc"
+weaver = registry.weavers["spider-sdlc"]
+template_path = f"{weaver.path}/artifacts/{artifact.kind}/template.md"
+# → "weavers/sdlc/artifacts/PRD/template.md"
 ```
 
 ### Checking Format
 
 ```python
-rule = registry.rules[system.rules]
-if rule.format == "FDD":
+weaver = registry.weavers[system.weaver]
+if weaver.format == "Spider":
     # Use CLI validation
-    run("fdd validate --artifact {path}")
+    run("spider validate --artifact {path}")
 else:
     # Custom format - LLM-only processing
     process_semantically(artifact)
@@ -423,7 +423,7 @@ else:
 ```
 ⚠️ Registry not found: {adapter_dir}/artifacts.json
 → Adapter exists but registry not initialized
-→ Fix: Run /fdd-adapter to create registry
+→ Fix: Run /spider-adapter to create registry
 ```
 **Action**: STOP — cannot process artifacts without registry.
 
@@ -437,12 +437,12 @@ else:
 ```
 **Action**: STOP — cannot process malformed registry.
 
-### Missing Rule Reference
+### Missing Weaver Reference
 
-**If system references non-existent rule**:
+**If system references non-existent weaver**:
 ```
-⚠️ Invalid rule reference: system "MyApp" references rule "custom-rules" not in rules section
-→ Fix: Add rule to rules section OR change system.rules to existing rule ID
+⚠️ Invalid weaver reference: system "MyApp" references weaver "custom-weaver" not in weavers section
+→ Fix: Add weaver to weavers section OR change system.weaver to an existing weaver ID
 ```
 **Action**: FAIL validation for that system, continue with others.
 
@@ -460,9 +460,9 @@ else:
 
 **If template for artifact kind doesn't exist**:
 ```
-⚠️ Template not found: rules/sdlc/artifacts/PRD/template.md
+⚠️ Template not found: weavers/sdlc/artifacts/PRD/template.md
 → Kind "PRD" registered but template missing
-→ Fix: Create template OR use different rules package
+→ Fix: Create template OR use different weaver package
 ```
 **Action**: FAIL validation for that artifact, continue with others.
 
@@ -475,15 +475,15 @@ else:
   "version": "1.0",
   "project_root": "..",
   "rules": {
-    "fdd-sdlc": {
-      "format": "FDD",
-      "path": "rules/sdlc"
+    "spider-sdlc": {
+      "format": "Spider",
+      "path": "weavers/sdlc"
     }
   },
   "systems": [
     {
       "name": "MyApp",
-      "rules": "fdd-sdlc",
+      "rules": "spider-sdlc",
       "artifacts": [
         { "name": "Product Requirements", "path": "architecture/PRD.md", "kind": "PRD", "traceability": "DOCS-ONLY" },
         { "name": "Overall Design", "path": "architecture/DESIGN.md", "kind": "DESIGN", "traceability": "FULL" },
@@ -502,7 +502,7 @@ else:
       "children": [
         {
           "name": "Auth",
-          "rules": "fdd-sdlc",
+          "rules": "spider-sdlc",
           "artifacts": [
             { "path": "modules/auth/architecture/PRD.md", "kind": "PRD", "traceability": "DOCS-ONLY" },
             { "path": "modules/auth/architecture/features/feature-sso/DESIGN.md", "kind": "FEATURE", "traceability": "FULL" }
@@ -521,7 +521,7 @@ else:
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
-| "Artifact not in FDD registry" | Path not registered | Add artifact to system's artifacts array |
+| "Artifact not in Spider registry" | Path not registered | Add artifact to system's artifacts array |
 | "Could not find template" | Missing template file | Create template at `{rules.path}/artifacts/{KIND}/template.md` |
 | "Invalid rule reference" | System references non-existent rule | Add rule to `rules` section |
 | "Path is a directory" | Artifact path ends with `/` or has no extension | Change to specific file path |
@@ -532,7 +532,7 @@ else:
 
 **Schema**: `schemas/artifacts.schema.json`
 
-**CLI**: `skills/fdd/fdd.clispec`
+**CLI**: `skills/spider/spider.clispec`
 
 **Related**:
 - `adapter-structure.md` - Adapter AGENTS.md requirements

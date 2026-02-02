@@ -1,13 +1,13 @@
 ---
-fdd: true
+spider: true
 type: workflow
-name: fdd-adapter
-description: Create/update project FDD adapter - scan structure, configure rules, generate AGENTS.md and artifacts.json
+name: spider-adapter
+description: Create/update project Spider adapter - scan structure, configure rules, generate AGENTS.md and artifacts.json
 version: 1.0
-purpose: Unified FDD adapter workflow - scan, configure, validate
+purpose: Unified Spider adapter workflow - scan, configure, validate
 ---
 
-# FDD Adapter Workflow
+# Spider Adapter Workflow
 
 **Type**: Operation
 **Role**: Any
@@ -37,7 +37,7 @@ purpose: Unified FDD adapter workflow - scan, configure, validate
 
 Unified adapter workflow that handles the complete lifecycle:
 1. **Scan** - Discover project structure, existing artifacts, tech stack
-2. **Configure** - Propose hierarchy, rules packages, traceability settings
+2. **Configure** - Propose hierarchy, weaver packages, traceability settings
 3. **Generate** - Create/update adapter files
 4. **Integrate** - Configure AI agent integration
 5. **Validate** - Verify adapter completeness
@@ -54,9 +54,12 @@ ALWAYS open and follow `../requirements/execution-protocol.md` WHEN executing th
 
 **ALWAYS open and follow**: `../requirements/reverse-engineering.md` WHEN scanning project structure (Phase 1)
 
+**ALWAYS open and follow**: `{WEAVER_PATH}/spec-hints.md` WHEN generating AGENTS.md navigation rules (Phase 3)
+
 Extract:
 - Adapter structure requirements
 - artifacts.json schema
+- Spec-to-artifact-kind mapping from each weaver
 
 ---
 
@@ -75,7 +78,7 @@ Extract:
 Search for project root:
 ```yaml
 Markers (in priority order):
-  1. .fdd-config.json (explicit FDD project)
+  1. .spider-config.json (explicit Spider project)
   2. .git directory (git repository root)
   3. package.json, pyproject.toml, Cargo.toml, go.mod (language markers)
 ```
@@ -87,8 +90,8 @@ Store as: `PROJECT_ROOT`
 Search for existing adapter:
 ```yaml
 Check in order:
-  1. .fdd-config.json → fddAdapterPath
-  2. Common locations: FDD-Adapter/, .adapter/, spec/FDD-Adapter/, docs/FDD-Adapter/
+  1. .spider-config.json → spiderAdapterPath
+  2. Common locations: .spider-adapter/, spec/.spider-adapter/, docs/.spider-adapter/
 
 If found:
   ADAPTER_EXISTS = true
@@ -129,7 +132,7 @@ Detect:
 
 #### Existing Artifacts Detection
 ```yaml
-Search for FDD artifacts:
+Search for Spider artifacts:
   - PRD.md (product requirements)
   - DESIGN.md (architecture design)
   - FEATURES.md (features manifest)
@@ -157,6 +160,45 @@ Propose level structure:
   - module (optional)
 ```
 
+### 1.4 Spec Discovery Scan
+
+**Reference**: `../requirements/adapter-structure.md` → Spec Discovery Guide
+
+Scan for domain-specific knowledge following the 12-domain model from Spider checklists:
+
+#### Core Specs (Always Scan)
+
+| Spec | Discovery Signals | Look In |
+|------|-------------------|---------|
+| `tech-stack.md` | Languages, frameworks, dependencies | `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, configs |
+| `project-structure.md` | Directory layout, entry points | Root structure, README, module organization |
+| `conventions.md` | Code style, naming, linting | `.eslintrc`, `.prettierrc`, `ruff.toml`, `.editorconfig`, CONTRIBUTING.md |
+| `testing.md` | Test framework, patterns, coverage | Test directories, `pytest.ini`, `jest.config.js`, CI configs |
+| `build-deploy.md` | Build commands, CI/CD | `Makefile`, scripts, `.github/workflows/`, `Dockerfile` |
+
+#### Conditional Specs (Scan if Applicable)
+
+| Spec | Trigger Condition | Discovery Signals |
+|------|-------------------|-------------------|
+| `domain-model.md` | DESIGN.md exists OR models/ directory | Types, schemas, entity definitions |
+| `api-contracts.md` | API specs exist OR routes/ directory | OpenAPI, Swagger, Proto files, API docs |
+| `patterns.md` | ADRs exist OR complex architecture | Design patterns, abstractions, ADR decisions |
+| `security.md` | Auth middleware OR handles user data | Auth configs, encryption, security middleware |
+| `data-governance.md` | Database migrations OR data models | Migration files, retention configs, privacy docs |
+| `performance.md` | Performance tests OR caching configs | Cache configs, SLA docs, load tests |
+| `reliability.md` | Health checks OR retry configs | Error handlers, circuit breakers, runbooks |
+| `compliance.md` | Regulated industry markers | Compliance docs, audit logs, legal references |
+
+#### Discovery Process
+
+For each applicable spec:
+
+1. **Locate signals** — Find files/patterns indicating the domain exists
+2. **Extract knowledge** — Read configs, docs, and code to understand patterns
+3. **Synthesize** — Create actionable guidance, not just description
+4. **Reference sources** — Document where information came from
+
+Store spec discovery results as: `SPEC_DISCOVERY_RESULTS`
 Store scan results as: `SCAN_RESULTS`
 
 ---
@@ -169,7 +211,7 @@ Display discovered information:
 
 ```
 ═══════════════════════════════════════════════════════════════════════════════
-FDD Adapter: Project Scan Results
+Spider Adapter: Project Scan Results
 ═══════════════════════════════════════════════════════════════════════════════
 
 Project: {PROJECT_NAME}
@@ -214,9 +256,9 @@ If adapter doesn't exist, ask user:
 Adapter Location
 
 Choose adapter directory:
-  1. .adapter/ (recommended - hidden, clean)
-  2. FDD-Adapter/ (visible, explicit)
-  3. docs/FDD-Adapter/ (documentation-focused)
+  1. .spider-adapter/ (recommended - hidden, clean)
+  2. .spider-adapter/ (visible, explicit)
+  3. docs/.spider-adapter/ (documentation-focused)
   4. Custom path
 
 Choice: [1-4]
@@ -224,30 +266,30 @@ Choice: [1-4]
 
 Store as: `ADAPTER_DIR`
 
-### 2.3 Configure Rules Package
+### 2.3 Configure Weaver Package
 
-Ask user about rules preference:
+Ask user about weaver preference:
 
 ```
-Rules Package
+Weaver Package
 
-FDD supports multiple rules packages:
+Spider supports multiple weaver packages:
 
-  1. fdd-sdlc (Recommended)
-     - Full FDD tooling support
+  1. spider-sdlc (Recommended)
+     - Full Spider tooling support
      - Code traceability
      - Complete validation rules
      - Templates, checklists, examples included
 
   2. Custom
-     - Define your own rules
+      - Define your own weaver
      - Use existing project conventions
      - Must follow rules.md format
 
 Choice: [1-2]
 ```
 
-Store as: `RULES_PACKAGE`
+Store as: `WEAVER_PACKAGE`
 
 ### 2.4 Configure Hierarchy
 
@@ -285,7 +327,7 @@ Traceability Configuration
 
 For each artifact, choose traceability level:
 
-  FULL - Full code traceability (FDD markers in code)
+  FULL - Full code traceability (Spider markers in code)
          Best for: New code, active development
 
   DOCS-ONLY - Documentation only (no code markers)
@@ -303,7 +345,7 @@ Store as: `TRACEABILITY_CONFIG`
 
 **If user cancels** (selects "Cancel", provides no response, or explicitly declines):
 - Do NOT create any files
-- Inform user: "Adapter setup cancelled. Run `/fdd-adapter` to restart."
+- Inform user: "Adapter setup cancelled. Run `/spider-adapter` to restart."
 - Return to normal assistant mode
 - Do NOT partially save configuration
 
@@ -326,15 +368,15 @@ Create `{ADAPTER_DIR}/artifacts.json` following schema:
   "version": "1.0",
   "project_root": "{relative_path_to_project_root}",
   "rules": {
-    "fdd-sdlc": {
-      "format": "FDD",
-      "path": "{fdd_core}/rules/sdlc"
+    "spider-sdlc": {
+      "format": "Spider",
+      "path": "{spider_core}/weavers/sdlc"
     }
   },
   "systems": [
     {
       "name": "{SYSTEM_NAME}",
-      "rules": "fdd-sdlc",
+      "rules": "spider-sdlc",
       "artifacts": [
         { "name": "Product Requirements", "path": "{artifacts_dir}/PRD.md", "kind": "PRD", "traceability": "{TRACEABILITY}" },
         { "name": "Overall Design", "path": "{artifacts_dir}/DESIGN.md", "kind": "DESIGN", "traceability": "{TRACEABILITY}" },
@@ -351,12 +393,17 @@ Create `{ADAPTER_DIR}/artifacts.json` following schema:
 
 ### 3.3 Generate AGENTS.md
 
+**For each weaver in artifacts.json**:
+1. Load `{WEAVER_PATH}/spec-hints.md`
+2. Parse the Spec Mapping table
+3. Generate WHEN rules for each spec that exists in adapter
+
 Create `{ADAPTER_DIR}/AGENTS.md`:
 
 ```markdown
-# FDD Adapter: {PROJECT_NAME}
+# Spider Adapter: {PROJECT_NAME}
 
-**Extends**: `{relative_path_to_fdd}/AGENTS.md`
+**Extends**: `{relative_path_to_spider}/AGENTS.md`
 
 **Version**: 1.0
 **Last Updated**: {DATE}
@@ -372,31 +419,28 @@ Create `{ADAPTER_DIR}/AGENTS.md`:
 
 ## Navigation Rules
 
-ALWAYS open and follow `specs/tech-stack.md` WHEN FDD follows rules `{RULES_ID}` for artifact kinds: DESIGN, ADR OR codebase
+<!-- Generated from {WEAVER_PATH}/spec-hints.md -->
+<!-- For each spec file in specs/, generate rule based on weaver's spec-hints.md mapping -->
 
-ALWAYS open and follow `specs/domain-model.md` WHEN FDD follows rules `{RULES_ID}` for artifact kinds: DESIGN, FEATURES, FEATURE OR codebase
+{FOR_EACH_WEAVER in artifacts.json}
+### {WEAVER_ID} Specs
 
-ALWAYS open and follow `specs/api-contracts.md` WHEN FDD follows rules `{RULES_ID}` for artifact kinds: DESIGN, ADR, FEATURE OR codebase
-
-ALWAYS open and follow `specs/patterns.md` WHEN FDD follows rules `{RULES_ID}` for artifact kinds: DESIGN, ADR, FEATURE OR codebase
-
-ALWAYS open and follow `specs/conventions.md` WHEN FDD follows rules `{RULES_ID}` for codebase
-
-ALWAYS open and follow `specs/build-deploy.md` WHEN FDD follows rules `{RULES_ID}` for codebase
-
-ALWAYS open and follow `specs/testing.md` WHEN FDD follows rules `{RULES_ID}` for codebase
+{FOR_EACH_SPEC in adapter/specs/}
+ALWAYS open and follow `specs/{SPEC_NAME}` WHEN Spider uses weaver `{WEAVER_ID}` for artifact kinds: {KINDS_FROM_SPEC_HINTS} [OR codebase if marked]
+{/FOR_EACH_SPEC}
+{/FOR_EACH_WEAVER}
 
 ---
 
 ## Artifacts Registry
 
 See `artifacts.json` for complete artifact configuration including:
-- Rules packages
+- Weaver packages
 - System hierarchy
 - Traceability settings
 ```
 
-**Note**: `{RULES_ID}` is the rules package identifier from artifacts.json (e.g., `fdd-sdlc`)
+**Note**: `{WEAVER_ID}` is the weaver identifier from artifacts.json (e.g., `spider-sdlc`)
 
 ### 3.4 Generate Spec Files
 
@@ -425,24 +469,90 @@ Based on scan results, create initial spec files:
 **Source**: Auto-detected from project scan
 ```
 
+#### specs/project-structure.md
+```markdown
+# Project Structure
+
+## Directory Layout
+
+{directory_tree}
+
+## Key Directories
+
+| Directory | Purpose |
+|-----------|---------|
+| {dir} | {purpose} |
+
+---
+
+**Source**: Auto-detected from project scan
+**Last Updated**: {DATE}
+```
+
 #### specs/domain-model.md (if detected)
 ```markdown
 # Domain Model
 
-**Format**: {detected_format}
-**Location**: {detected_location}
+## Core Concepts
 
-**Source**: Auto-detected from project scan
+{extracted_concepts}
+
+## Key Data Structures
+
+{data_structures}
+
+---
+
+**Source**: {DESIGN.md, schemas, types directories}
+**Last Updated**: {DATE}
 ```
 
-### 3.5 Create .fdd-config.json
+#### specs/testing.md (if detected)
+```markdown
+# Testing Guidelines
+
+## Test Framework
+
+- **Framework**: {detected_framework}
+- **Coverage**: {coverage_tool}
+- **Threshold**: {if_detected}
+
+## Running Tests
+
+{detected_commands}
+
+## Test Patterns
+
+{detected_patterns}
+
+---
+
+**Source**: Auto-detected from project scan
+**Last Updated**: {DATE}
+```
+
+#### Conditional Spec Files
+
+Generate these only if discovery signals found:
+
+| Spec | Generate When | Content |
+|------|---------------|---------|
+| `security.md` | Auth configs found | Auth mechanism, authorization model, data classification |
+| `api-contracts.md` | OpenAPI/routes found | API patterns, contract format, versioning |
+| `patterns.md` | ADRs or patterns found | Architecture patterns, design patterns |
+| `data-governance.md` | Migrations/models found | Data lifecycle, retention, privacy |
+| `performance.md` | Perf configs found | SLAs, caching, optimization patterns |
+| `reliability.md` | Health checks found | Error handling, recovery, circuit breakers |
+| `compliance.md` | Regulatory markers found | Regulations, standards, audit |
+
+### 3.5 Create .spider-config.json
 
 At project root:
 
 ```json
 {
-  "fddAdapterPath": "{relative_adapter_path}",
-  "fddCorePath": "{relative_fdd_core_path}"
+  "spiderAdapterPath": "{relative_adapter_path}",
+  "spiderCorePath": "{relative_spider_core_path}"
 }
 ```
 
@@ -452,7 +562,7 @@ At project root:
 1. Note which files were created successfully
 2. Delete partially created files (incomplete AGENTS.md, malformed JSON, etc.)
 3. Log error to user with specific failure point
-4. Suggest: "Run `/fdd-adapter` again to restart from Phase 1"
+4. Suggest: "Run `/spider-adapter` again to restart from Phase 1"
 
 **Do NOT leave adapter in inconsistent state** — either complete all files or rollback to previous state.
 
@@ -481,12 +591,12 @@ AI Agent Integration
 
 Detected: {agent_name}
 
-Would you like to configure FDD integration?
+Would you like to configure Spider integration?
 
 This will:
-  - Add FDD workflow commands
+  - Add Spider workflow commands
   - Configure adapter references
-  - Enable FDD skill invocation
+  - Enable Spider skill invocation
 
 Configure {agent_name}? [Yes] [No] [Later]
 ```
@@ -496,14 +606,14 @@ Configure {agent_name}? [Yes] [No] [Later]
 For each confirmed agent, run:
 
 ```bash
-fdd agent-workflows --agent {agent}
-fdd agent-skills --agent {agent}
+spider agent-workflows --agent {agent}
+spider agent-skills --agent {agent}
 ```
 
 **If CLI command fails**:
 - Log error output to user
 - Note which agent configuration failed
-- Suggest manual configuration or `/fdd` to verify setup
+- Suggest manual configuration or `/spider` to verify setup
 - Continue with other agents if multiple configured
 
 ---
@@ -516,10 +626,10 @@ Execute validation checks:
 
 ```yaml
 Validate:
-  1. .fdd-config.json
+  1. .spider-config.json
      - Exists at project root
      - Valid JSON
-     - Contains fddAdapterPath
+     - Contains spiderAdapterPath
      - Path points to valid adapter
 
   2. AGENTS.md
@@ -530,7 +640,7 @@ Validate:
   3. artifacts.json
      - Valid against schema
      - All paths resolve correctly
-     - Rules packages configured
+      - Weaver packages configured
      - Systems hierarchy valid
 
   4. Spec files
@@ -542,7 +652,7 @@ Validate:
 
 ```
 ═══════════════════════════════════════════════════════════════════════════════
-FDD Adapter: Validation Report
+Spider Adapter: Validation Report
 ═══════════════════════════════════════════════════════════════════════════════
 
 Status: PASS ✅ | FAIL ❌
@@ -550,9 +660,9 @@ Status: PASS ✅ | FAIL ❌
 ───────────────────────────────────────────────────────────────────────────────
 CONFIGURATION
 ───────────────────────────────────────────────────────────────────────────────
-✅ .fdd-config.json valid
-✅ fddAdapterPath correct
-✅ fddCorePath correct (if set)
+✅ .spider-config.json valid
+✅ spiderAdapterPath correct
+✅ spiderCorePath correct (if set)
 
 ───────────────────────────────────────────────────────────────────────────────
 ADAPTER FILES
@@ -634,9 +744,9 @@ Run adapter workflow with --agent {windsurf|cursor|claude|copilot}
 ## Next Steps
 
 **After successful adapter setup**:
-- `/fdd-generate PRD` — Define product requirements
-- `/fdd-generate DESIGN` — Create architecture design
-- `/fdd-generate FEATURES` — Create features manifest
+- `/spider-generate PRD` — Define product requirements
+- `/spider-generate DESIGN` — Create architecture design
+- `/spider-generate FEATURES` — Create features manifest
 
 **For existing projects**:
 - Review detected artifacts

@@ -2,7 +2,7 @@
 Test language configuration loading and dynamic regex building.
 
 Validates that language_config module correctly:
-- Loads configuration from .fdd-config.json
+- Loads configuration from .spider-config.json
 - Falls back to defaults when config missing
 - Builds correct regex patterns for different comment styles
 - Detects effective code lines vs comments
@@ -14,24 +14,24 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "fdd" / "scripts"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "spider" / "scripts"))
 
-from fdd.utils import (
+from spider.utils import (
     load_language_config,
-    build_fdd_begin_regex,
-    build_fdd_end_regex,
-    build_no_fdd_begin_regex,
-    build_no_fdd_end_regex,
+    build_spider_begin_regex,
+    build_spider_end_regex,
+    build_no_spider_begin_regex,
+    build_no_spider_end_regex,
     LanguageConfig,
     DEFAULT_FILE_EXTENSIONS,
 )
 
 
 class TestLanguageConfigLoading(unittest.TestCase):
-    """Test language configuration loading from .fdd-config.json."""
+    """Test language configuration loading from .spider-config.json."""
 
     def test_default_config_when_no_project_config(self):
-        """Verify default config is used when no .fdd-config.json exists."""
+        """Verify default config is used when no .spider-config.json exists."""
         with TemporaryDirectory() as tmpdir:
             config = load_language_config(Path(tmpdir))
             
@@ -47,14 +47,14 @@ class TestLanguageConfigLoading(unittest.TestCase):
             self.assertIn("--", config.single_line_comments)
 
     def test_custom_config_overrides_defaults(self):
-        """Verify custom config from .fdd-config.json overrides defaults."""
+        """Verify custom config from .spider-config.json overrides defaults."""
         with TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             
             # Write custom config
-            config_file = tmppath / ".fdd-config.json"
+            config_file = tmppath / ".spider-config.json"
             config_file.write_text(json.dumps({
-                "fddAdapterPath": "adapter",
+                "spiderAdapterPath": "adapter",
                 "codeScanning": {
                     "fileExtensions": [".php", ".rb"],
                     "singleLineComments": ["#", "//"],
@@ -80,9 +80,9 @@ class TestLanguageConfigLoading(unittest.TestCase):
             tmppath = Path(tmpdir)
             
             # Write config with only fileExtensions
-            config_file = tmppath / ".fdd-config.json"
+            config_file = tmppath / ".spider-config.json"
             config_file.write_text(json.dumps({
-                "fddAdapterPath": "adapter",
+                "spiderAdapterPath": "adapter",
                 "codeScanning": {
                     "fileExtensions": [".kt", ".swift"]
                 }
@@ -101,8 +101,8 @@ class TestLanguageConfigLoading(unittest.TestCase):
 class TestRegexPatternBuilding(unittest.TestCase):
     """Test dynamic regex pattern building from language config."""
 
-    def test_fdd_begin_regex_matches_python_style(self):
-        """Verify fdd-begin regex matches Python # comments."""
+    def test_spider_begin_regex_matches_python_style(self):
+        """Verify spider-begin regex matches Python # comments."""
         config = LanguageConfig(
             file_extensions={".py"},
             single_line_comments=["#"],
@@ -110,18 +110,18 @@ class TestRegexPatternBuilding(unittest.TestCase):
             block_comment_prefixes=[]
         )
         
-        regex = build_fdd_begin_regex(config)
+        regex = build_spider_begin_regex(config)
         
         # Should match Python comment
-        self.assertIsNotNone(regex.match("# fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("  # fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("# spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("  # spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
         
         # Should extract tag
-        match = regex.match("# fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step")
-        self.assertEqual(match.group(1), "fdd-test-feature-x-flow-y:ph-1:inst-step")
+        match = regex.match("# spider-begin spd-test-feature-x-flow-y:ph-1:inst-step")
+        self.assertEqual(match.group(1), "spd-test-feature-x-flow-y:ph-1:inst-step")
 
-    def test_fdd_begin_regex_matches_javascript_style(self):
-        """Verify fdd-begin regex matches JavaScript // comments."""
+    def test_spider_begin_regex_matches_javascript_style(self):
+        """Verify spider-begin regex matches JavaScript // comments."""
         config = LanguageConfig(
             file_extensions={".js"},
             single_line_comments=["//"],
@@ -129,14 +129,14 @@ class TestRegexPatternBuilding(unittest.TestCase):
             block_comment_prefixes=[]
         )
         
-        regex = build_fdd_begin_regex(config)
+        regex = build_spider_begin_regex(config)
         
         # Should match JS comment
-        self.assertIsNotNone(regex.match("// fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("  // fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("// spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("  // spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
 
-    def test_fdd_begin_regex_matches_sql_style(self):
-        """Verify fdd-begin regex matches SQL -- comments."""
+    def test_spider_begin_regex_matches_sql_style(self):
+        """Verify spider-begin regex matches SQL -- comments."""
         config = LanguageConfig(
             file_extensions={".sql"},
             single_line_comments=["--"],
@@ -144,13 +144,13 @@ class TestRegexPatternBuilding(unittest.TestCase):
             block_comment_prefixes=[]
         )
         
-        regex = build_fdd_begin_regex(config)
+        regex = build_spider_begin_regex(config)
         
         # Should match SQL comment
-        self.assertIsNotNone(regex.match("-- fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("-- spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
 
-    def test_fdd_begin_regex_matches_html_comment(self):
-        """Verify fdd-begin regex matches HTML <!-- comments."""
+    def test_spider_begin_regex_matches_html_comment(self):
+        """Verify spider-begin regex matches HTML <!-- comments."""
         config = LanguageConfig(
             file_extensions={".html"},
             single_line_comments=[],
@@ -158,13 +158,13 @@ class TestRegexPatternBuilding(unittest.TestCase):
             block_comment_prefixes=[]
         )
         
-        regex = build_fdd_begin_regex(config)
+        regex = build_spider_begin_regex(config)
         
         # Should match HTML comment
-        self.assertIsNotNone(regex.match("<!-- fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("<!-- spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
 
-    def test_fdd_begin_regex_matches_multiple_styles(self):
-        """Verify fdd-begin regex matches multiple comment styles."""
+    def test_spider_begin_regex_matches_multiple_styles(self):
+        """Verify spider-begin regex matches multiple comment styles."""
         config = LanguageConfig(
             file_extensions={".py", ".js", ".sql"},
             single_line_comments=["#", "//", "--"],
@@ -172,17 +172,17 @@ class TestRegexPatternBuilding(unittest.TestCase):
             block_comment_prefixes=["*"]
         )
         
-        regex = build_fdd_begin_regex(config)
+        regex = build_spider_begin_regex(config)
         
         # Should match all styles
-        self.assertIsNotNone(regex.match("# fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("// fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("-- fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("/* fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("* fdd-begin fdd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("# spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("// spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("-- spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("/* spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("* spider-begin spd-test-feature-x-flow-y:ph-1:inst-step"))
 
-    def test_fdd_end_regex_matches_same_styles_as_begin(self):
-        """Verify fdd-end regex matches same styles as fdd-begin."""
+    def test_spider_end_regex_matches_same_styles_as_begin(self):
+        """Verify spider-end regex matches same styles as spider-begin."""
         config = LanguageConfig(
             file_extensions={".py", ".js"},
             single_line_comments=["#", "//"],
@@ -190,14 +190,14 @@ class TestRegexPatternBuilding(unittest.TestCase):
             block_comment_prefixes=[]
         )
         
-        end_regex = build_fdd_end_regex(config)
+        end_regex = build_spider_end_regex(config)
         
         # Should match both styles
-        self.assertIsNotNone(end_regex.match("# fdd-end fdd-test-feature-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(end_regex.match("// fdd-end fdd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(end_regex.match("# spider-end spd-test-feature-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(end_regex.match("// spider-end spd-test-feature-x-flow-y:ph-1:inst-step"))
 
-    def test_no_fdd_begin_regex_matches_exclusion_marker(self):
-        """Verify !no-fdd-begin regex matches exclusion markers."""
+    def test_no_spider_begin_regex_matches_exclusion_marker(self):
+        """Verify !no-spider-begin regex matches exclusion markers."""
         config = LanguageConfig(
             file_extensions={".py"},
             single_line_comments=["#"],
@@ -205,15 +205,15 @@ class TestRegexPatternBuilding(unittest.TestCase):
             block_comment_prefixes=[]
         )
         
-        regex = build_no_fdd_begin_regex(config)
+        regex = build_no_spider_begin_regex(config)
         
         # Should match exclusion markers
-        self.assertIsNotNone(regex.match("# !no-fdd-begin"))
-        self.assertIsNotNone(regex.match("# Some text !no-fdd-begin"))
-        self.assertIsNotNone(regex.match("<!-- !no-fdd-begin -->"))
+        self.assertIsNotNone(regex.match("# !no-spider-begin"))
+        self.assertIsNotNone(regex.match("# Some text !no-spider-begin"))
+        self.assertIsNotNone(regex.match("<!-- !no-spider-begin -->"))
 
-    def test_no_fdd_end_regex_matches_exclusion_marker(self):
-        """Verify !no-fdd-end regex matches exclusion end markers."""
+    def test_no_spider_end_regex_matches_exclusion_marker(self):
+        """Verify !no-spider-end regex matches exclusion end markers."""
         config = LanguageConfig(
             file_extensions={".py"},
             single_line_comments=["#"],
@@ -221,11 +221,11 @@ class TestRegexPatternBuilding(unittest.TestCase):
             block_comment_prefixes=[]
         )
         
-        regex = build_no_fdd_end_regex(config)
+        regex = build_no_spider_end_regex(config)
         
         # Should match exclusion end markers
-        self.assertIsNotNone(regex.match("# !no-fdd-end"))
-        self.assertIsNotNone(regex.match("<!-- !no-fdd-end -->"))
+        self.assertIsNotNone(regex.match("# !no-spider-end"))
+        self.assertIsNotNone(regex.match("<!-- !no-spider-end -->"))
 
 
 class TestEffectiveCodeLineDetection(unittest.TestCase):

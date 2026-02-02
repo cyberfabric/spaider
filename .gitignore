@@ -40,8 +40,9 @@ deck.pptx
 coverage.json
 .windsurf
 .claude
-fdd-agents.json
+.cursor
+spider-agents.json
 .tmp/
-fdd-flow-layers-2a.drawio.svg
+spider-flow-layers-2a.drawio.svg
 .github/prompts/*
 .github/copilot-instructions.md

@@ -1,5 +1,5 @@
 ---
-fdd: true
+spider: true
 type: requirement
 name: Prompt Engineering Review Methodology
 version: 1.0
@@ -9,6 +9,8 @@ purpose: Systematic methodology for reviewing and improving agent instructions
 # Prompt Engineering Review Methodology
 
 **Scope**: Any file containing agent instructions — system prompts, skills, workflows, requirements, AGENTS.md, methodologies
+
+**Out of scope**: This document does not provide a “best prompt” template or produce production prompts; it defines a review methodology and reporting format.
 
 ---
 
@@ -33,7 +35,7 @@ This methodology provides a systematic approach to reviewing and improving any a
 9. [Layer 9: Improvement Synthesis](#layer-9-improvement-synthesis)
 10. [Execution Protocol](#execution-protocol)
 11. [Quick Reference: Anti-Pattern Codes](#quick-reference-anti-pattern-codes)
-12. [Integration with FDD](#integration-with-fdd)
+12. [Integration with Spider](#integration-with-spider)
 13. [References](#references)
 
 ---
@@ -274,6 +276,7 @@ For each instruction, ask:
 ### 5.2.1 Context Mismanagement
 
 - [ ] **AP-CONTEXT-BLOAT**: Excessive context that dilutes important info
+- [ ] **AP-SYSTEM-PROMPT-BLOAT**: Violates `6.1.3` — always-on system prompt is oversized (>200 lines) OR it embeds large conditional/task-specific blocks that should be externalized into on-demand modules
 - [ ] **AP-CONTEXT-STARVATION**: Critical context missing
 - [ ] **AP-CONTEXT-DRIFT**: Assumed context may not persist (compaction)
 - [ ] **AP-VAGUE-REFERENCE**: "The above" / "this" without clear antecedent
@@ -318,6 +321,16 @@ For each instruction, ask:
 
 ### 6.1.1 Content Audit
 
+**Quick sizing helpers** (optional):
+
+```bash
+# Line count (used by the time-boxing table)
+wc -l path/to/document.md
+
+# Rough token proxy (words). Treat as an approximation.
+python3 -c 'import pathlib; p=pathlib.Path("path/to/document.md"); print(len(p.read_text(encoding="utf-8").split()))'
+```
+
 - [ ] Identify verbose sections that can be compressed
 - [ ] Identify redundant content across sections
 - [ ] Identify content that could be loaded conditionally
@@ -328,6 +341,73 @@ For each instruction, ask:
 - [ ] Most critical instructions in first 20% of document
 - [ ] Examples/details can be truncated without losing core behavior
 - [ ] Conditional content clearly marked for selective loading
+
+### 6.1.3 System Prompt Budget (CRIT)
+
+**CRIT rule (CRITICAL)**: If the document under review is a **System Prompt**, its **always-on** portion MUST NOT exceed **200 lines**.
+
+**Scope**:
+
+- This budget applies to the baseline/always-injected system prompt.
+- Content moved into **on-demand modules** (loaded by WHEN/IF/step rules) does **not** count toward the 200-line limit.
+- If the system prompt is assembled from multiple files, count the **fully assembled always-on text** (the exact text injected on every request).
+
+**How to verify**:
+
+- [ ] Identify the always-on system prompt text (single file or assembled “base”)
+- [ ] Count lines (including headings, blank lines, and lists)
+- [ ] Confirm line count is ≤ 200
+
+**Example commands** (pick what fits your setup):
+
+```bash
+# Single file
+wc -l path/to/system-prompt.md
+
+# If assembled/generated into a single output (count the assembled result)
+wc -l path/to/assembled-system-prompt.txt
+```
+
+**PASS/FAIL**:
+
+- PASS if always-on system prompt lines ≤ 200
+- FAIL if always-on system prompt lines > 200
+
+**If it exceeds 200 lines, fix by reorganizing prompts (do not just delete rules):**
+
+- [ ] Keep only always-on invariants in the system prompt (identity, safety constraints, tool access rules, output contract)
+- [ ] Move everything conditional/task-specific into separate files (“modules”)
+- [ ] Add explicit loading/navigation rules so the agent pulls modules **only when needed** (AGENTS.md / workflow WHEN clauses / step order)
+
+**Recommended organization patterns**:
+
+- [ ] **Module index + conditional loading**: One short index file listing modules and explicit WHEN clauses for each
+- [ ] **Stepwise chain loading**: Load modules by phase (e.g., discovery → context loading → execution → validation)
+- [ ] **Branching by mode**: Split by task family (e.g., code vs artifact, STRICT vs RELAXED) and load the matching branch
+
+**Acceptance criteria (what “good” looks like)**:
+
+- [ ] System prompt ≤ 200 lines
+- [ ] Optional detail is externalized into modules (not duplicated)
+- [ ] Each module has clear trigger(s): WHEN/IF conditions or explicit step order
+- [ ] The agent can navigate: it’s obvious which module to load next, and why
+
+### 6.1.4 Context Load Budget & Overflow Prevention (CRIT)
+
+**CRIT rule (CRITICAL)**: If the document under review is a **workflow/skill/methodology** that instructs an agent to load additional files (modules), it MUST include an explicit, testable strategy to prevent context overflow.
+
+**Minimum required controls** (FAIL if any are missing):
+
+- [ ] **Budget**: Defines a load budget (e.g., max files, max total lines/words) OR defines a mandatory summarize-and-drop procedure after each load.
+- [ ] **Gating**: Defines when a dependency SHOULD be loaded (triggers/decision rules), avoiding “load everything”.
+- [ ] **Chunking**: Defines how to load partial content (TOC/sections/line ranges) rather than whole files by default.
+- [ ] **Summarization**: Requires converting loaded text into a short operational summary (rules/criteria) that can replace the raw text in working context.
+- [ ] **Fail-safe**: Defines what to do when the budget would be exceeded (stop + ask user to choose scope, or write a checkpoint and continue iteratively).
+
+**How to verify** (evidence requirement):
+
+- [ ] The review output lists the files actually loaded, with their sizes (lines or word proxy) and the sections/ranges used.
+- [ ] The review output shows the chosen budget and confirms it was respected OR shows the fail-safe path taken.
 
 ## 6.2 Context Lifecycle
 
@@ -533,9 +613,17 @@ Before starting review:
 
 Layers MUST be executed in order 1-9. Each layer builds on previous findings.
 
+**Exit criteria**: Review is complete only when the output is produced using the required format AND the verification checklist is fully evaluated.
+
 **Checkpointing**: After each layer, summarize findings before proceeding.
 
 **Time Boxing**: Set time limits per layer based on document size:
+
+**How to measure document size** (use line count):
+
+```bash
+wc -l path/to/document.md
+```
 
 | Document Size | Layer 1-3 | Layer 4-5 | Layer 6-8 | Layer 9 |
 |---------------|-----------|-----------|-----------|---------|
@@ -585,6 +673,11 @@ After completing all layers, produce:
 - **Critical Issues**: {count}
 - **Total Issues**: {count}
 
+## Context Budget & Evidence
+- **Budget**: {max files / max total lines/words OR summarize-and-drop policy}
+- **Inputs loaded**: {path — size — sections/ranges}
+- **Overflow handling**: {budget respected | fail-safe taken (what + why)}
+
 ## Layer Summaries
 {One paragraph per layer}
 
@@ -619,7 +712,10 @@ After completing all layers, produce:
 - [ ] All critical issues addressed
 - [ ] No new issues introduced
 - [ ] Examples/tests updated if needed
+- [ ] Context overflow prevented (budget + gating + chunking + summarization + fail-safe) with evidence
 ```
+
+**N/A rule**: Only mark an item N/A if the document explicitly makes it inapplicable. Otherwise mark as FAIL or PARTIAL and describe what’s missing.
 
 ---
 
@@ -636,6 +732,7 @@ After completing all layers, produce:
 | AP-CONFLICTING | Specification | Contradictory rules |
 | AP-IMPOSSIBLE | Specification | Unsatisfiable |
 | AP-CONTEXT-BLOAT | Context | Too much context |
+| AP-SYSTEM-PROMPT-BLOAT | Context | Violates `6.1.3` — always-on system prompt oversized (>200 lines) or contains conditional blocks that should be modular |
 | AP-CONTEXT-STARVATION | Context | Missing context |
 | AP-CONTEXT-DRIFT | Context | Context may be lost |
 | AP-VAGUE-REFERENCE | Context | Unclear antecedent |
@@ -656,9 +753,9 @@ After completing all layers, produce:
 
 ---
 
-## Integration with FDD
+## Integration with Spider
 
-This methodology integrates with FDD workflows:
+This methodology integrates with Spider workflows:
 
 - **Validate workflow**: Use this methodology for semantic validation of instruction documents
 - **Generate workflow**: Apply these principles when creating new instruction documents

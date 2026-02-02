@@ -1,28 +1,47 @@
 ---
-fdd: true
+spider: true
 type: requirement
-name: FDD Template Specification
+name: Spider Template Specification
 version: 1.1
-purpose: Define marker-based template syntax for FDD artifacts
+purpose: Define marker-based template syntax for Spider artifacts
 ---
 
-# FDD Template Specification
+# Spider Template Specification
 
 ## Table of Contents
 
-1. [Quick Reference](#quick-reference)
-2. [Prerequisite Checklist](#prerequisite-checklist)
-3. [Overview](#overview)
-4. [Template Frontmatter](#template-frontmatter)
-5. [Marker Syntax](#marker-syntax)
-6. [ID Formats](#id-formats)
-7. [FDL Format](#fdl-format-fdd-definition-language)
-8. [Template Example](#template-example)
-9. [Artifact Validation](#artifact-validation)
-10. [Error Types](#error-types)
-11. [Agent Workflow](#agent-workflow)
-12. [Validation Checklist](#validation-checklist)
-13. [References](#references)
+- [Spider Template Specification](#spider-template-specification)
+  - [Table of Contents](#table-of-contents)
+  - [Quick Reference](#quick-reference)
+  - [Prerequisite Checklist](#prerequisite-checklist)
+  - [Overview](#overview)
+  - [Template Frontmatter](#template-frontmatter)
+    - [Fields](#fields)
+  - [Marker Syntax](#marker-syntax)
+    - [Basic Structure](#basic-structure)
+    - [Marker Types](#marker-types)
+    - [Marker Attributes](#marker-attributes)
+  - [ID Formats](#id-formats)
+    - [ID Definition (`id` block)](#id-definition-id-block)
+    - [ID Reference (`id-ref` block)](#id-reference-id-ref-block)
+    - [Inline ID Reference](#inline-id-reference)
+    - [ID Naming Convention](#id-naming-convention)
+  - [Spider DSL (SDSL) Format](#spider-dsl-sdsl-format)
+    - [SDSL Line Format](#sdsl-line-format)
+  - [Template Example](#template-example)
+  - [Artifact Validation](#artifact-validation)
+    - [Structure Validation](#structure-validation)
+    - [Content Validation](#content-validation)
+    - [Cross-Validation](#cross-validation)
+  - [Error Types](#error-types)
+    - [Error Format](#error-format)
+  - [Agent Workflow](#agent-workflow)
+    - [When to Use This Spec](#when-to-use-this-spec)
+    - [Template Creation Workflow](#template-creation-workflow)
+    - [Validation Workflow](#validation-workflow)
+    - [Common Tasks](#common-tasks)
+  - [Validation Checklist](#validation-checklist)
+  - [References](#references)
 
 ---
 
@@ -30,18 +49,18 @@ purpose: Define marker-based template syntax for FDD artifacts
 
 **Marker syntax**:
 ```html
-<!-- fdd:TYPE:NAME ATTRS -->
+<!-- spd:TYPE:NAME ATTRS -->
 content
-<!-- fdd:TYPE:NAME -->
+<!-- spd:TYPE:NAME -->
 ```
 
 **Common marker types**: `free`, `id`, `id-ref`, `list`, `table`, `paragraph`, `fdl`, `#`-`######`
 
-**ID format**: `` `fdd-{project}-{kind}-{slug}` ``
+**ID format**: `` `spd-{system}-{kind}-{slug}` ``
 
 **Validate template**:
 ```bash
-python3 {FDD}/skills/fdd/scripts/fdd.py validate --artifact <path>
+python3 {Spider}/skills/spider/scripts/spider.py validate --artifact <path>
 ```
 
 ---
@@ -56,7 +75,7 @@ python3 {FDD}/skills/fdd/scripts/fdd.py validate --artifact <path>
 
 ## Overview
 
-FDD templates use paired HTML comment markers to define structural blocks in markdown documents. This enables deterministic validation of artifacts against their templates.
+Spider templates use paired HTML comment markers to define structural blocks in markdown documents. This enables deterministic validation of artifacts against their templates.
 
 **Supported Version**: `1.0`
 
@@ -68,7 +87,7 @@ Every template MUST begin with YAML frontmatter:
 
 ```yaml
 ---
-fdd-template:
+spider-template:
   version:
     major: 1
     minor: 0
@@ -77,7 +96,7 @@ fdd-template:
 ---
 ```
 
-**IMPORTANT**: This `fdd-template:` frontmatter is **template metadata only**. It MUST NOT be copied into generated artifacts. Artifacts may optionally have their own `fdd:` frontmatter for document metadata.
+**IMPORTANT**: This `spider-template:` frontmatter is **template metadata only**. It MUST NOT be copied into generated artifacts. Artifacts may optionally have their own `spd:` frontmatter for document metadata.
 
 ### Fields
 
@@ -95,12 +114,12 @@ fdd-template:
 ### Basic Structure
 
 ```html
-<!-- fdd:TYPE:NAME ATTRS -->
+<!-- spd:TYPE:NAME ATTRS -->
 content goes here
-<!-- fdd:TYPE:NAME -->
+<!-- spd:TYPE:NAME -->
 ```
 
-**Pattern**: `<!-- fdd:(?:TYPE:)?NAME ATTRS -->`
+**Pattern**: `<!-- spd:(?:TYPE:)?NAME ATTRS -->`
 
 - `TYPE` — block type (optional, defaults to `free`)
 - `NAME` — unique identifier within the template
@@ -122,7 +141,7 @@ content goes here
 | `#` - `######` | Heading (level 1-6) | First line must be heading of specified level |
 | `link` | Markdown link | Must contain `[text](url)` |
 | `image` | Markdown image | Must start with `!` |
-| `fdl` | FDL instruction list | Lines matching FDL format |
+| `fdl` | SDSL instruction list | Lines matching SDSL format |
 
 ### Marker Attributes
 
@@ -144,72 +163,72 @@ content goes here
 ### ID Definition (`id` block)
 
 ```
-**ID**: `fdd-project-kind-slug`
-- [ ] **ID**: `fdd-project-kind-slug`
-- [x] `p1` - **ID**: `fdd-project-kind-slug`
-`p2` - **ID**: `fdd-project-kind-slug`
+**ID**: `spd-system-kind-slug`
+- [ ] **ID**: `spd-system-kind-slug`
+- [x] `p1` - **ID**: `spd-system-kind-slug`
+`p2` - **ID**: `spd-system-kind-slug`
 ```
 
 **Pattern**:
 
 ```regex
-^(?:\*\*ID\*\*:\s*`fdd-[a-z0-9][a-z0-9-]+`|`p\d+`\s*-\s*\*\*ID\*\*:\s*`fdd-[a-z0-9][a-z0-9-]+`|[-*]\s+\[\s*[xX]?\s*\]\s*(?:`p\d+`\s*-\s*)?\*\*ID\*\*:\s*`fdd-[a-z0-9][a-z0-9-]+`)\s*$
+^(?:\*\*ID\*\*:\s*`spd-[a-z0-9][a-z0-9-]+`|`p\d+`\s*-\s*\*\*ID\*\*:\s*`spd-[a-z0-9][a-z0-9-]+`|[-*]\s+\[\s*[xX]?\s*\]\s*(?:`p\d+`\s*-\s*)?\*\*ID\*\*:\s*`spd-[a-z0-9][a-z0-9-]+`)\s*$
 ```
 
 Components:
 - `**ID**:` — literal prefix (required)
 - `- [ ]` or `- [x]` — optional task checkbox (task list item)
 - `` `p1` `` - `` `p9` `` — optional priority
-- `` `fdd-xxx` `` — the ID in backticks (required)
+- `` `spd-xxx` `` — the ID in backticks (required)
 
 ### ID Reference (`id-ref` block)
 
 ```
-`fdd-project-kind-slug`
-[ ] `fdd-project-kind-slug`
-[x] `p1` - `fdd-project-kind-slug`
+`spd-system-kind-slug`
+[ ] `spd-system-kind-slug`
+[x] `p1` - `spd-system-kind-slug`
 ```
 
 **Pattern**:
 
 ```regex
-^(?:(?:\[\s*[xX]?\s*\])\s*(?:`p\d+`\s*-\s*)?)?`fdd-[a-z0-9][a-z0-9-]+`\s*$
+^(?:(?:\[\s*[xX]?\s*\])\s*(?:`p\d+`\s*-\s*)?)?`spd-[a-z0-9][a-z0-9-]+`\s*$
 ```
 
 ### Inline ID Reference
 
-Any `` `fdd-xxx` `` in content is treated as a reference.
+Any `` `spd-xxx` `` in content is treated as a reference.
 
 **Pattern**:
 
 ```regex
-`(fdd-[a-z0-9][a-z0-9-]+)`
+`(spd-[a-z0-9][a-z0-9-]+)`
 ```
 
 ### ID Naming Convention
 
 ```
-fdd-{project}-{kind}-{slug}
+spd-{system}-{kind}-{slug}
 ```
 
-- `fdd-` — literal prefix (required)
+- `spd-` — literal prefix (required)
 - `{project}` — project/system identifier (lowercase, alphanumeric, hyphens)
 - `{kind}` — ID kind (actor, cap, req, flow, algo, state, test, etc.)
 - `{slug}` — descriptive slug (lowercase, alphanumeric, hyphens)
 
 **Examples**:
-- `fdd-myapp-actor-admin-user`
-- `fdd-myapp-cap-user-management`
-- `fdd-myapp-req-must-authenticate`
-- `fdd-myapp-flow-login-process`
+- `spd-myapp-actor-admin-user`
+- `spd-myapp-cap-user-management`
+- `spd-myapp-req-must-authenticate`
+- `spd-myapp-flow-login-process`
 
 ---
 
-## FDL Format (FDD Definition Language)
+## Spider DSL (SDSL) Format
 
-FDL is used in `fdl` blocks to define step-by-step instructions with traceability.
+Spider DSL (SDSL) is used in `fdl` blocks to define step-by-step instructions with traceability.
 
-### FDL Line Format
+### SDSL Line Format
 
 ```
 N. [ ] - `ph-N` - Description - `inst-slug`
@@ -242,7 +261,7 @@ Components:
 
 ```markdown
 ---
-fdd-template:
+spider-template:
   version:
     major: 1
     minor: 0
@@ -252,21 +271,21 @@ fdd-template:
 
 # Feature: {Name}
 
-<!-- fdd:##:overview -->
+<!-- spd:##:overview -->
 ## Overview
-<!-- fdd:##:overview -->
+<!-- spd:##:overview -->
 
-<!-- fdd:paragraph:description required="true" -->
+<!-- spd:paragraph:description required="true" -->
 Brief description of the feature.
-<!-- fdd:paragraph:description -->
+<!-- spd:paragraph:description -->
 
-<!-- fdd:id:requirements required="true" repeat="many" covered_by="CODE" has="task" -->
-- [ ] **ID**: `fdd-project-req-xxx`
-<!-- fdd:id:requirements -->
+<!-- spd:id:requirements required="true" repeat="many" covered_by="CODE" has="task" -->
+- [ ] **ID**: `spd-system-req-xxx`
+<!-- spd:id:requirements -->
 
-<!-- fdd:fdl:flow required="true" -->
+<!-- spd:fdl:flow required="true" -->
 1. [ ] - `ph-1` - Step description - `inst-step-name`
-<!-- fdd:fdl:flow -->
+<!-- spd:fdl:flow -->
 ```
 
 ---
@@ -295,7 +314,7 @@ Brief description of the feature.
 | `#`-`######` | First line is heading of correct level |
 | `link` | Contains `[text](url)` |
 | `image` | Starts with `!` |
-| `fdl` | Each line matches FDL pattern |
+| `fdl` | Each line matches SDSL pattern |
 
 ### Cross-Validation
 
@@ -356,15 +375,15 @@ Brief description of the feature.
 
 | Task | Command |
 |------|---------|
-| Validate artifact | `python3 {FDD}/skills/fdd/scripts/fdd.py validate --artifact <path>` |
-| List IDs | `python3 {FDD}/skills/fdd/scripts/fdd.py list-ids` |
-| Check references | `python3 {FDD}/skills/fdd/scripts/fdd.py check-refs` |
+| Validate artifact | `python3 {Spider}/skills/spider/scripts/spider.py validate --artifact <path>` |
+| List IDs | `python3 {Spider}/skills/spider/scripts/spider.py list-ids` |
+| Check references | `python3 {Spider}/skills/spider/scripts/spider.py check-refs` |
 
 ---
 
 ## Validation Checklist
 
-- [ ] Template has valid `fdd-template` frontmatter
+- [ ] Template has valid `spider-template` frontmatter
 - [ ] Template version is supported (≤ 1.0)
 - [ ] All markers are properly paired (open/close)
 - [ ] Artifact has all required blocks
@@ -377,6 +396,6 @@ Brief description of the feature.
 
 ## References
 
-- **Schema**: `schemas/fdd-template-frontmatter.schema.json`
-- **Implementation**: `skills/fdd/scripts/fdd/utils/template.py`
-- **CLI**: `python3 {FDD}/skills/fdd/scripts/fdd.py validate --artifact <path>`
+- **Schema**: `schemas/spider-template-frontmatter.schema.json`
+- **Implementation**: `skills/spider/scripts/spider/utils/template.py`
+- **CLI**: `python3 {Spider}/skills/spider/scripts/spider.py validate --artifact <path>`

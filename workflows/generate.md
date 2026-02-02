@@ -1,10 +1,10 @@
 ---
-fdd: true
+spider: true
 type: workflow
-name: fdd-generate
-description: Create/update FDD artifacts (PRD, DESIGN, FEATURES, ADR, Feature) or implement code from design with traceability markers
+name: spider-generate
+description: Create/update Spider artifacts (PRD, DESIGN, FEATURES, ADR, Feature) or implement code from design with traceability markers
 version: 1.0
-purpose: Universal workflow for creating or updating any FDD artifact or code
+purpose: Universal workflow for creating or updating any Spider artifact or code
 ---
 
 # Generate
@@ -15,28 +15,58 @@ ALWAYS open and follow `../requirements/execution-protocol.md` FIRST
 
 ALWAYS open and follow `../requirements/reverse-engineering.md` WHEN user requests to analyze codebase, search in code, search in project documentation, or generate artifacts or code based on existing project structure
 
+ALWAYS open and follow `../requirements/code-checklist.md` WHEN user requests implementing, generating, or editing code (Code mode)
+
+OPEN and follow `../requirements/prompt-engineering.md` WHEN user requests generation or updates of:
+- System prompts, agent prompts, or LLM prompts
+- Agent instructions or agent guidelines
+- Skills, workflows, or methodologies
+- AGENTS.md or navigation rules
+- Any document containing instructions for AI agents
+
 For context compaction recovery during multi-phase workflows, follow `../requirements/execution-protocol.md` Section "Compaction Recovery".
 
 ---
 
 ## Table of Contents
 
-- [Reverse Engineering Prerequisite](#reverse-engineering-prerequisite)
-- [Overview](#overview)
-- [Agent Anti-Patterns](#-agent-anti-patterns-strict-mode)
-- [Rules Mode Behavior](#rules-mode-behavior)
-- [Phase 0: Ensure Dependencies](#phase-0-ensure-dependencies)
-- [Phase 0.5: Clarify Output & Context](#phase-05-clarify-output--context)
-- [Phase 1: Collect Information](#phase-1-collect-information)
-- [Phase 2: Generate](#phase-2-generate)
-- [Phase 2.5: Checkpoint](#phase-25-checkpoint-for-long-artifacts)
-- [Phase 3: Summary](#phase-3-summary)
-- [Phase 4: Write](#phase-4-write)
-- [Phase 5: Validate](#phase-5-validate)
-- [Phase 6: Offer Next Steps](#phase-6-offer-next-steps)
-- [Error Handling](#error-handling)
-- [State Summary](#state-summary)
-- [Validation Criteria](#validation-criteria)
+- [Generate](#generate)
+  - [Table of Contents](#table-of-contents)
+  - [Reverse Engineering Prerequisite](#reverse-engineering-prerequisite)
+  - [Overview](#overview)
+    - [Resolved Variables (from `execution-protocol.md` + adapter-info)](#resolved-variables-from-execution-protocolmd--adapter-info)
+  - [Context Budget \& Overflow Prevention (CRITICAL)](#context-budget--overflow-prevention-critical)
+  - [⛔ Agent Anti-Patterns (STRICT mode)](#-agent-anti-patterns-strict-mode)
+  - [Rules Mode Behavior](#rules-mode-behavior)
+  - [Phase 0: Ensure Dependencies](#phase-0-ensure-dependencies)
+    - [Verify Rules Loaded](#verify-rules-loaded)
+    - [For Code (additional)](#for-code-additional)
+  - [Phase 0.5: Clarify Output \& Context](#phase-05-clarify-output--context)
+    - [System Context (if using rules)](#system-context-if-using-rules)
+    - [Output Destination](#output-destination)
+    - [Parent Artifact References](#parent-artifact-references)
+    - [ID Naming](#id-naming)
+  - [Phase 1: Collect Information](#phase-1-collect-information)
+    - [For Artifacts (template-based)](#for-artifacts-template-based)
+    - [For Code (checklist-based)](#for-code-checklist-based)
+    - [Input Collection Rules](#input-collection-rules)
+    - [Confirmation](#confirmation)
+  - [Phase 2: Generate](#phase-2-generate)
+    - [For Artifacts (rules.md Tasks)](#for-artifacts-rulesmd-tasks)
+    - [For Code (rules.md Tasks)](#for-code-rulesmd-tasks)
+    - [Content Rules](#content-rules)
+    - [Markdown Quality](#markdown-quality)
+  - [Phase 2.5: Checkpoint (for long artifacts)](#phase-25-checkpoint-for-long-artifacts)
+  - [Phase 3: Summary](#phase-3-summary)
+  - [Phase 4: Write](#phase-4-write)
+  - [Phase 5: Validate](#phase-5-validate)
+  - [Phase 6: Offer Next Steps](#phase-6-offer-next-steps)
+  - [Error Handling](#error-handling)
+    - [Tool Failures](#tool-failures)
+    - [User Abandonment](#user-abandonment)
+    - [Validation Failure Loop](#validation-failure-loop)
+  - [State Summary](#state-summary)
+  - [Validation Criteria](#validation-criteria)
 
 ---
 
@@ -45,15 +75,16 @@ For context compaction recovery during multi-phase workflows, follow `../require
 **When trigger conditions above are met**, before proceeding with generation:
 
 1. **Check if adapter has project analysis**:
-   - Does `{adapter-dir}/specs/` contain populated spec files?
-   - Is there a recent project scan summary?
+  - Does `spider.py adapter-info` report any `specs`?
+  - If specs exist, load and follow them before generating.
+  - If no specs exist, proceed with best effort or run a rescan.
 
 2. **If no project analysis exists**:
    ```
    To generate quality artifacts/code based on the existing project,
    I recommend running adapter in reverse engineering mode first:
 
-   /fdd-adapter --rescan
+   /spider-adapter --rescan
 
    This will:
    - Analyze codebase structure (Layers 1-3)
@@ -78,7 +109,26 @@ Universal generation workflow. Handles two modes:
 
 After executing `execution-protocol.md`, you have: TARGET_TYPE, RULES, KIND, PATH, MODE, and resolved dependencies.
 
-**Examples**: Each artifact type has examples in `{rules-path}/artifacts/{KIND}/examples/`. Reference these during Phase 1 (input collection) and Phase 2 (content generation) for style and quality guidance.
+### Resolved Variables (from `execution-protocol.md` + adapter-info)
+
+- `{adapter_dir}` — adapter directory from `spider.py adapter-info` (contains `artifacts.json`)
+- `{ARTIFACTS_REGISTRY}` — `{adapter_dir}/artifacts.json`
+- `{WEAVERS_PATH}` — weaver package base directory resolved from registry (registry schema uses `weavers`/`weaver`)
+- `{PATH}` — target artifact/code path for the current operation
+
+**Examples**: Each artifact type has examples in `{WEAVERS_PATH}/artifacts/{KIND}/examples/`. Reference these during Phase 1 (input collection) and Phase 2 (content generation) for style and quality guidance.
+
+---
+
+## Context Budget & Overflow Prevention (CRITICAL)
+
+This workflow can require loading multiple long templates/checklists/examples and (optionally) reverse-engineering guidance. To prevent context overflow and accidental rule skipping:
+
+- **Budget first**: Before loading large docs, estimate size (e.g., `wc -l`) and state a rough budget for what you will load this turn.
+- **Load only what you will use**: Prefer the specific template sections and checklist categories needed for the current KIND; avoid loading entire registries/specs unless required.
+- **Chunk reads**: Use `read_file` in ranges and summarize each chunk; do not keep raw full-text of multiple 500+ line documents in context at once.
+- **Summarize-and-drop**: After extracting the needed criteria, keep a short checklist summary and drop the raw text from working memory.
+- **Fail-safe**: If you cannot complete required steps within context, stop and output a checkpoint (chat-only) describing what is done and what remains. Do not proceed to writing files.
 
 ---
 
@@ -114,7 +164,7 @@ After executing `execution-protocol.md`, you have: TARGET_TYPE, RULES, KIND, PAT
 
 ## Rules Mode Behavior
 
-| Aspect | STRICT (FDD rules) | RELAXED (no rules) |
+| Aspect | STRICT (Spider rules) | RELAXED (no rules) |
 |--------|-------------------|-------------------|
 | Template | Required | User-provided or best effort |
 | Checklist | Required for self-review | Optional |
@@ -124,7 +174,7 @@ After executing `execution-protocol.md`, you have: TARGET_TYPE, RULES, KIND, PAT
 
 **RELAXED mode disclaimer**:
 ```
-⚠️ Generated without FDD rules (reduced quality assurance)
+⚠️ Generated without Spider rules (reduced quality assurance)
 ```
 
 ---
@@ -132,7 +182,7 @@ After executing `execution-protocol.md`, you have: TARGET_TYPE, RULES, KIND, PAT
 ## Phase 0: Ensure Dependencies
 
 **After execution-protocol.md, you have**:
-- `RULES_PATH` — path to loaded rules.md
+- `WEAVERS_PATH` — path to loaded rules.md
 - `TEMPLATE` — template content (from rules Dependencies)
 - `CHECKLIST` — checklist content (from rules Dependencies)
 - `EXAMPLE` — example content (from rules Dependencies)
@@ -156,6 +206,7 @@ After executing `execution-protocol.md`, you have: TARGET_TYPE, RULES, KIND, PAT
 
 | Dependency | Purpose | If missing |
 |------------|---------|------------|
+| **Code checklist** | Baseline quality criteria for all code work | Load `../requirements/code-checklist.md` |
 | **Design artifact** | Requirements to implement | Ask user to specify source |
 
 **MUST NOT proceed** to Phase 1 until all dependencies are available.
@@ -200,14 +251,14 @@ Where should the result go?
 **If generating code**:
 - Identify design artifact(s) being implemented
 - Extract requirement IDs to trace
-- Plan FDD markers for traceability (if FULL traceability)
+- Plan Spider markers for traceability (if FULL traceability)
 
 ### ID Naming
 
 **For new artifacts with IDs**:
 - Use project prefix from adapter
-- Follow pattern: `fdd-{project}-{kind}-{slug}`
-- Verify uniqueness with `fdd list-ids`
+- Follow pattern: `spd-{system}-{kind}-{slug}`
+- Verify uniqueness with `spider list-ids`
 
 ---
 
@@ -303,7 +354,7 @@ Standard checks (subset of [Validation Criteria](#validation-criteria)):
 
 Execute phases from codebase/rules.md:
 - **Phase 1: Setup** — load feature design, checklist
-- **Phase 2: Implementation** — implement with FDD markers
+- **Phase 2: Implementation** — implement with Spider markers
 - **Phase 3: Marker Format** — use correct marker syntax
 - **Phase 4: Quality Check** — verify traceability
 
@@ -311,7 +362,7 @@ Standard checks (subset of [Validation Criteria](#validation-criteria)):
 - [ ] Follows conventions
 - [ ] Implements all requirements
 - [ ] Has tests (if required)
-- [ ] FDD markers present (if to_code="true")
+- [ ] Spider markers present (if to_code="true")
 
 ### Content Rules
 
@@ -320,7 +371,7 @@ Standard checks (subset of [Validation Criteria](#validation-criteria)):
 - Use imperative language
 - Wrap IDs in backticks
 - Reference types from domain model (no redefinition)
-- Use FDL for behavioral sections (if applicable)
+- Use Spider DSL (SDSL) for behavioral sections (if applicable)
 
 **MUST NOT**:
 - Leave placeholders
@@ -341,11 +392,11 @@ Standard checks (subset of [Validation Criteria](#validation-criteria)):
 
 **When to checkpoint**: Artifacts with >10 sections OR generation taking multiple conversation turns.
 
-**After Phase 2 completion, save checkpoint**:
+**After Phase 2 completion, save checkpoint (chat-only by default)**:
 ```markdown
 ### Generation Checkpoint
 
-**Workflow**: /fdd-generate {KIND}
+**Workflow**: /spider-generate {KIND}
 **Phase**: 2 complete, ready for Phase 3
 **Inputs collected**:
 - {section}: {value summary}
@@ -356,6 +407,10 @@ Standard checks (subset of [Validation Criteria](#validation-criteria)):
 
 Resume: Re-read this checkpoint, verify no file changes, continue to Phase 3.
 ```
+
+**Checkpoint write policy**:
+- Default: checkpoint is output to chat only (no files created)
+- Only write a checkpoint file if the user explicitly requests/approves it
 
 **On resume after compaction**:
 1. Re-read target file (if exists) to verify no external changes
@@ -383,7 +438,7 @@ Resume: Re-read this checkpoint, verify no file changes, continue to Phase 3.
 {additional files if any}
 
 ### Artifacts registry:
-- `{adapter-dir}/artifacts.json`: {entry additions/updates, if any}
+- `{adapter_dir}/artifacts.json`: {entry additions/updates, if any}
 
 **Proceed?** [yes/no/modify]
 ```
@@ -399,7 +454,7 @@ Resume: Re-read this checkpoint, verify no file changes, continue to Phase 3.
 
 **Only after confirmation**:
 
-1. Update `{adapter-dir}/artifacts.json` if new artifact path introduced
+1. Update `{adapter_dir}/artifacts.json` if new artifact path introduced
 2. Create directories if needed
 3. Write file(s)
 4. Verify content
@@ -420,7 +475,12 @@ Output:
 
 **Automatic**: Run validation after generation (do not list in Next Steps):
 ```
-/fdd-validate {TARGET_TYPE} {KIND}
+/spider-validate --artifact {PATH}
+```
+
+For code generation, use:
+```
+/spider-validate --code {PATH} --design {design-path}
 ```
 
 **If PASS**:
@@ -457,12 +517,12 @@ What would you like to do next?
 
 ### Tool Failures
 
-**If `fdd.py` script fails**:
+**If `spider.py` script fails**:
 ```
 ⚠️ Tool error: {error message}
 → Check Python environment and dependencies
 → Verify adapter is correctly configured
-→ Run /fdd-adapter --rescan to refresh
+→ Run /spider-adapter --rescan to refresh
 ```
 **STOP** — do not continue with incomplete state.
 

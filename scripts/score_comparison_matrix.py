@@ -156,7 +156,7 @@ def _find_project_root(start: Path) -> Path:
         cur = cur.parent
 
     for parent in [cur, *cur.parents]:
-        if (parent / ".fdd-config.json").exists():
+        if (parent / ".spider-config.json").exists():
             return parent
         if (parent / ".git").exists():
             return parent

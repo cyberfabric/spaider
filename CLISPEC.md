@@ -67,7 +67,7 @@ COMMAND init-feature
 
 **SYNOPSIS**: Command usage pattern
 ```
-SYNOPSIS: fdd init-feature <slug> [options]
+SYNOPSIS: spider init-feature <slug> [options]
 ```
 
 **DESCRIPTION**: Brief description (1-2 sentences)
@@ -102,14 +102,14 @@ EXIT CODES:
 **EXAMPLE**: Usage examples (one or more)
 ```
 EXAMPLE:
-  $ fdd init-feature user-authentication
-  $ fdd init-feature data-export --template minimal
-  $ fdd init-feature payment --skip-validation
+  $ spider init-feature user-authentication
+  $ spider init-feature data-export --template minimal
+  $ spider init-feature payment --skip-validation
 ```
 
 ### Optional Sections
 
-**WORKFLOW**: Reference to FDD workflow
+**WORKFLOW**: Reference to Spider workflow
 ```
 WORKFLOW: 05-init-feature
 ```
@@ -200,7 +200,7 @@ Reference other commands, workflows, or entities:
 ### Workflow References
 
 ```
-@Workflow.NN-workflow-name     # Reference to FDD workflow
+@Workflow.NN-workflow-name     # Reference to Spider workflow
 @Workflow.adapter-config       # Reference to workflow file
 ```
 
@@ -217,8 +217,8 @@ Reference other commands, workflows, or entities:
 
 ```
 COMMAND validate-feature
-SYNOPSIS: fdd validate-feature <slug> [options]
-DESCRIPTION: Validate feature design completeness and FDD compliance
+SYNOPSIS: spider validate-feature <slug> [options]
+DESCRIPTION: Validate feature design completeness and Spider compliance
 WORKFLOW: 06-validate-feature
 
 ARGUMENTS:
@@ -236,9 +236,9 @@ EXIT CODES:
   3  Workflow execution error
 
 EXAMPLE:
-  $ fdd validate-feature user-authentication
-  $ fdd validate-feature data-export --strict
-  $ fdd validate-feature payment --output report.txt
+  $ spider validate-feature user-authentication
+  $ spider validate-feature data-export --strict
+  $ spider validate-feature payment --output report.txt
 
 RELATED:
   - @CLI.init-feature
@@ -247,7 +247,7 @@ RELATED:
 ---
 
 COMMAND init-feature
-SYNOPSIS: fdd init-feature <slug> [options]
+SYNOPSIS: spider init-feature <slug> [options]
 DESCRIPTION: Initialize a new feature with DESIGN.md template
 WORKFLOW: 05-init-feature
 
@@ -266,9 +266,9 @@ EXIT CODES:
   3  Feature directory already exists
 
 EXAMPLE:
-  $ fdd init-feature user-authentication
-  $ fdd init-feature data-export --template minimal
-  $ fdd init-feature payment --skip-validation
+  $ spider init-feature user-authentication
+  $ spider init-feature data-export --template minimal
+  $ spider init-feature payment --skip-validation
 
 RELATED:
   - @CLI.validate-feature
@@ -335,7 +335,7 @@ def parse_clispec(text):
 
 - Direct workflow references
 - Command relationships via RELATED
-- Integration with FDD methodology
+- Integration with Spider methodology
 
 ### Tool Generation
 
@@ -348,7 +348,7 @@ From CLISPEC, generate:
 
 ---
 
-## Usage in FDD
+## Usage in Spider
 
 ### In Adapter Configuration
 
@@ -370,7 +370,7 @@ Standard location: `architecture/cli-specs/commands.clispec`
 
 ```bash
 # Validate CLISPEC format
-fdd validate-cli-specs
+spider validate-cli-specs
 
 # Or custom validator
 your-tool validate-clispec architecture/cli-specs/commands.clispec
@@ -414,7 +414,7 @@ your-tool validate-clispec architecture/cli-specs/commands.clispec
 - ✅ Type system
 - ❌ Less flexible
 
-**Best for**: CLI tools in FDD projects where agent-readability is priority
+**Best for**: CLI tools in Spider projects where agent-readability is priority
 
 ---
 
@@ -459,12 +459,12 @@ Syntax highlighting:
 
 ## References
 
-- **FDD Methodology**: `AGENTS.md`
+- **Spider Methodology**: `AGENTS.md`
 - **Adapter Guide**: `guides/ADAPTER.md`
-- **Example Usage**: See `../fdd-cli-adapter/AGENTS.md` for real-world CLISPEC
+- **Example Usage**: See `../spider-cli-adapter/AGENTS.md` for real-world CLISPEC
 
 ---
 
 ## License
 
-This specification is part of the FDD (Feature-Driven Development) methodology.
+This specification is part of the Spider (Feature-Driven Development) methodology.

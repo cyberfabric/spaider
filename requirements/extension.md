@@ -1,12 +1,12 @@
 ---
-fdd: true
+spider: true
 type: requirement
 name: Extension Mechanism
 version: 1.0
 purpose: Define how files extend other files using Extends directive
 ---
 
-# FDD Extension Mechanism
+# Spider Extension Mechanism
 
 ---
 
@@ -85,33 +85,33 @@ Merged Result (base + modifications)
 
 ### Valid Extension
 
-**Base**: `FDD/AGENTS.md`
+**Base**: `Spider/AGENTS.md`
 ```markdown
 See [PRD.md](PRD.md)
 See [ADR](ADR/)
 See [api.json](../../../docs/api/api.json)
 ```
-ALWAYS open and follow `.adapter/specs/conventions.md` WHEN modifying FDD files
+ALWAYS open and follow `.spider-adapter/specs/conventions.md` WHEN modifying Spider files
 ```
 
 **Extension**: `{adapter-directory}/AGENTS.md`
 ```markdown
 # Project AI Agent Navigation
 
-**Extends**: `../FDD/AGENTS.md`
+**Extends**: `../Spider/AGENTS.md`
 
 ALWAYS open and follow `{adapter-directory}/domain-model.gts` WHEN executing workflows: design/, design-validate/, adr/, adr-validate/
 ALWAYS open and follow `{adapter-directory}/api-contracts.yaml` WHEN executing workflows: design.md, design-validate.md, adr.md, adr-validate.md
 ```
 
-**Result**: Agent reads FDD/AGENTS.md first, then adds project-specific instructions
+**Result**: Agent reads Spider/AGENTS.md first, then adds project-specific instructions
 
 ### Invalid Extension
 
 ```markdown
 # Project AI Agent Navigation
 
-**Extends**: `../FDD/AGENTS.md`
+**Extends**: `../Spider/AGENTS.md`
 
 # This contradicts base - INVALID
 DO NOT read requirements files
@@ -139,7 +139,7 @@ DO NOT read requirements files
 
 ### AGENTS.md Extension
 
-**Base**: Core FDD navigation  
+**Base**: Core Spider navigation  
 **Extension**: Project-specific navigation (domain model, API contracts, tech stack)
 
 ### Requirements Extension
@@ -269,5 +269,5 @@ DO NOT read requirements files
 - All files using **Extends** directive
 
 **References**:
-- `../.adapter/specs/patterns.md` - Defines structure for AGENTS.md files
-- `adapter-structure.md` - Requires adapter AGENTS.md to extend FDD AGENTS.md
+- `../.spider-adapter/specs/patterns.md` - Defines structure for AGENTS.md files
+- `adapter-structure.md` - Requires adapter AGENTS.md to extend Spider AGENTS.md

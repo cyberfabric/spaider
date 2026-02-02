@@ -6,13 +6,13 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "fdd" / "scripts"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "spider" / "scripts"))
 
-from fdd.utils.artifacts_meta import (
+from spider.utils.artifacts_meta import (
     Artifact,
     ArtifactsMeta,
     CodebaseEntry,
-    Rule,
+    Weaver,
     SystemNode,
     create_backup,
     generate_default_registry,
@@ -20,32 +20,32 @@ from fdd.utils.artifacts_meta import (
 )
 
 
-class TestRule(unittest.TestCase):
-    def test_rule_from_dict(self):
-        data = {"format": "FDD", "path": "templates"}
-        rule = Rule.from_dict("test-rule", data)
-        self.assertEqual(rule.rule_id, "test-rule")
-        self.assertEqual(rule.format, "FDD")
-        self.assertEqual(rule.path, "templates")
+class TestWeaver(unittest.TestCase):
+    def test_weaver_from_dict(self):
+        data = {"format": "Spider", "path": "templates"}
+        weaver = Weaver.from_dict("test-weaver", data)
+        self.assertEqual(weaver.weaver_id, "test-weaver")
+        self.assertEqual(weaver.format, "Spider")
+        self.assertEqual(weaver.path, "templates")
 
-    def test_rule_is_fdd_format(self):
-        rule = Rule("id", "FDD", "path")
-        self.assertTrue(rule.is_fdd_format())
-        rule2 = Rule("id", "OTHER", "path")
-        self.assertFalse(rule2.is_fdd_format())
+    def test_weaver_is_spider_format(self):
+        weaver = Weaver("id", "Spider", "path")
+        self.assertTrue(weaver.is_spider_format())
+        weaver2 = Weaver("id", "OTHER", "path")
+        self.assertFalse(weaver2.is_spider_format())
 
-    def test_rule_get_template_path(self):
-        rule = Rule("id", "FDD", "rules/sdlc")
-        self.assertEqual(rule.get_template_path("PRD"), "rules/sdlc/artifacts/PRD/template.md")
-        self.assertEqual(rule.get_template_path("UNKNOWN"), "rules/sdlc/artifacts/UNKNOWN/template.md")
+    def test_weaver_get_template_path(self):
+        weaver = Weaver("id", "Spider", "weavers/sdlc")
+        self.assertEqual(weaver.get_template_path("PRD"), "weavers/sdlc/artifacts/PRD/template.md")
+        self.assertEqual(weaver.get_template_path("UNKNOWN"), "weavers/sdlc/artifacts/UNKNOWN/template.md")
 
-    def test_rule_get_checklist_path(self):
-        rule = Rule("id", "FDD", "rules/sdlc")
-        self.assertEqual(rule.get_checklist_path("PRD"), "rules/sdlc/artifacts/PRD/checklist.md")
+    def test_weaver_get_checklist_path(self):
+        weaver = Weaver("id", "Spider", "weavers/sdlc")
+        self.assertEqual(weaver.get_checklist_path("PRD"), "weavers/sdlc/artifacts/PRD/checklist.md")
 
-    def test_rule_get_example_path(self):
-        rule = Rule("id", "FDD", "rules/sdlc")
-        self.assertEqual(rule.get_example_path("PRD"), "rules/sdlc/artifacts/PRD/examples/example.md")
+    def test_weaver_get_example_path(self):
+        weaver = Weaver("id", "Spider", "weavers/sdlc")
+        self.assertEqual(weaver.get_example_path("PRD"), "weavers/sdlc/artifacts/PRD/examples/example.md")
 
 
 class TestArtifact(unittest.TestCase):
@@ -88,13 +88,13 @@ class TestSystemNode(unittest.TestCase):
     def test_system_node_from_dict_basic(self):
         data = {
             "name": "MySystem",
-            "rules": "fdd-sdlc",
+            "weaver": "spider-sdlc",
             "artifacts": [{"path": "PRD.md", "kind": "PRD"}],
             "codebase": [{"path": "src/", "extensions": [".py"]}],
         }
         node = SystemNode.from_dict(data)
         self.assertEqual(node.name, "MySystem")
-        self.assertEqual(node.rules, "fdd-sdlc")
+        self.assertEqual(node.weaver, "spider-sdlc")
         self.assertEqual(len(node.artifacts), 1)
         self.assertEqual(len(node.codebase), 1)
 
@@ -102,10 +102,10 @@ class TestSystemNode(unittest.TestCase):
         """Cover lines 135-136: parsing children."""
         data = {
             "name": "Parent",
-            "rules": "fdd",
+            "weaver": "spider",
             "children": [
-                {"name": "Child1", "rules": "fdd"},
-                {"name": "Child2", "rules": "fdd"},
+                {"name": "Child1", "weaver": "spider"},
+                {"name": "Child2", "weaver": "spider"},
             ],
         }
         node = SystemNode.from_dict(data)
@@ -119,13 +119,13 @@ class TestArtifactsMeta(unittest.TestCase):
         data = {
             "version": "1.0",
             "project_root": "..",
-            "rules": {"fdd": {"format": "FDD", "path": "templates"}},
-            "systems": [{"name": "Test", "rules": "fdd", "artifacts": [{"path": "PRD.md", "kind": "PRD"}]}],
+            "weavers": {"spider": {"format": "Spider", "path": "templates"}},
+            "systems": [{"name": "Test", "weaver": "spider", "artifacts": [{"path": "PRD.md", "kind": "PRD"}]}],
         }
         meta = ArtifactsMeta.from_dict(data)
         self.assertEqual(meta.version, "1.0")
         self.assertEqual(meta.project_root, "..")
-        self.assertEqual(len(meta.rules), 1)
+        self.assertEqual(len(meta.weavers), 1)
         self.assertEqual(len(meta.systems), 1)
 
     def test_from_json(self):
@@ -133,7 +133,7 @@ class TestArtifactsMeta(unittest.TestCase):
         data = {
             "version": "1.0",
             "project_root": "..",
-            "rules": {},
+            "weavers": {},
             "systems": [],
         }
         meta = ArtifactsMeta.from_json(json.dumps(data))
@@ -143,7 +143,7 @@ class TestArtifactsMeta(unittest.TestCase):
         """Cover lines 228-229: from_file method."""
         with TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "artifacts.json"
-            data = {"version": "1.0", "project_root": "..", "rules": {}, "systems": []}
+            data = {"version": "1.0", "project_root": "..", "weavers": {}, "systems": []}
             path.write_text(json.dumps(data), encoding="utf-8")
             meta = ArtifactsMeta.from_file(path)
             self.assertEqual(meta.version, "1.0")
@@ -153,8 +153,8 @@ class TestArtifactsMeta(unittest.TestCase):
         data = {
             "version": "1.0",
             "project_root": "..",
-            "rules": {"fdd": {"format": "FDD", "path": "templates"}},
-            "systems": [{"name": "Test", "rules": "fdd", "artifacts": [{"path": "architecture/PRD.md", "kind": "PRD"}]}],
+            "weavers": {"spider": {"format": "Spider", "path": "templates"}},
+            "systems": [{"name": "Test", "weaver": "spider", "artifacts": [{"path": "architecture/PRD.md", "kind": "PRD"}]}],
         }
         meta = ArtifactsMeta.from_dict(data)
         result = meta.get_artifact_by_path("architecture/PRD.md")
@@ -164,7 +164,7 @@ class TestArtifactsMeta(unittest.TestCase):
         self.assertEqual(system.name, "Test")
 
     def test_get_artifact_by_path_not_found(self):
-        data = {"version": "1.0", "project_root": "..", "rules": {}, "systems": []}
+        data = {"version": "1.0", "project_root": "..", "weavers": {}, "systems": []}
         meta = ArtifactsMeta.from_dict(data)
         result = meta.get_artifact_by_path("nonexistent.md")
         self.assertIsNone(result)
@@ -174,8 +174,8 @@ class TestArtifactsMeta(unittest.TestCase):
         data = {
             "version": "1.0",
             "project_root": "..",
-            "rules": {},
-            "systems": [{"name": "Test", "rules": "", "artifacts": [{"path": "./PRD.md", "kind": "PRD"}]}],
+            "weavers": {},
+            "systems": [{"name": "Test", "weaver": "", "artifacts": [{"path": "./PRD.md", "kind": "PRD"}]}],
         }
         meta = ArtifactsMeta.from_dict(data)
         result = meta.get_artifact_by_path("PRD.md")
@@ -183,7 +183,7 @@ class TestArtifactsMeta(unittest.TestCase):
 
     def test_resolve_template_path(self):
         """Cover lines 252-253: resolve_template_path method."""
-        data = {"version": "1.0", "project_root": "..", "rules": {}, "systems": []}
+        data = {"version": "1.0", "project_root": "..", "weavers": {}, "systems": []}
         meta = ArtifactsMeta.from_dict(data)
         with TemporaryDirectory() as tmpdir:
             base = Path(tmpdir) / "adapter"
@@ -196,18 +196,18 @@ class TestArtifactsMeta(unittest.TestCase):
         data = {
             "version": "1.0",
             "project_root": "..",
-            "rules": {"fdd": {"format": "FDD", "path": "rules/sdlc"}},
-            "systems": [{"name": "Test", "rules": "fdd", "artifacts": [{"path": "PRD.md", "kind": "PRD"}]}],
+            "weavers": {"spider": {"format": "Spider", "path": "weavers/sdlc"}},
+            "systems": [{"name": "Test", "weaver": "spider", "artifacts": [{"path": "PRD.md", "kind": "PRD"}]}],
         }
         meta = ArtifactsMeta.from_dict(data)
         artifact = Artifact(path="PRD.md", kind="PRD", traceability="DOCS-ONLY")
         system = meta.systems[0]
         template_path = meta.get_template_for_artifact(artifact, system)
-        self.assertEqual(template_path, "rules/sdlc/artifacts/PRD/template.md")
+        self.assertEqual(template_path, "weavers/sdlc/artifacts/PRD/template.md")
 
-    def test_get_template_for_artifact_missing_rule(self):
-        """Cover get_template_for_artifact when rule doesn't exist."""
-        data = {"version": "1.0", "project_root": "..", "rules": {}, "systems": [{"name": "Test", "rules": "missing"}]}
+    def test_get_template_for_artifact_missing_weaver(self):
+        """Cover get_template_for_artifact when weaver doesn't exist."""
+        data = {"version": "1.0", "project_root": "..", "weavers": {}, "systems": [{"name": "Test", "weaver": "missing"}]}
         meta = ArtifactsMeta.from_dict(data)
         artifact = Artifact(path="PRD.md", kind="PRD", traceability="DOCS-ONLY")
         system = meta.systems[0]
@@ -218,8 +218,8 @@ class TestArtifactsMeta(unittest.TestCase):
         data = {
             "version": "1.0",
             "project_root": "..",
-            "rules": {},
-            "systems": [{"name": "Test", "rules": "", "artifacts": [{"path": "a.md", "kind": "A"}, {"path": "b.md", "kind": "B"}]}],
+            "weavers": {},
+            "systems": [{"name": "Test", "weaver": "", "artifacts": [{"path": "a.md", "kind": "A"}, {"path": "b.md", "kind": "B"}]}],
         }
         meta = ArtifactsMeta.from_dict(data)
         artifacts = list(meta.iter_all_artifacts())
@@ -230,16 +230,16 @@ class TestArtifactsMeta(unittest.TestCase):
         data = {
             "version": "1.0",
             "project_root": "..",
-            "rules": {},
+            "weavers": {},
             "systems": [
                 {
                     "name": "Parent",
-                    "rules": "",
+                    "weaver": "",
                     "artifacts": [{"path": "parent.md", "kind": "P"}],
                     "children": [
                         {
                             "name": "Child",
-                            "rules": "",
+                            "weaver": "",
                             "artifacts": [{"path": "child.md", "kind": "C"}],
                         }
                     ],
@@ -258,17 +258,17 @@ class TestArtifactsMeta(unittest.TestCase):
         data = {
             "version": "1.0",
             "project_root": "..",
-            "rules": {},
+            "weavers": {},
             "systems": [
                 {
                     "name": "myapp",
-                    "rules": "",
+                    "weaver": "",
                     "children": [
-                        {"name": "account-server", "rules": ""},
-                        {"name": "billing", "rules": "", "children": [{"name": "invoicing", "rules": ""}]},
+                        {"name": "account-server", "weaver": ""},
+                        {"name": "billing", "weaver": "", "children": [{"name": "invoicing", "weaver": ""}]},
                     ],
                 },
-                {"name": "other-system", "rules": ""},
+                {"name": "other-system", "weaver": ""},
             ],
         }
         meta = ArtifactsMeta.from_dict(data)
@@ -285,10 +285,10 @@ class TestArtifactsMeta(unittest.TestCase):
         data = {
             "version": "1.0",
             "project_root": "..",
-            "rules": {},
+            "weavers": {},
             "systems": [
-                {"name": "MyApp", "rules": ""},
-                {"name": "Account-Server", "rules": ""},
+                {"name": "MyApp", "weaver": ""},
+                {"name": "Account-Server", "weaver": ""},
             ],
         }
         meta = ArtifactsMeta.from_dict(data)
@@ -306,7 +306,7 @@ class TestLoadArtifactsMeta(unittest.TestCase):
         """Cover lines 275-284: load_artifacts_meta success path."""
         with TemporaryDirectory() as tmpdir:
             ad = Path(tmpdir)
-            data = {"version": "1.0", "project_root": "..", "rules": {}, "systems": []}
+            data = {"version": "1.0", "project_root": "..", "weavers": {}, "systems": []}
             (ad / "artifacts.json").write_text(json.dumps(data), encoding="utf-8")
             meta, err = load_artifacts_meta(ad)
             self.assertIsNotNone(meta)
@@ -399,16 +399,16 @@ class TestCreateBackup(unittest.TestCase):
 
 class TestGenerateDefaultRegistry(unittest.TestCase):
     def test_generate_default_registry(self):
-        result = generate_default_registry("MyProject", "../FDD")
+        result = generate_default_registry("MyProject", "../Spider")
         self.assertEqual(result["version"], "1.0")
         self.assertEqual(result["project_root"], "..")
-        self.assertIn("fdd-sdlc", result["rules"])
+        self.assertIn("spider-sdlc", result["weavers"])
         self.assertEqual(len(result["systems"]), 1)
         self.assertEqual(result["systems"][0]["name"], "MyProject")
 
     def test_join_path_edge_cases(self):
         """Cover line 321: _join_path with empty base."""
-        from fdd.utils.artifacts_meta import _join_path
+        from spider.utils.artifacts_meta import _join_path
 
         self.assertEqual(_join_path("", "tail"), "tail")
         self.assertEqual(_join_path(".", "tail"), "tail")

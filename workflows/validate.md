@@ -1,10 +1,10 @@
 ---
-fdd: true
+spider: true
 type: workflow
-name: fdd-validate
-description: Validate FDD artifacts against templates or code against design requirements with traceability verification
+name: spider-validate
+description: Validate Spider artifacts against templates or code against design requirements with traceability verification
 version: 1.0
-purpose: Universal workflow for validating any FDD artifact or code
+purpose: Universal workflow for validating any Spider artifact or code
 ---
 
 # Validate
@@ -12,6 +12,8 @@ purpose: Universal workflow for validating any FDD artifact or code
 **Type**: Validation
 
 ALWAYS open and follow `../requirements/execution-protocol.md` FIRST
+
+ALWAYS open and follow `../requirements/code-checklist.md` WHEN user requests validation of code, codebase changes, or implementation behavior (Code mode)
 
 OPEN and follow `../requirements/prompt-engineering.md` WHEN user requests validation of:
 - System prompts, agent prompts, or LLM prompts
@@ -79,11 +81,11 @@ Universal validation workflow. Handles multiple modes:
 
 | Command | Mode | Description |
 |---------|------|-------------|
-| `/fdd-validate` | Full | Deterministic gate → Semantic review |
-| `/fdd-validate semantic` | Semantic only | Skip deterministic, checklist-based validation only |
-| `/fdd-validate --artifact <path>` | Full | Validate specific artifact |
-| `/fdd-validate semantic --artifact <path>` | Semantic only | Semantic validation for specific artifact |
-| `/fdd-validate prompt <path>` | Prompt review | Prompt engineering methodology (9-layer analysis) |
+| `/spider-validate` | Full | Deterministic gate → Semantic review |
+| `/spider-validate semantic` | Semantic only | Skip deterministic, checklist-based validation only |
+| `/spider-validate --artifact <path>` | Full | Validate specific artifact |
+| `/spider-validate semantic --artifact <path>` | Semantic only | Semantic validation for specific artifact |
+| `/spider-validate prompt <path>` | Prompt review | Prompt engineering methodology (9-layer analysis) |
 
 **Prompt review triggers** (auto-detected from context):
 - "validate this system prompt"
@@ -95,12 +97,24 @@ After executing `execution-protocol.md`, you have: TARGET_TYPE, RULES, KIND, PAT
 
 ---
 
+## Context Budget & Overflow Prevention (CRITICAL)
+
+This workflow can require loading multiple long checklists/specs. To prevent context overflow and "missed checks" failures:
+
+- **Budget first**: Before loading large docs, estimate size (e.g., `wc -l`) and state a rough budget for what you will load this turn.
+- **Load only what you will use**: Prefer rules.md "Validation" and the specific checklist categories needed; avoid loading entire registries/specs unless required.
+- **Chunk reads**: Use `read_file` in ranges and summarize each chunk; do not keep raw full-text of multiple 500+ line documents in context at once.
+- **Summarize-and-drop**: After extracting the needed criteria, keep a short checklist summary and drop the raw text from working memory.
+- **Fail-safe**: If you cannot complete the required checks within context, output `PARTIAL` with a checkpoint (what was checked, what remains, where to resume). Do not claim overall PASS.
+
+---
+
 ## Mode Detection
 
 **Check invocation**:
 
-- If user invoked `/fdd-validate semantic` or `/fdd validate semantic` → Set `SEMANTIC_ONLY=true`
-- If user invoked `/fdd-validate prompt` or context indicates prompt/instruction review → Set `PROMPT_REVIEW=true`
+- If user invoked `/spider-validate semantic` or `/spider validate semantic` → Set `SEMANTIC_ONLY=true`
+- If user invoked `/spider-validate prompt` or context indicates prompt/instruction review → Set `PROMPT_REVIEW=true`
 - Otherwise → Set `SEMANTIC_ONLY=false`, `PROMPT_REVIEW=false` (full validation)
 
 **When `SEMANTIC_ONLY=true`**:
@@ -111,7 +125,7 @@ After executing `execution-protocol.md`, you have: TARGET_TYPE, RULES, KIND, PAT
 **When `PROMPT_REVIEW=true`**:
 - Open and follow `../requirements/prompt-engineering.md`
 - Execute 9-layer prompt engineering analysis
-- Skip standard FDD validation (not applicable to prompts)
+- Skip standard Spider validation (not applicable to prompts)
 - Output using prompt-engineering.md format
 - Traceability checks: N/A (prompts don't have code markers)
 - Registry checks: N/A (prompts may not be in artifacts.json)
@@ -121,7 +135,7 @@ After executing `execution-protocol.md`, you have: TARGET_TYPE, RULES, KIND, PAT
 ## Phase 0: Ensure Dependencies
 
 **After execution-protocol.md, you have**:
-- `RULES_PATH` — path to loaded rules.md
+- `WEAVERS_PATH` — path to loaded rules.md
 - `TEMPLATE` — template content (from rules Dependencies)
 - `CHECKLIST` — checklist content (from rules Dependencies)
 - `EXAMPLE` — example content (from rules Dependencies)
@@ -147,6 +161,7 @@ After executing `execution-protocol.md`, you have: TARGET_TYPE, RULES, KIND, PAT
 
 | Dependency | Purpose | If missing |
 |------------|---------|------------|
+| **Code checklist** | Baseline validation criteria for all code work | Load `../requirements/code-checklist.md` |
 | **Design artifact** | Requirements that should be implemented | Ask user to specify source |
 
 **MUST NOT proceed** to Phase 1 until all dependencies are available.
@@ -173,7 +188,7 @@ What is the validation scope?
 
 **If FULL traceability**:
 - Identify codebase directories from artifacts.json
-- Plan to check for `@fdd-*` markers
+- Plan to check for `@spider-*` markers
 - Plan to verify all IDs have code implementations
 
 ### Registry Consistency
@@ -183,7 +198,9 @@ What is the validation scope?
 - Verify kind matches registered kind
 - Verify system assignment is correct
 
-**If not registered**: Warn user, suggest registration.
+**If not registered**:
+- Warn user and suggest registering it in `{adapter_dir}/artifacts.json` (preferred for STRICT validation)
+- If user wants to proceed anyway, require `/spider-validate semantic` and clearly label output as semantic-only (no deterministic gate)
 
 ### Cross-Reference Scope
 
@@ -209,7 +226,7 @@ What is the validation scope?
 **If fails**:
 ```
 ✗ Target not found: {PATH}
-→ Run /fdd-generate {TARGET_TYPE} {KIND} to create
+→ Run /spider-generate {TARGET_TYPE} {KIND} to create
 ```
 STOP validation.
 
@@ -219,18 +236,27 @@ STOP validation.
 
 **If `SEMANTIC_ONLY=true`**: Skip this phase, go to Phase 3.
 
-**MUST run first** (when not semantic-only) - this is the authoritative PASS/FAIL.
+**MUST run first when available** (when not semantic-only).
+
+Deterministic gate is considered **available** when:
+- Target is registered in `{adapter_dir}/artifacts.json` under a system with a `weaver` configured (registry schema uses `weavers`/`weaver`), AND
+- The weaver `format` supports Spider CLI validation (typically `format: "Spider"`), AND
+- You are validating an artifact or code path supported by the CLI.
+
+If deterministic gate is **not available** (e.g., unregistered path, RELAXED mode without configured weaver/rules, or non-Spider weaver format):
+- Do **not** attempt to force `spider.py validate --artifact {PATH}`
+- Require semantic-only validation (`/spider-validate semantic`) or ask the user to register/provide rules first
 
 ### For Artifacts
 
 ```bash
-python3 {FDD}/skills/fdd/scripts/fdd.py validate --artifact {PATH}
+python3 {Spider}/skills/spider/scripts/spider.py validate --artifact {PATH}
 ```
 
 ### For Code
 
 ```bash
-python3 {FDD}/skills/fdd/scripts/fdd.py validate --code {PATH} --design {design-path}
+python3 {Spider}/skills/spider/scripts/spider.py validate --code {PATH} --design {design-path}
 ```
 
 ### Evaluate
@@ -264,9 +290,9 @@ Blocking issues:
 
 | Invocation | Rules Mode | Semantic Review | Evidence Required |
 |------------|------------|-----------------|-------------------|
-| `/fdd-validate semantic` | Any | MANDATORY | Yes — per `agent-compliance.md` |
-| `/fdd-validate` | **STRICT** | MANDATORY | Yes — per `agent-compliance.md` |
-| `/fdd-validate` | **RELAXED** | Optional | No — best effort |
+| `/spider-validate semantic` | Any | MANDATORY | Yes — per `agent-compliance.md` |
+| `/spider-validate` | **STRICT** | MANDATORY | Yes — per `agent-compliance.md` |
+| `/spider-validate` | **RELAXED** | Optional | No — best effort |
 
 **If STRICT mode**:
 - Semantic review is MANDATORY, not optional
@@ -279,7 +305,7 @@ Blocking issues:
 1. Document which categories were checked with evidence
 2. Mark incomplete categories with reason (e.g., "INCOMPLETE: context limit reached")
 3. Output as `PARTIAL` — do NOT report overall PASS/FAIL
-4. Include checkpoint guidance: "Resume with `/fdd-validate semantic` after addressing blockers"
+4. Include checkpoint guidance: "Resume with `/spider-validate semantic` after addressing blockers"
 
 **If RELAXED mode**:
 - Semantic review is optional
@@ -297,7 +323,7 @@ Execute validation phases from rules.md:
 - **Phase 2: Semantic Validation** — checklist-based, from rules.md
 
 Use checklist from Phase 0 dependencies.
-Load adapter specs: `{adapter-dir}/AGENTS.md` → follow MANDATORY specs
+Load adapter specs: `{adapter_dir}/AGENTS.md` → follow MANDATORY specs
 
 Check (from rules.md + standard):
 - [ ] Content quality per checklist
@@ -321,7 +347,7 @@ Check (from rules.md + standard):
 - [ ] All design requirements implemented
 - [ ] Code follows conventions
 - [ ] Tests cover requirements
-- [ ] FDD markers present where required (to_code="true" IDs)
+- [ ] Spider markers present where required (to_code="true" IDs)
 - [ ] Implemented items marked `[x]` in FEATURE design
 
 ### Completeness Checks
@@ -345,13 +371,13 @@ Check (from rules.md + standard):
 - [ ] All flow IDs have code markers
 - [ ] All algorithm IDs have code markers
 - [ ] All test IDs have test implementations
-- [ ] Code markers use correct format (`@fdd-{kind}:{id}:ph-{N}`)
+- [ ] Code markers use correct format defined by the loaded codebase rules (prefer `@spider-*` markers; `@spd-*` scope markers may also be used if specified by the rules)
 - [ ] No stale markers (ID no longer in design)
 
 ### ID Uniqueness & Format
 
 - [ ] No duplicate IDs within artifact
-- [ ] No duplicate IDs across system (use `fdd list-ids`)
+- [ ] No duplicate IDs across system (use `spider list-ids`)
 - [ ] All IDs follow naming convention
 - [ ] All IDs have correct prefix for project
 
@@ -420,7 +446,7 @@ Status: PASS
 ═══════════════════════════════════════════════
 ```
 
-### Semantic-Only Validation Output (`/fdd-validate semantic`)
+### Semantic-Only Validation Output (`/spider-validate semantic`)
 
 ```
 ═══════════════════════════════════════════════
@@ -495,9 +521,9 @@ Fix the issues above, then:
 
 ### Deterministic Gate Is Authoritative
 
-- `fdd validate` PASS/FAIL is the official result
-- Semantic review only adds recommendations
-- Never override deterministic result
+- If deterministic gate ran: its PASS/FAIL is the official result
+- Semantic review adds recommendations (and, in STRICT mode, evidence-backed verification)
+- If deterministic gate cannot run (unregistered/RELAXED/custom rules): do not label overall PASS; use semantic-only output and disclaim reduced rigor
 
 ### No Files Created
 
@@ -545,7 +571,7 @@ Fix the issues above, then:
 
 | Question | Answer | Evidence |
 |----------|--------|----------|
-| Read execution-protocol? | YES | Loaded fdd-sdlc rules, checklist.md |
+| Read execution-protocol? | YES | Loaded spider-sdlc rules, checklist.md |
 | Read artifact via Read tool? | YES | Read DESIGN.md: 742 lines |
 | Checked every category? | YES | 12 categories in table above |
 | Evidence for each status? | YES | Quotes included per category |
@@ -559,7 +585,7 @@ Fix the issues above, then:
 
 In RELAXED mode, self-test is advisory only. Include disclaimer:
 ```
-⚠️ Self-test skipped (RELAXED mode — no FDD rules)
+⚠️ Self-test skipped (RELAXED mode — no Spider rules)
 ```
 
 ---

@@ -1,9 +1,9 @@
 ---
-fdd: true
+spider: true
 type: requirement
 name: Agent Compliance Protocol
 version: 1.0
-purpose: Enforcement protocol for AI agents executing FDD workflows (STRICT mode only)
+purpose: Enforcement protocol for AI agents executing Spider workflows (STRICT mode only)
 ---
 
 # Agent Compliance Protocol
@@ -29,7 +29,7 @@ purpose: Enforcement protocol for AI agents executing FDD workflows (STRICT mode
 
 ## Overview
 
-This protocol defines mandatory behaviors for AI agents executing FDD workflows when FDD rules are enabled. It prevents common agent failure modes through structural enforcement.
+This protocol defines mandatory behaviors for AI agents executing Spider workflows when Spider rules are enabled. It prevents common agent failure modes through structural enforcement.
 
 **Key principle**: Trust but verify — agents must provide observable evidence (quotes, line numbers, tool call confirmations) for every claim. "I checked it" without evidence = violation.
 
@@ -71,7 +71,7 @@ This protocol defines mandatory behaviors for AI agents executing FDD workflows 
 **Evidence**:
 ```
 ✓ Read architecture/DESIGN.md: 742 lines
-✓ Read rules/sdlc/artifacts/DESIGN/checklist.md: 839 lines
+✓ Read weavers/sdlc/artifacts/DESIGN/checklist.md: 839 lines
 ```
 
 ### 2. Checklist Execution
@@ -154,7 +154,7 @@ Agent MUST structure validation output as follows:
 ## Validation Report
 
 ### 1. Protocol Compliance
-- Rules Mode: STRICT (fdd-sdlc)
+- Rules Mode: STRICT (spider-sdlc)
 - Artifact Read: {path} ({N} lines)
 - Checklist Loaded: {path} ({N} lines)
 
@@ -271,11 +271,11 @@ If agent or user detects anti-pattern violation:
 
 ## Relaxed Mode Behavior
 
-When Rules Mode = RELAXED (no FDD rules):
+When Rules Mode = RELAXED (no Spider rules):
 
 - This compliance protocol does NOT apply
 - Agent uses best judgment
-- Output includes disclaimer: `⚠️ Validated without FDD rules (reduced rigor)`
+- Output includes disclaimer: `⚠️ Validated without Spider rules (reduced rigor)`
 - User accepts reduced confidence in results
 
 ---

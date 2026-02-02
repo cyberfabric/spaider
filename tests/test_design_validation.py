@@ -23,8 +23,8 @@ except ModuleNotFoundError:  # pragma: no cover
     pytest = _PytestShim()  # type: ignore
 
 
-# Add fdd.py to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "fdd" / "scripts"))
+# Add spider.py to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "spider" / "scripts"))
 
 
 def test_features_manifest_references_design():

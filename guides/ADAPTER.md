@@ -1,8 +1,8 @@
-# FDD Adapter Creation Guide
+# Spider Adapter Creation Guide
 
 ## Core Principle
 
-Adapters extend FDD with project-specific context. Start files with `Extends: ../FDD/path/to/file.md`.
+Adapters extend Spider with project-specific context. Start files with `Extends: ../Spider/path/to/file.md`.
 
 **You can override/add anything EXCEPT the immutable rules below.**
 
@@ -24,9 +24,9 @@ Must reference parent level, never contradict.
 - **FEATURE DESIGN**: Actor flows, algorithms, requirements
 - **CODE**: Implementation following feature design
 
-### 2. Mandatory FDD Rules
+### 2. Mandatory Spider Rules
 - Actor Flows (Section B) are PRIMARY - always start from what actors do
-- Use FDL for flows/algorithms/states - NEVER code in DESIGN.md
+- Use Spider DSL (SDSL) for flows/algorithms/states - NEVER code in DESIGN.md
 - Never redefine types - reference domain model from Overall Design
 - Validate before proceeding (Overall ≥90/100, Feature 100/100)
 - Feature size limits: ≤3000 lines (recommended), ≤4000 (hard limit)
@@ -56,7 +56,7 @@ architecture/
 - Section C: Algorithms
 - Section D: States (optional)
 - Section E: Technical Details
-- Section F: Requirements (formalized scope + Testing Scenarios in FDL)
+- Section F: Requirements (formalized scope + Testing Scenarios in Spider DSL (SDSL))
 
 ### 5. Validation Scores
 - Overall Design: ≥90/100
@@ -68,7 +68,7 @@ architecture/
 
 Everything else is adapter-specific. Define as needed:
 
-**Note**: All FDD operation workflows now support **CREATE and UPDATE modes**. Adapters can be created once and updated anytime as project evolves. Use `adapter.md` workflow to create or update your adapter.
+**Note**: All Spider operation workflows now support **CREATE and UPDATE modes**. Adapters can be created once and updated anytime as project evolves. Use `adapter.md` workflow to create or update your adapter.
 
 ### Tech Stack (`specs/tech-stack.md`)
 - Primary language and version
@@ -147,7 +147,7 @@ Everything else is adapter-specific. Define as needed:
 ### Project Structure (`specs/project-structure.md`)
 - Directory organization
 - File naming conventions
-- FDD artifact locations
+- Spider artifact locations
 - Source code structure
 - Test and documentation locations
 
@@ -166,9 +166,9 @@ Everything else is adapter-specific. Define as needed:
 **Validation output format**: MUST be chat output only, NO report files
 
 ### Behavior Description Language (Optional Override)
-- **Default**: FDL (Flow Description Language) for flows/algorithms/states
+- **Default**: Spider DSL (SDSL) for flows/algorithms/states
 - **Can override**: Create custom behavior specification in `{adapter-directory}/`
-- **Example**: Replace `../FDL.md` with `../FDD-Adapter/CustomBDL.md`
+- **Example**: Replace `../requirements/SDSL.md` with `../.spider-adapter/CustomBDL.md`
 - **Requirements**: Define control flow keywords, syntax rules, validation criteria
 - **Note**: Must update workflows 05 and 06 to reference custom spec
 
@@ -184,7 +184,7 @@ Everything else is adapter-specific. Define as needed:
 
 ```bash
 {project-root}/
-├── FDD-Adapter/                 # Your project-specific extensions (at root level)
+├── .spider-adapter/                 # Your project-specific extensions (at root level)
 │   ├── AGENTS.md                # Navigation rules (WHEN executing workflows: ...)
 │   └── specs/                   # Detailed specifications
 │       ├── tech-stack.md        # Languages, frameworks, databases, versions
@@ -198,17 +198,17 @@ Everything else is adapter-specific. Define as needed:
 │       ├── security.md          # Security requirements and practices
 │       ├── performance.md       # Performance requirements and optimization
 │       └── project-structure.md # Directory structure and organization
-└── FDD/                         # Core FDD (as git submodule or direct copy)
+└── Spider/                         # Core Spider (as git submodule or direct copy)
 ```
 
-**Important**: FDD-Adapter MUST be at project root level, discoverable from `{project-root}/FDD-Adapter/`
+**Important**: .spider-adapter MUST be at project root level, discoverable from `{project-root}/.spider-adapter/`
 
 **Alternative locations** (if needed):
-- `{project-root}/guidelines/FDD-Adapter/`
-- `{project-root}/spec/FDD-Adapter/`
-- `{project-root}/docs/FDD-Adapter/`
+- `{project-root}/guidelines/.spider-adapter/`
+- `{project-root}/spec/.spider-adapter/`
+- `{project-root}/docs/.spider-adapter/`
 
-**Avoid**: Deep nesting like `{project-root}/guidelines/subfolder/FDD-Adapter/` ❌
+**Avoid**: Deep nesting like `{project-root}/guidelines/subfolder/.spider-adapter/` ❌
 
 **Common spec files** (create as needed):
 - **Core**: tech-stack, domain-model, api-contracts, conventions, testing, build-deploy
@@ -221,9 +221,9 @@ Everything else is adapter-specific. Define as needed:
 ## Template: AGENTS.md
 
 ```markdown
-# FDD Adapter: {Project Name}
+# Spider Adapter: {Project Name}
 
-**Extends**: `../../FDD/AGENTS.md`
+**Extends**: `../../Spider/AGENTS.md`
 
 **Version**: 1.0  
 **Status**: COMPLETE  

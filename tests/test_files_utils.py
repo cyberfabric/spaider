@@ -9,13 +9,12 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "fdd" / "scripts"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "spider" / "scripts"))
 
-from fdd.utils.files import load_text, find_adapter_directory
-from fdd.utils.files import (
+from spider.utils.files import load_text, find_adapter_directory
+from spider.utils.files import (
     cfg_get_str,
-    detect_requirements,
-    fdd_root_from_project_config,
+    spider_root_from_project_config,
     iter_registry_entries,
     load_adapter_config,
     load_artifacts_registry,
@@ -102,11 +101,11 @@ class TestFindAdapterDirectory(unittest.TestCase):
             # Create .git to mark as project root
             (root / ".git").mkdir()
             
-            adapter_dir = root / ".adapter"
+            adapter_dir = root / ".spider-adapter"
             adapter_dir.mkdir()
             
             # Create AGENTS.md with adapter markers
-            (adapter_dir / "AGENTS.md").write_text("# FDD Adapter: Test\n\nThis is an FDD adapter for testing.")
+            (adapter_dir / "AGENTS.md").write_text("# Spider Adapter: Test\n\nThis is an Spider adapter for testing.")
             
             # Create specs directory (required for validation)
             specs_dir = adapter_dir / "specs"
@@ -123,10 +122,10 @@ class TestFindAdapterDirectory(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / ".git").mkdir()
-            (root / ".fdd-config.json").write_text('{"fddAdapterPath": "cfg-adapter"}', encoding="utf-8")
+            (root / ".spider-config.json").write_text('{"spiderAdapterPath": "cfg-adapter"}', encoding="utf-8")
             adapter_dir = root / "cfg-adapter"
             adapter_dir.mkdir()
-            (adapter_dir / "AGENTS.md").write_text("# FDD Adapter: X\n", encoding="utf-8")
+            (adapter_dir / "AGENTS.md").write_text("# Spider Adapter: X\n", encoding="utf-8")
 
             result = find_adapter_directory(root)
             self.assertIsNotNone(result)
@@ -137,12 +136,12 @@ class TestFindAdapterDirectory(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / ".git").mkdir()
-            (root / ".fdd-config.json").write_text('{"fddAdapterPath": "missing"}', encoding="utf-8")
+            (root / ".spider-config.json").write_text('{"spiderAdapterPath": "missing"}', encoding="utf-8")
 
             # A valid adapter exists elsewhere, but must NOT be used.
-            adapter_dir = root / ".adapter"
+            adapter_dir = root / ".spider-adapter"
             adapter_dir.mkdir()
-            (adapter_dir / "AGENTS.md").write_text("# FDD Adapter: X\n", encoding="utf-8")
+            (adapter_dir / "AGENTS.md").write_text("# Spider Adapter: X\n", encoding="utf-8")
             (adapter_dir / "specs").mkdir()
 
             result = find_adapter_directory(root)
@@ -167,52 +166,25 @@ class TestFindAdapterDirectory(unittest.TestCase):
             finally:
                 Path.iterdir = orig_iterdir  # type: ignore
 
-    def test_find_adapter_extends_matches_fdd_root(self):
-        """Cover is_adapter_directory Extends path validation with provided fdd_root."""
+    def test_find_adapter_extends_matches_spider_root(self):
+        """Cover is_adapter_directory Extends path validation with provided spider_root."""
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / ".git").mkdir()
 
-            fdd_root = root / "FDD"
-            fdd_root.mkdir()
-            (fdd_root / "AGENTS.md").write_text("# Core\n", encoding="utf-8")
-            (fdd_root / "requirements").mkdir()
-            (fdd_root / "workflows").mkdir()
+            spider_root = root / "Spider"
+            spider_root.mkdir()
+            (spider_root / "AGENTS.md").write_text("# Core\n", encoding="utf-8")
+            (spider_root / "requirements").mkdir()
+            (spider_root / "workflows").mkdir()
 
-            adapter_dir = root / "FDD-Adapter"
+            adapter_dir = root / ".spider-adapter"
             adapter_dir.mkdir()
-            (adapter_dir / "AGENTS.md").write_text("# FDD Adapter: P\n\n**Extends**: `../FDD/AGENTS.md`\n", encoding="utf-8")
+            (adapter_dir / "AGENTS.md").write_text("# Spider Adapter: P\n\n**Extends**: `../Spider/AGENTS.md`\n", encoding="utf-8")
 
-            found = find_adapter_directory(root, fdd_root=fdd_root)
+            found = find_adapter_directory(root, spider_root=spider_root)
             self.assertIsNotNone(found)
             self.assertEqual(found.resolve(), adapter_dir.resolve())
-
-
-class TestDetectRequirements(unittest.TestCase):
-    def test_detect_requirements_known_artifacts(self):
-        kind, rp = detect_requirements(Path("/tmp/architecture/PRD.md"))
-        self.assertEqual(kind, "prd")
-        self.assertTrue(str(rp).endswith("requirements/prd-content.md"))
-
-        kind, rp = detect_requirements(Path("/tmp/architecture/ADR"))
-        self.assertEqual(kind, "adr")
-        self.assertTrue(str(rp).endswith("requirements/adr-content.md"))
-
-        kind, rp = detect_requirements(Path("/tmp/architecture/FEATURES.md"))
-        self.assertEqual(kind, "features-manifest")
-        self.assertTrue(str(rp).endswith("requirements/features-manifest-content.md"))
-
-        kind, rp = detect_requirements(Path("/tmp/architecture/DESIGN.md"))
-        self.assertEqual(kind, "overall-design")
-        self.assertTrue(str(rp).endswith("requirements/overall-design-content.md"))
-
-        kind, rp = detect_requirements(Path("/tmp/architecture/features/feature-x/DESIGN.md"))
-        self.assertEqual(kind, "feature-design")
-        self.assertTrue(str(rp).endswith("requirements/feature-design-content.md"))
-
-    def test_detect_requirements_unsupported_raises(self):
-        with self.assertRaises(ValueError):
-            detect_requirements(Path("/tmp/README.txt"))
 
 
 class TestConfigHelpers(unittest.TestCase):
@@ -225,26 +197,26 @@ class TestConfigHelpers(unittest.TestCase):
     def test_load_project_config_invalid_json_returns_none(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            (root / ".fdd-config.json").write_text("{not json", encoding="utf-8")
+            (root / ".spider-config.json").write_text("{not json", encoding="utf-8")
             self.assertIsNone(load_project_config(root))
 
     def test_load_project_config_non_dict_returns_none(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            (root / ".fdd-config.json").write_text("[]", encoding="utf-8")
+            (root / ".spider-config.json").write_text("[]", encoding="utf-8")
             self.assertIsNone(load_project_config(root))
 
-    def test_fdd_root_from_project_config_success(self):
+    def test_spider_root_from_project_config_success(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / ".git").mkdir()
-            fdd_core = root / "FDD"
-            fdd_core.mkdir()
-            (fdd_core / "AGENTS.md").write_text("# Core\n", encoding="utf-8")
-            (fdd_core / "requirements").mkdir()
-            (fdd_core / "workflows").mkdir()
+            spider_core = root / "Spider"
+            spider_core.mkdir()
+            (spider_core / "AGENTS.md").write_text("# Core\n", encoding="utf-8")
+            (spider_core / "requirements").mkdir()
+            (spider_core / "workflows").mkdir()
 
-            (root / ".fdd-config.json").write_text('{"fddCorePath": "FDD"}', encoding="utf-8")
+            (root / ".spider-config.json").write_text('{"spiderCorePath": "Spider"}', encoding="utf-8")
 
             # Run from a subdir to exercise find_project_root via cwd.
             sub = root / "src"
@@ -253,39 +225,39 @@ class TestConfigHelpers(unittest.TestCase):
             try:
                 import os
                 os.chdir(str(sub))
-                found = fdd_root_from_project_config()
+                found = spider_root_from_project_config()
                 self.assertIsNotNone(found)
-                self.assertEqual(found.resolve(), fdd_core.resolve())
+                self.assertEqual(found.resolve(), spider_core.resolve())
             finally:
                 import os
                 os.chdir(str(cwd))
 
-    def test_fdd_root_from_project_config_missing_key_returns_none(self):
+    def test_spider_root_from_project_config_missing_key_returns_none(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / ".git").mkdir()
-            (root / ".fdd-config.json").write_text("{}", encoding="utf-8")
+            (root / ".spider-config.json").write_text("{}", encoding="utf-8")
             sub = root / "src"
             sub.mkdir()
             cwd = Path.cwd()
             try:
                 import os
                 os.chdir(str(sub))
-                self.assertIsNone(fdd_root_from_project_config())
+                self.assertIsNone(spider_root_from_project_config())
             finally:
                 import os
                 os.chdir(str(cwd))
 
-    def test_fdd_root_from_project_config_invalid_core_dir_returns_none(self):
+    def test_spider_root_from_project_config_invalid_core_dir_returns_none(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / ".git").mkdir()
-            (root / ".fdd-config.json").write_text('{"fddCorePath": "MissingFDD"}', encoding="utf-8")
+            (root / ".spider-config.json").write_text('{"spiderCorePath": "MissingSpider"}', encoding="utf-8")
             cwd = Path.cwd()
             try:
                 import os
                 os.chdir(str(root))
-                self.assertIsNone(fdd_root_from_project_config())
+                self.assertIsNone(spider_root_from_project_config())
             finally:
                 import os
                 os.chdir(str(cwd))
@@ -296,7 +268,7 @@ class TestLoadAdapterConfig(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             ad = Path(tmpdir) / "adapter"
             ad.mkdir()
-            (ad / "AGENTS.md").write_text("# FDD Adapter: MyProj\n", encoding="utf-8")
+            (ad / "AGENTS.md").write_text("# Spider Adapter: MyProj\n", encoding="utf-8")
             (ad / "specs").mkdir()
             (ad / "specs" / "a.md").write_text("# A\n", encoding="utf-8")
             (ad / "specs" / "b.md").write_text("# B\n", encoding="utf-8")
@@ -309,7 +281,7 @@ class TestLoadAdapterConfig(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             ad = Path(tmpdir) / "adapter"
             ad.mkdir()
-            (ad / "AGENTS.md").write_text("# FDD Adapter: MyProj\n", encoding="utf-8")
+            (ad / "AGENTS.md").write_text("# Spider Adapter: MyProj\n", encoding="utf-8")
             cfg = load_adapter_config(ad)
             self.assertEqual(cfg.get("project_name"), "MyProj")
             self.assertEqual(cfg.get("specs"), [])
@@ -334,7 +306,7 @@ class TestLoadAdapterConfig(unittest.TestCase):
             # Create .git to mark as project root
             (root / ".git").mkdir()
             
-            adapter_dir = root / ".fdd-adapter"
+            adapter_dir = root / ".spider-adapter"
             adapter_dir.mkdir()
             
             # Create AGENTS.md (required)
@@ -391,7 +363,7 @@ class TestLoadAdapterConfigExceptionHandling(unittest.TestCase):
             ad = Path(tmpdir) / "adapter"
             ad.mkdir()
             agents = ad / "AGENTS.md"
-            agents.write_text("# FDD Adapter: Test\n", encoding="utf-8")
+            agents.write_text("# Spider Adapter: Test\n", encoding="utf-8")
 
             orig = Path.read_text
 
@@ -421,7 +393,7 @@ class TestIsAdapterDirectoryContentBased(unittest.TestCase):
             adapter_dir.mkdir()
             # AGENTS.md mentions "spec" but no specs/ directory
             (adapter_dir / "AGENTS.md").write_text(
-                "# FDD Adapter: Test\n\nSee our spec documents.\n",
+                "# Spider Adapter: Test\n\nSee our spec documents.\n",
                 encoding="utf-8",
             )
 
@@ -438,29 +410,29 @@ class TestIsAdapterDirectoryContentBased(unittest.TestCase):
             # Create deeply nested adapter (beyond default max_depth of 5)
             deep = root / "a" / "b" / "c" / "d" / "e" / "f" / "g" / "adapter"
             deep.mkdir(parents=True)
-            (deep / "AGENTS.md").write_text("# FDD Adapter: Deep\n", encoding="utf-8")
+            (deep / "AGENTS.md").write_text("# Spider Adapter: Deep\n", encoding="utf-8")
             (deep / "specs").mkdir()
 
             result = find_adapter_directory(root)
             self.assertIsNone(result)
 
 
-class TestFddRootFromProjectConfigEdgeCases(unittest.TestCase):
-    def test_fdd_root_no_project_root_returns_none(self):
-        """Cover fdd_root_from_project_config returning None when no project root."""
+class TestSpiderRootFromProjectConfigEdgeCases(unittest.TestCase):
+    def test_spider_root_no_project_root_returns_none(self):
+        """Cover spider_root_from_project_config returning None when no project root."""
         with TemporaryDirectory() as tmpdir:
-            # No .git or .fdd-config.json - no project root
+            # No .git or .spider-config.json - no project root
             cwd = Path.cwd()
             try:
                 import os
                 os.chdir(tmpdir)
-                result = fdd_root_from_project_config()
+                result = spider_root_from_project_config()
                 self.assertIsNone(result)
             finally:
                 os.chdir(str(cwd))
 
-    def test_fdd_root_no_config_returns_none(self):
-        """Cover fdd_root_from_project_config returning None when config missing."""
+    def test_spider_root_no_config_returns_none(self):
+        """Cover spider_root_from_project_config returning None when config missing."""
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / ".git").mkdir()  # Project root exists but no config
@@ -468,7 +440,7 @@ class TestFddRootFromProjectConfigEdgeCases(unittest.TestCase):
             try:
                 import os
                 os.chdir(str(root))
-                result = fdd_root_from_project_config()
+                result = spider_root_from_project_config()
                 self.assertIsNone(result)
             finally:
                 os.chdir(str(cwd))

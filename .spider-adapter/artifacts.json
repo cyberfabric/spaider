@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "project_root": "..",
+  "weavers": {
+    "spider-sdlc": {
+      "format": "Spider",
+      "path": "weavers/sdlc"
+    }
+  },
+  "systems": [
+    {
+      "name": "Spider",
+      "weaver": "spider-sdlc",
+      "artifacts": [
+        { "name": "Product Requirements", "path": "architecture/PRD.md", "kind": "PRD", "traceability": "FULL" },
+        { "name": "Overall Design", "path": "architecture/DESIGN.md", "kind": "DESIGN", "traceability": "FULL" },
+        { "name": "ADR-0001: Initial Architecture", "path": "architecture/ADR/general/0001-spd-spider-adr-initial-architecture-v1.md", "kind": "ADR", "traceability": "FULL" },
+        { "name": "ADR-0002: Adaptive Spider", "path": "architecture/ADR/general/0002-spd-spider-adr-adaptive-spider-flow-driven-development-v1.md", "kind": "ADR", "traceability": "FULL" },
+        { "name": "ADR-0003: Template-Centric", "path": "architecture/ADR/general/0003-spd-spider-adr-template-centric-architecture-v1.md", "kind": "ADR", "traceability": "FULL" },
+        { "name": "Features Manifest", "path": "architecture/features/FEATURES.md", "kind": "FEATURES", "traceability": "FULL" }
+      ],
+      "codebase": [
+        {
+          "name": "Spider CLI",
+          "path": "skills/spider/scripts/spider",
+          "extensions": [".py"],
+          "singleLineComments": ["#"],
+          "multiLineComments": [{"start": "\"\"\"", "end": "\"\"\""}]
+        },
+        {
+          "name": "Tests",
+          "path": "tests",
+          "extensions": [".py"],
+          "singleLineComments": ["#"],
+          "multiLineComments": [{"start": "\"\"\"", "end": "\"\"\""}]
+        }
+      ],
+      "children": []
+    }
+  ]
+}

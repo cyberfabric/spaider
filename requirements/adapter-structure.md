@@ -1,12 +1,12 @@
 ---
-fdd: true
+spider: true
 type: requirement
 name: Adapter Structure
 version: 1.1
-purpose: Define validation rules for FDD adapter files
+purpose: Define validation rules for Spider adapter files
 ---
 
-# FDD Adapter Structure Requirements
+# Spider Adapter Structure Requirements
 
 ---
 
@@ -45,7 +45,7 @@ purpose: Define validation rules for FDD adapter files
 - **Template defines**: Structure for generation (HOW to create)
 - **Workflow defines**: Process (STEP by STEP)
 
-**FDD Adapter** — Dynamic project-specific configuration that evolves with the project
+**Spider Adapter** — Dynamic project-specific configuration that evolves with the project
 
 **Philosophy**: 
 - Adapter specs derive from design decisions, not predefined templates
@@ -80,57 +80,57 @@ purpose: Define validation rules for FDD adapter files
 
 ## Required Files
 
-### .fdd-config.json
+### .spider-config.json
 
-**Location**: `{project-root}/.fdd-config.json`
+**Location**: `{project-root}/.spider-config.json`
 
 **Mandatory fields**:
 ```json
 {
-  "fddAdapterPath": "FDD-Adapter"
+  "spiderAdapterPath": ".spider-adapter"
 }
 ```
 
 **Validation**:
 - [ ] File exists at project root
 - [ ] Valid JSON format
-- [ ] `fddAdapterPath` field present
+- [ ] `spiderAdapterPath` field present
 - [ ] Path points to existing directory with AGENTS.md
 
 ### AGENTS.md
 
 **Location**: `{adapter-directory}/AGENTS.md`
 
-**WHEN rule format** (mandatory for adapter navigation rules):
+**WHEN clause format** (mandatory for adapter navigation rules):
 ```
-ALWAYS open and follow `{spec-file}` WHEN FDD follows rules `{rule-id}` for artifact kinds: {KIND1}, {KIND2} [OR codebase]
+ALWAYS open and follow `{spec-file}` WHEN Spider follows weaver `{weaver-id}` for artifact kinds: {KIND1}, {KIND2} [OR codebase]
 ```
 
-**Valid artifact kinds**: As defined in `artifacts.json` rules section. Standard FDD kinds: PRD, DESIGN, FEATURES, ADR, FEATURE. Custom kinds may be added per project.
+**Valid artifact kinds**: Standard Spider kinds: PRD, DESIGN, FEATURES, ADR, FEATURE. Custom kinds may be added per project.
 
 **Codebase**: Use `OR codebase` when spec applies to code validation/generation
 
 **Valid examples** ✅:
 ```markdown
-ALWAYS open and follow `specs/tech-stack.md` WHEN FDD follows rules `fdd-sdlc` for artifact kinds: DESIGN, ADR OR codebase
+ALWAYS open and follow `specs/tech-stack.md` WHEN Spider follows weaver `spider-sdlc` for artifact kinds: DESIGN, ADR OR codebase
 
-ALWAYS open and follow `specs/conventions.md` WHEN FDD follows rules `fdd-sdlc` for codebase
+ALWAYS open and follow `specs/conventions.md` WHEN Spider follows weaver `spider-sdlc` for codebase
 
-ALWAYS open and follow `specs/domain-model.md` WHEN FDD follows rules `fdd-sdlc` for artifact kinds: DESIGN, FEATURES, FEATURE
+ALWAYS open and follow `specs/domain-model.md` WHEN Spider follows weaver `spider-sdlc` for artifact kinds: DESIGN, FEATURES, FEATURE
 ```
 
 **Invalid examples** ❌:
 ```markdown
-# Missing rule ID
+# Missing weaver ID
 ALWAYS open and follow `specs/tech-stack.md` WHEN generating DESIGN
-→ FIX: Add `FDD follows rules `fdd-sdlc` for artifact kinds:`
+→ FIX: Add `Spider follows weaver `spider-sdlc` for artifact kinds:`
 
 # Using legacy workflow format
-ALWAYS open and follow `specs/tech-stack.md` WHEN executing workflows: fdd-generate, fdd-validate
+ALWAYS open and follow `specs/tech-stack.md` WHEN executing workflows: spider-generate, spider-validate
 → FIX: Use rules-based format with artifact kinds
 
 # Missing artifact kinds
-ALWAYS open and follow `specs/tech-stack.md` WHEN FDD follows rules `fdd-sdlc`
+ALWAYS open and follow `specs/tech-stack.md` WHEN Spider follows weaver `spider-sdlc`
 → FIX: Specify `for artifact kinds: X, Y` or `for codebase`
 ```
 
@@ -144,9 +144,9 @@ ALWAYS open and follow `specs/tech-stack.md` WHEN FDD follows rules `fdd-sdlc`
 
 **Required content**:
 ```markdown
-# FDD Adapter: {Project Name}
+# Spider Adapter: {Project Name}
 
-**Extends**: `{path}/FDD/AGENTS.md`
+**Extends**: `{path}/Spider/AGENTS.md`
 ```
 
 ### Phase 2: Evolved Adapter
@@ -158,7 +158,7 @@ ALWAYS open and follow `specs/tech-stack.md` WHEN FDD follows rules `fdd-sdlc`
 - Last Updated
 - Tech Stack
 
-**Required spec files** (created by `/fdd-adapter` during Discovery phase or manually):
+**Required spec files** (created by `/spider-adapter` during Discovery phase or manually):
 
 | Spec File | Contains | Created When |
 |-----------|----------|--------------|
@@ -169,8 +169,255 @@ ALWAYS open and follow `specs/tech-stack.md` WHEN FDD follows rules `fdd-sdlc`
 | `conventions.md` | Naming, style, file organization | Codebase exists OR DESIGN defines conventions |
 | `build-deploy.md` | Build commands, CI/CD | Project has build/deploy config |
 | `testing.md` | Test frameworks, structure | Project has test infrastructure |
+| `project-structure.md` | Directory layout, package organization | Codebase exists |
+| `security.md` | Auth mechanisms, data classification | Security-sensitive project |
+| `data-governance.md` | Data lifecycle, retention, privacy | Data-intensive project |
+| `performance.md` | SLAs, caching, optimization | Performance-critical project |
+| `reliability.md` | Error handling, recovery, fallbacks | Production system |
+| `compliance.md` | Regulations, standards, audit | Regulated industry |
 
-**Creation trigger**: Run `/fdd-adapter --rescan` to auto-detect and propose spec files based on project state.
+**Creation trigger**: Run `/spider-adapter --rescan` to auto-detect and propose spec files based on project state.
+
+---
+
+## Spec Discovery Guide
+
+This section defines **what to look for** and **where to find it** when discovering project-specific knowledge for adapter specs. The domains are derived from the expertise areas in Spider checklists (PRD, DESIGN, FEATURES, ADR, FEATURE, and codebase).
+
+### Discovery Methodology
+
+Follow the layers from `reverse-engineering.md`:
+1. **Surface Reconnaissance** → tech-stack.md, project-structure.md
+2. **Entry Point Analysis** → conventions.md, patterns.md
+3. **Structural Decomposition** → domain-model.md, api-contracts.md
+4. **Data Flow Tracing** → data-governance.md, security.md
+5. **Dependency Mapping** → tech-stack.md (dependencies section)
+6. **State Management Analysis** → patterns.md (state patterns)
+7. **Integration Boundary Scan** → api-contracts.md, reliability.md
+8. **Pattern Recognition** → patterns.md, conventions.md
+9. **Knowledge Synthesis** → All specs consolidated
+
+### Spec Discovery Matrix
+
+| Spec File | Domain | What to Discover | Where to Look |
+|-----------|--------|------------------|---------------|
+| `tech-stack.md` | ARCH/OPS | Languages, frameworks, databases, infrastructure | `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `docker-compose.yml`, `.env.example`, config files |
+| `project-structure.md` | ARCH | Directory layout, module organization, entry points | Root directories, `src/`, `lib/`, `pkg/`, README structure |
+| `domain-model.md` | BIZ/DATA | Core concepts, entities, relationships, invariants | Types/models directories, schemas, DESIGN.md, glossary |
+| `api-contracts.md` | INT | Endpoints, protocols, request/response formats | `openapi.yml`, `swagger.json`, `*.proto`, API docs |
+| `patterns.md` | ARCH | Architecture patterns, design patterns, state management | DESIGN.md, ADRs, code structure, existing abstractions |
+| `conventions.md` | MAINT | Code style, naming, file organization, commit style | `.eslintrc`, `.prettierrc`, `ruff.toml`, `.editorconfig`, CONTRIBUTING.md |
+| `build-deploy.md` | OPS | Build commands, CI/CD, deployment procedures | `Makefile`, `package.json` scripts, `.github/workflows/`, `Dockerfile` |
+| `testing.md` | TEST | Test framework, patterns, coverage rules, fixtures | Test directories, `pytest.ini`, `jest.config.js`, test files |
+| `security.md` | SEC | Auth mechanisms, data classification, encryption | Auth configs, security middleware, encryption configs, security ADRs |
+| `data-governance.md` | DATA/COMPL | Data lifecycle, retention, privacy, classification | Privacy policies, data models, migration scripts, compliance docs |
+| `performance.md` | PERF | SLAs, caching strategy, optimization patterns | Caching configs, performance tests, monitoring dashboards, ADRs |
+| `reliability.md` | REL | Error handling, recovery, fallbacks, circuit breakers | Error handling patterns, retry configs, health checks, runbooks |
+| `compliance.md` | COMPL | Regulations, standards, audit requirements | Compliance docs, audit logs, regulatory references |
+
+### Discovery Signals by Domain
+
+#### ARCH (Architecture)
+**Signals to look for**:
+- Directory structure patterns (layered, hexagonal, clean architecture)
+- Module boundaries and dependencies
+- Component organization
+- Service boundaries (monolith vs microservices)
+
+**Discovery locations**:
+- Root directory structure
+- Package/module definitions
+- Import patterns
+- DESIGN.md, ADRs
+
+#### PERF (Performance)
+**Signals to look for**:
+- Caching configurations (Redis, Memcached, in-memory)
+- Database indexes and query optimization
+- Response time SLAs
+- Batch processing patterns
+
+**Discovery locations**:
+- Cache configurations
+- Database migration files
+- Performance tests
+- Monitoring dashboards
+- Load testing configs
+
+#### SEC (Security)
+**Signals to look for**:
+- Authentication mechanism (JWT, OAuth, sessions)
+- Authorization model (RBAC, ABAC)
+- Data encryption (at-rest, in-transit)
+- Audit logging
+
+**Discovery locations**:
+- Auth middleware/services
+- Security configurations
+- Environment variables (patterns, not values)
+- Security-related ADRs
+- Input validation schemas
+
+#### REL (Reliability)
+**Signals to look for**:
+- Error handling patterns
+- Retry logic and circuit breakers
+- Health check endpoints
+- Graceful degradation strategies
+
+**Discovery locations**:
+- Error handlers
+- HTTP client configurations
+- Health check routes
+- Observability setup
+- Runbooks/playbooks
+
+#### DATA (Data)
+**Signals to look for**:
+- Data models and schemas
+- Migration patterns
+- Data validation rules
+- Storage technologies
+
+**Discovery locations**:
+- Schema definitions
+- Migration files
+- Model/entity directories
+- Database configurations
+- ORM configurations
+
+#### INT (Integration)
+**Signals to look for**:
+- API contracts (REST, GraphQL, gRPC)
+- Message formats (JSON, Protobuf)
+- External service integrations
+- Webhook patterns
+
+**Discovery locations**:
+- OpenAPI/Swagger specs
+- Proto files
+- API route definitions
+- Integration tests
+- Client SDK configurations
+
+#### OPS (Operations)
+**Signals to look for**:
+- Build and deployment processes
+- CI/CD pipelines
+- Monitoring and alerting
+- Logging patterns
+
+**Discovery locations**:
+- Makefile, package.json scripts
+- CI/CD configs (.github/workflows/, .gitlab-ci.yml)
+- Docker/Kubernetes configs
+- Monitoring configurations
+
+#### MAINT (Maintainability)
+**Signals to look for**:
+- Code style and linting rules
+- Naming conventions
+- File organization patterns
+- Documentation standards
+
+**Discovery locations**:
+- Linter configurations
+- Editor configurations
+- CONTRIBUTING.md
+- Code comments and docstrings
+- Existing documentation
+
+#### TEST (Testing)
+**Signals to look for**:
+- Test framework and runners
+- Test organization patterns
+- Coverage requirements
+- Test fixtures and factories
+
+**Discovery locations**:
+- Test directories
+- Test configuration files
+- CI test stages
+- Coverage reports
+- Test utilities
+
+#### COMPL (Compliance)
+**Signals to look for**:
+- Regulatory requirements (GDPR, HIPAA, SOC2)
+- Industry standards
+- Audit trail requirements
+- Data retention policies
+
+**Discovery locations**:
+- Compliance documentation
+- Privacy policies
+- Audit log implementations
+- Data retention configs
+- Legal/compliance ADRs
+
+#### UX (Usability)
+**Signals to look for**:
+- UI component libraries
+- Accessibility patterns
+- Internationalization setup
+- User feedback mechanisms
+
+**Discovery locations**:
+- UI component directories
+- Accessibility tests
+- i18n configurations
+- User-facing error messages
+
+#### BIZ (Business)
+**Signals to look for**:
+- Domain terminology
+- Business rules and logic
+- Entity relationships
+- Invariants and constraints
+
+**Discovery locations**:
+- Domain model documentation
+- Business logic implementations
+- Validation rules
+- Glossaries
+- PRD/requirements docs
+
+### Conditional Spec Creation
+
+Not all specs apply to all projects. Use these rules:
+
+| Spec | Create When | Skip When |
+|------|-------------|-----------|
+| `security.md` | Handles user data, auth, or sensitive info | Internal tool, no user data |
+| `compliance.md` | Regulated industry, PII, financial data | Internal dev tool |
+| `performance.md` | User-facing with SLAs, high-load system | Internal tool, no SLAs |
+| `reliability.md` | Production system, uptime requirements | Prototype, dev tool |
+| `data-governance.md` | Stores user data, has retention needs | Stateless service |
+| `api-contracts.md` | Exposes or consumes APIs | Self-contained tool |
+
+### Spec File Quality Criteria
+
+Each spec file MUST include:
+1. **Source reference**: Where the information came from
+2. **Last Updated date**: When the spec was last verified
+3. **Scope**: What systems/components this spec applies to
+4. **Actionable guidance**: Not just description, but what to do
+
+**Minimal spec structure**:
+```markdown
+# {Spec Name}
+
+## Overview
+{Brief description of what this spec covers}
+
+## {Content Sections}
+{Domain-specific content}
+
+---
+
+**Source**: {Where this was discovered/derived from}
+**Last Updated**: {Date}
+```
 
 ---
 
@@ -203,7 +450,7 @@ Each spec file MUST include:
 **If template file not found** (`../templates/adapter-AGENTS.template.md`):
 ```
 ⚠️ Template not found: {path}
-→ Verify FDD installation is complete
+→ Verify Spider installation is complete
 → Check path is relative to requirements/ directory
 ```
 **Action**: STOP — cannot generate without template.
@@ -227,14 +474,14 @@ Each spec file MUST include:
 **If Phase 1 validation fails**:
 1. Check AGENTS.md exists at adapter path
 2. Verify `**Extends**:` declaration present
-3. Verify Extends path points to valid FDD AGENTS.md
+3. Verify Extends path points to valid Spider AGENTS.md
 
 **If Phase 2 validation fails**:
 1. Identify which spec files are missing
-2. Run `/fdd-adapter --rescan` to regenerate
+2. Run `/spider-adapter --rescan` to regenerate
 3. For each failed check, see [Consolidated Validation Checklist](#consolidated-validation-checklist)
 
-**Recovery**: After fixing issues, re-run `/fdd-validate` to confirm resolution.
+**Recovery**: After fixing issues, re-run `/spider-validate` to confirm resolution.
 
 ---
 
@@ -246,11 +493,11 @@ Each spec file MUST include:
 
 | # | Check | Required | How to Verify |
 |---|-------|----------|---------------|
-| 1.1 | `.fdd-config.json` exists at project root | YES | File exists check |
-| 1.2 | `.fdd-config.json` is valid JSON | YES | JSON parse succeeds |
-| 1.3 | `fddAdapterPath` field present | YES | Field exists in JSON |
+| 1.1 | `.spider-config.json` exists at project root | YES | File exists check |
+| 1.2 | `.spider-config.json` is valid JSON | YES | JSON parse succeeds |
+| 1.3 | `spiderAdapterPath` field present | YES | Field exists in JSON |
 | 1.4 | Adapter path points to directory with AGENTS.md | YES | Path + `/AGENTS.md` exists |
-| 1.5 | AGENTS.md has project name heading | YES | `# FDD Adapter: {name}` present |
+| 1.5 | AGENTS.md has project name heading | YES | `# Spider Adapter: {name}` present |
 | 1.6 | AGENTS.md has `**Extends**:` declaration | YES | Pattern match |
 | 1.7 | Extends path resolves to valid file | YES | File exists at path |
 | 1.8 | No PRD content in adapter | YES | No problem/solution/scope sections |
@@ -265,7 +512,7 @@ Each spec file MUST include:
 | 2.2 | Version field present | YES | `**Version**:` in AGENTS.md |
 | 2.3 | Last Updated field present | YES | `**Last Updated**:` in AGENTS.md |
 | 2.4 | Tech Stack summary present | YES | Tech Stack section exists |
-| 2.5 | WHEN rules use rules-based format | YES | Pattern: `WHEN FDD follows rules` |
+| 2.5 | WHEN rules use rules-based format | YES | Pattern: `WHEN Spider follows rules` |
 | 2.6 | No orphaned WHEN rules | YES | All referenced specs exist |
 | 2.7 | tech-stack.md complete | CONDITIONAL | If tech stack defined in DESIGN |
 | 2.8 | domain-model.md complete | CONDITIONAL | If domain model in DESIGN |
@@ -292,11 +539,11 @@ Each spec file MUST include:
 
 | Issue | Symptom | Fix |
 |-------|---------|-----|
-| Missing Extends | Validation fails at 1.6 | Add `**Extends**: \`{path}/FDD/AGENTS.md\`` |
-| Legacy WHEN format | Validation fails at 2.5 | Convert to `WHEN FDD follows rules \`{id}\` for artifact kinds:` |
+| Missing Extends | Validation fails at 1.6 | Add `**Extends**: \`{path}/Spider/AGENTS.md\`` |
+| Legacy WHEN format | Validation fails at 2.5 | Convert to `WHEN Spider follows rules \`{id}\` for artifact kinds:` |
 | Orphaned WHEN rules | Validation fails at 2.6 | Create missing spec OR remove rule |
 | Inconsistent tech refs | Spec conflicts with DESIGN | Update spec to match DESIGN source of truth |
-| Missing spec files | Validation fails at 2.7-2.13 | Run `/fdd-adapter --rescan` to generate |
+| Missing spec files | Validation fails at 2.7-2.13 | Run `/spider-adapter --rescan` to generate |
 | PRD content in adapter | Validation fails at 1.8 | Move to PRD artifact |
 
 ---
@@ -308,5 +555,5 @@ Each spec file MUST include:
 **Example**: `../templates/examples/adapter/AGENTS-EXAMPLE.md`
 
 **Related**:
-- `../AGENTS.md` — Core FDD requirements
+- `../AGENTS.md` — Core Spider requirements
 - `workflow-requirements.md` — Workflow structure requirements

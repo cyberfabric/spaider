@@ -1,8 +1,8 @@
-# FDD Workflows (IDE & Agent Agnostic)
+# Spider Workflows (IDE & Agent Agnostic)
 
 ## Overview
 
-These workflows are **IDE and agent-agnostic** - they describe the FDD methodology steps in a universal format that can be:
+These workflows are **IDE and agent-agnostic** - they describe the Spider methodology steps in a universal format that can be:
 
 1. **Executed manually** by developers following step-by-step instructions
 2. **Converted to IDE-specific workflows** (Windsurf, VS Code, Cursor, etc.)
@@ -17,11 +17,11 @@ These workflows are **IDE and agent-agnostic** - they describe the FDD methodolo
 
 **Quick Start**: See `AGENTS.md` for workflow selection decision tree and common sequences
 
-**Entrypoint**: `fdd.md` - Enable FDD mode (`/fdd`)
+**Entrypoint**: `spider.md` - Enable Spider mode (`/spider`)
 
 ### Phase 0: Adapter Setup
 
-**adapter.md** - Create or update FDD adapter
+**adapter.md** - Create or update Spider adapter
 **adapter-from-sources.md** - Extract adapter from existing codebase (legacy integration)
 **adapter-agents.md** - Generate AI agent config from adapter
 **adapter-validate.md** - Validate adapter structure
@@ -201,7 +201,7 @@ mkdir -p src/{domain,infrastructure,api}
 2. Follow the Steps section.
 3. When the workflow references an artifact path, resolve it via `{adapter-dir}/artifacts.json`.
 4. If `{adapter-dir}/artifacts.json` is missing, run the adapter bootstrap/migration workflow first.
-5. Validate using the deterministic gate (`fdd validate`).
+5. Validate using the deterministic gate (`spider validate`).
 ```
 
 ### AI Agent
@@ -219,14 +219,14 @@ for step in workflow.steps:
 
 ### When to Update
 
-- Core FDD methodology changes
+- Core Spider methodology changes
 - New validation requirements
 - Best practices evolve
 - Community feedback
 
 ### Version Control
 
-Workflows are versioned with FDD:
+Workflows are versioned with Spider:
 - Current: v2.1
 - Track changes in git
 - Document breaking changes
@@ -237,4 +237,4 @@ Workflows are versioned with FDD:
 
 - **Overview**: `../README.md` - Architecture, core concepts, quick start
 - **AI Agent Instructions**: `../AGENTS.md` - Complete methodology for AI agents
-- **FDL Specification**: `../FDL.md` - FDD Description Language (flows, algorithms, states)
+- **Spider DSL (SDSL) Specification**: `../requirements/SDSL.md` - Plain-English behavior specs (flows, algorithms, states)

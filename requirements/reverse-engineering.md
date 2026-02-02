@@ -1,5 +1,5 @@
 ---
-fdd: true
+spider: true
 type: requirement
 name: Reverse Engineering Methodology
 version: 1.0
@@ -620,7 +620,7 @@ Produce visual or textual component map:
 
 - [ ] List all identified entities with one-line descriptions
 - [ ] Entity relationship summary
-- [ ] Key business rules/invariants
+- [ ] Key business weavers/invariants
 
 ### 9.2.2 Key Operations
 
@@ -718,11 +718,11 @@ This methodology applies to:
 - **Brownfield projects**: Understand before modification
 - **Acquisitions/transfers**: Due diligence and onboarding
 - **Legacy modernization**: Identify boundaries for strangler fig pattern
-- **Documentation generation**: Input for FDD artifact creation
+- **Documentation generation**: Input for Spider artifact creation
 
-## Integration with FDD
+## Integration with Spider
 
-This methodology feeds into FDD workflows:
+This methodology feeds into Spider workflows:
 
 - **Adapter workflow**: Uses Layer 1-3 for project scan
 - **Generate workflow**: Uses all layers for artifact creation

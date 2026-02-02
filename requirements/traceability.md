@@ -1,9 +1,9 @@
 ---
-fdd: true
+spider: true
 type: requirement
 name: Code Traceability Specification
 version: 1.1
-purpose: Define FDD code traceability markers and validation rules
+purpose: Define Spider code traceability markers and validation rules
 ---
 
 # Code Traceability Specification
@@ -28,26 +28,26 @@ purpose: Define FDD code traceability markers and validation rules
 
 **Scope marker** (single-line):
 ```
-@fdd-{kind}:{full-id}:ph-{N}
+@spd-{kind}:{full-id}:ph-{N}
 ```
 
 **Block markers** (paired):
 ```
-@fdd-begin:{full-id}:ph-{N}:inst-{local}
+@spider-begin:{full-id}:ph-{N}:inst-{local}
 ...code...
-@fdd-end:{full-id}:ph-{N}:inst-{local}
+@spider-end:{full-id}:ph-{N}:inst-{local}
 ```
 
 **Validate markers**:
 ```bash
-python3 {FDD}/skills/fdd/scripts/fdd.py validate-code
+python3 {Spider}/skills/spider/scripts/spider.py validate-code
 ```
 
 ---
 
 ## Overview
 
-FDD code traceability links design artifacts (FEATURE designs) to implementation code through markers. This enables:
+Spider code traceability links design artifacts (FEATURE designs) to implementation code through markers. This enables:
 - Automated verification that design is implemented
 - Bidirectional navigation between design and code
 - Progress tracking via checkbox synchronization
@@ -85,61 +85,61 @@ artifacts.json → systems[].artifacts[] → { path, kind, traceability }
 Mark scope entry points (functions, classes, modules):
 
 ```
-@fdd-{kind}:{full-id}:ph-{N}
+@spd-{kind}:{full-id}:ph-{N}
 ```
 
 **Kinds:**
-- `@fdd-flow:{id}:ph-{N}` — Actor flow implementation
-- `@fdd-algo:{id}:ph-{N}` — Algorithm implementation
-- `@fdd-state:{id}:ph-{N}` — State machine implementation
-- `@fdd-req:{id}:ph-{N}` — Requirement implementation
-- `@fdd-test:{id}:ph-{N}` — Test scenario implementation
+- `@spider-flow:{id}:ph-{N}` — Actor flow implementation
+- `@spider-algo:{id}:ph-{N}` — Algorithm implementation
+- `@spider-state:{id}:ph-{N}` — State machine implementation
+- `@spider-req:{id}:ph-{N}` — Requirement implementation
+- `@spider-test:{id}:ph-{N}` — Test scenario implementation
 
 **Format:**
-- `{id}` — Full FDD ID from design (e.g., `fdd-myapp-feature-auth-flow-login`)
+- `{id}` — Full Spider ID from design (e.g., `spd-myapp-feature-auth-flow-login`)
 - `ph-{N}` — Phase number (mandatory postfix)
 
 **Example:**
 ```python
-# @fdd-flow:fdd-myapp-feature-auth-flow-login:ph-1
+# @spider-flow:spd-myapp-feature-auth-flow-login:ph-1
 def login_flow(request):
     ...
 ```
 
 ### Block Markers (Paired)
 
-Wrap specific FDL instruction implementations:
+Wrap specific SDSL instruction implementations:
 
 ```
-@fdd-begin:{full-id}:ph-{N}:inst-{local}
+@spider-begin:{full-id}:ph-{N}:inst-{local}
 ...code...
-@fdd-end:{full-id}:ph-{N}:inst-{local}
+@spider-end:{full-id}:ph-{N}:inst-{local}
 ```
 
 **Format:**
-- `{full-id}` — Full FDD ID from design
+- `{full-id}` — Full Spider ID from design
 - `ph-{N}` — Phase number
-- `inst-{local}` — Instruction ID from FDL step (e.g., `inst-validate-creds`)
+- `inst-{local}` — Instruction ID from SDSL step (e.g., `inst-validate-creds`)
 
 **Example:**
 ```python
-# @fdd-begin:fdd-myapp-feature-auth-flow-login:ph-1:inst-validate-creds
+# @spider-begin:spd-myapp-feature-auth-flow-login:ph-1:inst-validate-creds
 def validate_credentials(username, password):
     if not username or not password:
         raise ValidationError("Missing credentials")
     return authenticate(username, password)
-# @fdd-end:fdd-myapp-feature-auth-flow-login:ph-1:inst-validate-creds
+# @spider-end:spd-myapp-feature-auth-flow-login:ph-1:inst-validate-creds
 ```
 
 ### Language-Specific Comment Syntax
 
 | Language | Single-line | Block start | Block end |
 |----------|-------------|-------------|-----------|
-| Python | `# @fdd-...` | `# @fdd-begin:...` | `# @fdd-end:...` |
-| TypeScript/JS | `// @fdd-...` | `// @fdd-begin:...` | `// @fdd-end:...` |
-| Go | `// @fdd-...` | `// @fdd-begin:...` | `// @fdd-end:...` |
-| Rust | `// @fdd-...` | `// @fdd-begin:...` | `// @fdd-end:...` |
-| Java | `// @fdd-...` | `// @fdd-begin:...` | `// @fdd-end:...` |
+| Python | `# @spider-...` | `# @spider-begin:...` | `# @spider-end:...` |
+| TypeScript/JS | `// @spider-...` | `// @spider-begin:...` | `// @spider-end:...` |
+| Go | `// @spider-...` | `// @spider-begin:...` | `// @spider-end:...` |
+| Rust | `// @spider-...` | `// @spider-begin:...` | `// @spider-end:...` |
+| Java | `// @spider-...` | `// @spider-begin:...` | `// @spider-end:...` |
 
 ---
 
@@ -148,13 +148,13 @@ def validate_credentials(username, password):
 ### Placement Rules
 
 1. **Scope markers**: Place at beginning of function/method/class implementing the scope
-2. **Block markers**: Wrap exact code implementing FDL instruction
+2. **Block markers**: Wrap exact code implementing SDSL instruction
 3. **Multiple markers**: Allowed when code implements multiple IDs
 4. **External dependencies**: Place on integration point (import/registration)
 
 ### Pairing Rules
 
-1. **Every `@fdd-begin` MUST have matching `@fdd-end`**
+1. **Every `@spider-begin` MUST have matching `@spider-end`**
 2. **Same ID required**: Begin and end must have identical ID string
 3. **No empty blocks**: Code MUST exist between begin/end
 4. **No nesting**: Block markers cannot be nested
@@ -173,8 +173,8 @@ When design ID is versioned:
 
 | Design ID | Code Marker |
 |-----------|-------------|
-| `fdd-app-feature-auth-flow-login` | `@fdd-flow:fdd-app-feature-auth-flow-login:ph-1` |
-| `fdd-app-feature-auth-flow-login-v2` | `@fdd-flow:fdd-app-feature-auth-flow-login-v2:ph-1` |
+| `spd-app-feature-auth-flow-login` | `@spider-flow:spd-app-feature-auth-flow-login:ph-1` |
+| `spd-app-feature-auth-flow-login-v2` | `@spider-flow:spd-app-feature-auth-flow-login-v2:ph-1` |
 
 **Migration:**
 - When design version increments, update all code markers
@@ -187,7 +187,7 @@ When design ID is versioned:
 ### Checkbox Rules
 
 When code marker exists and is valid:
-- Mark corresponding FDL instruction `- [ ]` → `- [x]` in design
+- Mark corresponding SDSL instruction `- [ ]` → `- [x]` in design
 
 When all instructions in scope are `[x]`:
 - Mark parent scope `- [ ]` → `- [x]` in design
@@ -205,7 +205,7 @@ When all instructions in scope are `[x]`:
 
 ### When to Add Markers
 
-**During code implementation** (via `/fdd-generate CODE`):
+**During code implementation** (via `/spider-generate CODE`):
 
 1. **Before writing code**: Identify which design IDs you're implementing
 2. **At function/class level**: Add scope marker as first line in docstring/comment
@@ -219,7 +219,7 @@ When all instructions in scope are `[x]`:
 2. Locate existing code OR create new file
 3. Add scope marker at entry point (function/class)
 4. Add block markers around instruction implementations
-5. Run validation: python3 {FDD}/skills/fdd/scripts/fdd.py validate-code
+5. Run validation: python3 {Spider}/skills/spider/scripts/spider.py validate-code
 6. Update design checkbox if implementation complete
 ```
 
@@ -238,11 +238,11 @@ When one function implements multiple design IDs:
 
 ```python
 # WRONG - missing :ph-N
-# @fdd-flow:fdd-app-feature-auth-flow-login
+# @spider-flow:spd-app-feature-auth-flow-login
 def login(): ...
 
 # CORRECT
-# @fdd-flow:fdd-app-feature-auth-flow-login:ph-1
+# @spider-flow:spd-app-feature-auth-flow-login:ph-1
 def login(): ...
 ```
 
@@ -250,25 +250,25 @@ def login(): ...
 
 ```python
 # WRONG - IDs don't match
-# @fdd-begin:fdd-app-feature-auth-flow-login:ph-1:inst-validate
+# @spider-begin:spd-app-feature-auth-flow-login:ph-1:inst-validate
 def validate(): ...
-# @fdd-end:fdd-app-feature-auth-flow-login:ph-1:inst-check  # DIFFERENT!
+# @spider-end:spd-app-feature-auth-flow-login:ph-1:inst-check  # DIFFERENT!
 
 # CORRECT - IDs match exactly
-# @fdd-begin:fdd-app-feature-auth-flow-login:ph-1:inst-validate
+# @spider-begin:spd-app-feature-auth-flow-login:ph-1:inst-validate
 def validate(): ...
-# @fdd-end:fdd-app-feature-auth-flow-login:ph-1:inst-validate
+# @spider-end:spd-app-feature-auth-flow-login:ph-1:inst-validate
 ```
 
 ### ❌ Invented IDs
 
 ```python
 # WRONG - ID doesn't exist in design
-# @fdd-flow:fdd-app-feature-auth-flow-my-custom-thing:ph-1
+# @spider-flow:spd-app-feature-auth-flow-my-custom-thing:ph-1
 def my_function(): ...
 
 # CORRECT - Use only IDs from design document
-# @fdd-flow:fdd-app-feature-auth-flow-login:ph-1
+# @spider-flow:spd-app-feature-auth-flow-login:ph-1
 def login_flow(): ...
 ```
 
@@ -276,33 +276,33 @@ def login_flow(): ...
 
 ```python
 # WRONG - no code between markers
-# @fdd-begin:fdd-app-feature-auth-flow-login:ph-1:inst-validate
-# @fdd-end:fdd-app-feature-auth-flow-login:ph-1:inst-validate
+# @spider-begin:spd-app-feature-auth-flow-login:ph-1:inst-validate
+# @spider-end:spd-app-feature-auth-flow-login:ph-1:inst-validate
 
 # CORRECT - actual implementation between markers
-# @fdd-begin:fdd-app-feature-auth-flow-login:ph-1:inst-validate
+# @spider-begin:spd-app-feature-auth-flow-login:ph-1:inst-validate
 def validate_credentials(user, password):
     return authenticate(user, password)
-# @fdd-end:fdd-app-feature-auth-flow-login:ph-1:inst-validate
+# @spider-end:spd-app-feature-auth-flow-login:ph-1:inst-validate
 ```
 
 ### ❌ Nested Blocks
 
 ```python
 # WRONG - nested block markers
-# @fdd-begin:...:inst-outer
-# @fdd-begin:...:inst-inner  # NESTING NOT ALLOWED
+# @spider-begin:...:inst-outer
+# @spider-begin:...:inst-inner  # NESTING NOT ALLOWED
 # ...
-# @fdd-end:...:inst-inner
-# @fdd-end:...:inst-outer
+# @spider-end:...:inst-inner
+# @spider-end:...:inst-outer
 
 # CORRECT - sequential blocks
-# @fdd-begin:...:inst-outer
+# @spider-begin:...:inst-outer
 # ...
-# @fdd-end:...:inst-outer
-# @fdd-begin:...:inst-inner
+# @spider-end:...:inst-outer
+# @spider-begin:...:inst-inner
 # ...
-# @fdd-end:...:inst-inner
+# @spider-end:...:inst-inner
 ```
 
 ---
@@ -345,7 +345,7 @@ Sync errors:
   - {id} (marker exists but not [x] in design)
 
 Pairing errors:
-  - {marker} (missing @fdd-end)
+  - {marker} (missing @spider-end)
 
 Status: PASS | FAIL
 ```
@@ -356,6 +356,6 @@ Status: PASS | FAIL
 
 - **Design artifacts**: `artifacts.json → systems[].artifacts[]`
 - **Traceability setting**: `artifact.traceability = "FULL" | "DOCS-ONLY"`
-- **FDL instruction format**: `requirements/FDL.md`
+- **SDSL instruction format**: `requirements/SDSL.md`
 - **Template markers**: `requirements/template.md`
-- **Validation command**: `python3 {FDD}/skills/fdd/scripts/fdd.py validate-code`
+- **Validation command**: `python3 {Spider}/skills/spider/scripts/spider.py validate-code`

@@ -1,4 +1,4 @@
-# @fdd-algo:fdd-fdd-feature-init-structure-change-infrastructure:ph-1
+# @spider-algo:spd-spider-feature-init-structure-change-infrastructure:ph-1
 .PHONY: test test-verbose test-quick test-coverage validate validate-examples validate-feature validate-code validate-code-feature self-check vulture vulture-ci install install-pipx clean help check-pytest check-pytest-cov check-pipx check-vulture
 
 PYTHON ?= python3
@@ -10,7 +10,7 @@ VULTURE_MIN_CONF ?= 0
 
 # Default target
 help:
-	@echo "FDD Makefile"
+	@echo "Spider Makefile"
 	@echo ""
 	@echo "Available targets:"
 	@echo "  make test                          - Run all tests"
@@ -77,12 +77,12 @@ check-vulture: check-pipx
 	}
 
 test: check-pytest
-	@echo "Running FDD tests with pipx..."
+	@echo "Running Spider tests with pipx..."
 	$(PYTEST_PIPX) tests/ -v --tb=short
 
 # Run tests with verbose output
 test-verbose: check-pytest
-	@echo "Running FDD tests (verbose) with pipx..."
+	@echo "Running Spider tests (verbose) with pipx..."
 	$(PYTEST_PIPX) tests/ -vv
 
 # Run quick tests only
@@ -94,25 +94,25 @@ test-quick: check-pytest
 test-coverage: check-pytest-cov
 	@echo "Running tests with coverage..."
 	$(PYTEST_PIPX_COV) tests/ \
-		--cov=skills/fdd/scripts/fdd \
+		--cov=skills/spider/scripts/spider \
 		--cov-report=term-missing \
 		--cov-report=json:coverage.json \
 		--cov-report=html \
 		-v --tb=short
-	@$(PYTHON) scripts/check_coverage.py coverage.json --root skills/fdd/scripts/fdd --min 90
+	@$(PYTHON) scripts/check_coverage.py coverage.json --root skills/spider/scripts/spider --min 90
 	@echo ""
 	@echo "Coverage report generated:"
 	@echo "  HTML: htmlcov/index.html"
 	@echo "  Open with: open htmlcov/index.html"
 
 vulture: check-vulture
-	@echo "Running vulture dead-code scan (excluding tests by scanning only skills/fdd/scripts/fdd)..."
+	@echo "Running vulture dead-code scan (excluding tests by scanning only skills/spider/scripts/spider)..."
 	@echo "Tip: raise/lower VULTURE_MIN_CONF to reduce false positives (current: $(VULTURE_MIN_CONF))."
-	@$(VULTURE_PIPX) skills/fdd/scripts/fdd --min-confidence $(VULTURE_MIN_CONF) || true
+	@$(VULTURE_PIPX) skills/spider/scripts/spider --min-confidence $(VULTURE_MIN_CONF) || true
 
 vulture-ci: check-vulture
 	@echo "Running vulture dead-code scan (CI mode, fails if findings)..."
-	$(VULTURE_PIPX) skills/fdd/scripts/fdd --min-confidence $(VULTURE_MIN_CONF)
+	$(VULTURE_PIPX) skills/spider/scripts/spider --min-confidence $(VULTURE_MIN_CONF)
 
 validate-examples: check-pytest
 	@echo "Validating requirements examples..."
@@ -120,7 +120,7 @@ validate-examples: check-pytest
 
 # Validate core methodology feature
 validate:
-	$(PYTHON) -m skills.fdd.scripts.fdd.cli validate
+	$(PYTHON) -m skills.spider.scripts.spider.cli validate
 
 # Validate specific feature
 validate-feature:
@@ -130,14 +130,14 @@ validate-feature:
 		exit 1; \
 	fi
 	@echo "Validating feature: $(FEATURE)..."
-	@$(PYTHON) -m skills.fdd.scripts.fdd.cli validate \
+	@$(PYTHON) -m skills.spider.scripts.spider.cli validate \
 		--artifact architecture/features/$(FEATURE)/DESIGN.md
 
 
 # Validate SDLC examples against templates
 self-check:
 	@echo "Running self-check: validating SDLC examples against templates..."
-	$(PYTHON) -m skills.fdd.scripts.fdd.cli self-check
+	$(PYTHON) -m skills.spider.scripts.spider.cli self-check
 
 # Validate code traceability for specific feature
 validate-code-feature:
@@ -147,7 +147,7 @@ validate-code-feature:
 		exit 1; \
 	fi
 	@echo "Validating code traceability for feature: $(FEATURE)..."
-	@$(PYTHON) -m skills.fdd.scripts.fdd.cli validate --artifact architecture/features/$(FEATURE)
+	@$(PYTHON) -m skills.spider.scripts.spider.cli validate --artifact architecture/features/$(FEATURE)
 
 # Install Python dependencies
 install-pipx: check-pipx

@@ -2,11 +2,11 @@
 
 **Version**: 1.1  
 **Purpose**: Define how agents discover, select, and use Claude-compatible skills in this repository  
-**Scope**: All agent work in this repository (all FDD workflows and non-FDD tasks)
+**Scope**: All agent work in this repository (all Spider workflows and non-Spider tasks)
 
-**Path base**: All paths in this document are relative to the FDD repository root (the directory containing `AGENTS.md`).
+**Path base**: All paths in this document are relative to the Spider repository root (the directory containing `AGENTS.md`).
 
-**How to locate the path base in a monorepo**: The FDD repository root is the directory that contains `AGENTS.md` and is the parent directory of `skills/` (this file is `skills/SKILLS.md`).
+**How to locate the path base in a monorepo**: The Spider repository root is the directory that contains `AGENTS.md` and is the parent directory of `skills/` (this file is `skills/SKILLS.md`).
 
 **Skill root directory**: `skills/`
 
@@ -61,27 +61,27 @@ If a skill contains `scripts/`, it MUST:
 - Cover both PASS and FAIL cases for every supported artifact kind/branch in the script
 
 To run tests:
-- `python3 -m unittest discover -s /FDD/skills/<skill>/tests -p 'test_*.py'`
+- `python3 -m unittest discover -s /Spider/skills/<skill>/tests -p 'test_*.py'`
 
 ---
 
 ## Available Skills
 
-### fdd
+### spider
 
-**Name**: `fdd`  
-**Description**: Unified FDD tool for artifact validation, search, and traceability. Validates FDD artifacts (PRD, DESIGN, ADR, FEATURES, FEATURE) against structure requirements, provides search and ID lookup across artifacts, and enables full bidirectional traceability between documentation and code.
+**Name**: `spider`  
+**Description**: Unified Spider tool for artifact validation, search, and traceability. Validates Spider artifacts (PRD, DESIGN, ADR, FEATURES, FEATURE) against structure requirements, provides search and ID lookup across artifacts, and enables full bidirectional traceability between documentation and code.
 
 **Primary capabilities**:
 - Artifact validation with deterministic pass/fail
-- Search and query FDD artifacts
+- Search and query Spider artifacts
 - ID extraction and lookup (actors, capabilities, requirements, flows, etc.)
 - Repository-wide traceability (where-defined, where-used)
-- Code traceability scanning (@fdd-* tags)
+- Code traceability scanning (@spider-* tags)
 - Support for qualified IDs (:ph-N:inst-*)
 
-**Location**: `skills/fdd/`  
-**See**: `skills/fdd/SKILL.md` for complete documentation
+**Location**: `skills/spider/`  
+**See**: `skills/spider/SKILL.md` for complete documentation
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-fdd: true
+spider: true
 type: requirement
 name: Adapter Triggers
 version: 1.0
@@ -12,22 +12,37 @@ purpose: Define when AI agent proposes running adapter workflow
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Mandatory Adapter Initialization](#mandatory-adapter-initialization)
-- [Trigger Rules](#trigger-rules)
-  - [1. Design Decisions Made](#1-design-decisions-made)
-  - [2. Feature Patterns Detected](#2-feature-patterns-detected)
-  - [3. Implementation Code](#3-implementation-code)
-  - [4. User Decisions](#4-user-decisions)
-  - [5. Existing Project Discovery](#5-existing-project-discovery)
-- [Detection Algorithm](#detection-algorithm)
-- [User Response Handling](#user-response-handling)
-- [Error Handling](#error-handling)
-- [Agent Responsibilities](#agent-responsibilities)
-- [Examples](#examples)
-- [Integration with Workflows](#integration-with-workflows)
-- [Consolidated Validation Checklist](#consolidated-validation-checklist)
-- [References](#references)
+- [Adapter Evolution Triggers](#adapter-evolution-triggers)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisite Checklist](#prerequisite-checklist)
+  - [Overview](#overview)
+  - [Mandatory Adapter Initialization](#mandatory-adapter-initialization)
+  - [Trigger Rules](#trigger-rules)
+    - [1. Design Decisions Made](#1-design-decisions-made)
+    - [2. Feature Patterns Detected](#2-feature-patterns-detected)
+    - [3. Implementation Code](#3-implementation-code)
+    - [4. User Decisions](#4-user-decisions)
+    - [5. Existing Project Discovery](#5-existing-project-discovery)
+  - [Detection Algorithm](#detection-algorithm)
+  - [User Response Handling](#user-response-handling)
+    - [\[Review\] Response Flow](#review-response-flow)
+  - [Error Handling](#error-handling)
+    - [Adapter Workflow Fails](#adapter-workflow-fails)
+    - [Trigger Detection Fails](#trigger-detection-fails)
+    - [Conflicting Decisions](#conflicting-decisions)
+  - [Agent Responsibilities](#agent-responsibilities)
+  - [Examples](#examples)
+    - [Example 1: Design Artifact Trigger](#example-1-design-artifact-trigger)
+    - [Example 2: Implementation Trigger](#example-2-implementation-trigger)
+    - [Example 3: User Decision Trigger](#example-3-user-decision-trigger)
+  - [Integration with Workflows](#integration-with-workflows)
+  - [Consolidated Validation Checklist](#consolidated-validation-checklist)
+    - [Structure (S)](#structure-s)
+    - [Completeness (C)](#completeness-c)
+    - [Clarity (CL)](#clarity-cl)
+    - [Integration (I)](#integration-i)
+    - [Final (F)](#final-f)
+  - [References](#references)
 
 ---
 
@@ -46,13 +61,13 @@ This document defines when AI agents should propose running the adapter workflow
 
 ## Mandatory Adapter Initialization
 
-**BEFORE any FDD workflow execution**:
+**BEFORE any Spider workflow execution**:
 
 Agent MUST check that adapter exists:
 - Search for `{adapter-directory}/AGENTS.md` in common locations:
-  - `/FDD-Adapter/AGENTS.md`
-  - `spec/FDD-Adapter/AGENTS.md`
-  - `docs/FDD-Adapter/AGENTS.md`
+  - `/.spider-adapter/AGENTS.md`
+  - `spec/.spider-adapter/AGENTS.md`
+  - `docs/.spider-adapter/AGENTS.md`
 
 IF adapter NOT found:
 - STOP workflow execution
@@ -124,7 +139,7 @@ Run adapter workflow to capture these? [Yes] [No] [Review]
 **Action**:
 ```
 Feature pattern detected:
-  - LRU caching strategy in fdd-context-provider
+  - LRU caching strategy in spider-context-provider
   
 Add to adapter specs/patterns.md? [Yes] [No]
 ```
@@ -190,7 +205,7 @@ Capture in adapter specs/tech-stack.md? [Yes] [No]
 
 ### 5. Existing Project Discovery
 
-**Trigger**: First FDD workflow run in existing codebase
+**Trigger**: First Spider workflow run in existing codebase
 
 **Check**:
 - Source code exists (src/, app/, lib/)
@@ -287,7 +302,7 @@ Agent shows:
 ⚠️ Adapter update failed: {error}
 → Original workflow state preserved
 → Technical decisions NOT captured
-→ Fix: Run /fdd-adapter manually after resolving error
+→ Fix: Run /spider-adapter manually after resolving error
 ```
 **Action**: Log error, continue original workflow without adapter updates.
 
@@ -351,7 +366,7 @@ User: "Yes"
 Agent: Runs adapter workflow Mode 3 (Evolution)
 Agent: Creates specs/tech-stack.md, specs/domain-model.md, specs/api-contracts.md
 Agent: Updates AGENTS.md with rules-based WHEN clauses:
-       ALWAYS open and follow `specs/tech-stack.md` WHEN FDD follows rules `fdd-sdlc` for artifact kinds: DESIGN, ADR OR codebase
+       ALWAYS open and follow `specs/tech-stack.md` WHEN Spider follows rules `spider-sdlc` for artifact kinds: DESIGN, ADR OR codebase
 Agent: Returns to generate workflow completion
 ```
 
@@ -449,7 +464,7 @@ Execute: Monitor triggers during workflow
 |---|-------|----------|
 | I.1 | References execution-protocol.md correctly | YES |
 | I.2 | References adapter-structure.md correctly | YES |
-| I.3 | Consistent with FDD principles | YES |
+| I.3 | Consistent with Spider principles | YES |
 | I.4 | Used by/References sections complete | YES |
 | I.5 | Integration examples provided | YES |
 
@@ -465,7 +480,7 @@ Execute: Monitor triggers during workflow
 ## References
 
 **Used by**:
-- All FDD workflows (via execution-protocol.md)
+- All Spider workflows (via execution-protocol.md)
 - AI agent execution logic
 
 **References**:

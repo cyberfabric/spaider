@@ -1,12 +1,12 @@
 ---
-fdd: true
+spider: true
 type: requirement
-name: FDD Rules Format Specification
+name: Spider Rules Format Specification
 version: 1.0
 purpose: Define rules.md format and workflow interaction protocol
 ---
 
-# FDD Rules Format Specification
+# Spider Rules Format Specification
 
 ---
 
@@ -14,8 +14,8 @@ purpose: Define rules.md format and workflow interaction protocol
 
 - [Agent Instructions](#agent-instructions)
 - [Overview](#overview)
-- [Rules Packages](#rules-packages)
-- [Rules Discovery](#rules-discovery)
+- [Weaver Packages](#weaver-packages)
+- [Weaver Discovery](#weaver-discovery)
 - [Rules.md Format](#rulesmd-format)
 - [Workflow Interaction Protocol](#workflow-interaction-protocol)
 - [Parsing Rules.md](#parsing-rulesmd)
@@ -46,31 +46,27 @@ purpose: Define rules.md format and workflow interaction protocol
 `rules.md` is the single entry point for each artifact/code type. It contains all requirements, tasks, and validation criteria that workflows need to generate or validate.
 
 **Location** (path from `artifacts.json`):
-- Artifacts: `{RULES_BASE}/artifacts/{ARTIFACT_TYPE}/rules.md`
-- Codebase: `{RULES_BASE}/codebase/rules.md`
+- Artifacts: `{WEAVER_BASE}/artifacts/{ARTIFACT_TYPE}/rules.md`
+- Codebase: `{WEAVER_BASE}/codebase/rules.md`
 
 ---
 
-## Rules Packages
+## Weaver Packages
 
-Rules packages are defined in `artifacts.json`:
+Weaver packages are defined in `artifacts.json`:
 
 ```json
 {
-  "rules": {
-    "fdd-sdlc": {
-      "format": "FDD",
-      "path": "rules/sdlc"
+   "weavers": {
+    "spider-sdlc": {
+      "format": "Spider",
+      "path": "weavers/sdlc"
     },
-    "fdd-core": {
-      "format": "FDD",
-      "path": "rules/core"
-    }
   },
   "systems": [
     {
       "name": "MySystem",
-      "rules": "fdd-sdlc",  // ← references rules package
+         "weaver": "spider-sdlc",  // ← references weaver package
       ...
     }
   ]
@@ -79,24 +75,24 @@ Rules packages are defined in `artifacts.json`:
 
 **Package resolution**:
 1. Find system for target artifact in `artifacts.json`
-2. Get `rules` name from system (e.g., `"fdd-sdlc"`)
-3. Look up path from `rules` section (e.g., `"rules/sdlc"`)
-4. Build full path: `{rules_path}/artifacts/{ARTIFACT_TYPE}/rules.md`
+2. Get `weaver` name from system (e.g., `"spider-sdlc"`)
+3. Look up path from `weavers` section (e.g., `"weavers/sdlc"`)
+4. Build full path: `{weaver_path}/artifacts/{ARTIFACT_TYPE}/rules.md`
 
 ---
 
-## Rules Discovery
+## Weaver Discovery
 
 ### Path Resolution
 
 Path comes from `artifacts.json`:
 ```
-RULES_BASE = artifacts.json.rules[{rules_name}].path
+WEAVER_BASE = artifacts.json.weavers[{weaver_name}].path
 ```
 
-**Directory structure** (relative to RULES_BASE):
+**Directory structure** (relative to WEAVER_BASE):
 ```
-{RULES_BASE}/
+{WEAVER_BASE}/
 ├── artifacts/
 │   ├── {ARTIFACT_TYPE}/
 │   │   ├── rules.md
@@ -110,9 +106,9 @@ RULES_BASE = artifacts.json.rules[{rules_name}].path
     └── checklist.md
 ```
 
-**Example** (if `rules["fdd-sdlc"].path = "rules/sdlc"`):
+**Example** (if `weavers["spider-sdlc"].path = "weavers/sdlc"`):
 ```
-rules/sdlc/
+weavers/sdlc/
 ├── artifacts/
 │   ├── PRD/rules.md
 │   ├── DESIGN/rules.md
@@ -126,7 +122,7 @@ rules/sdlc/
 
 Workflow determines artifact type from:
 
-1. **Explicit parameter**: `fdd generate PRD`
+1. **Explicit parameter**: `spider generate PRD`
 2. **From artifacts.json**: lookup artifact by path → get `kind`
    ```json
    { "path": "architecture/PRD.md", "kind": "PRD" }
@@ -211,10 +207,10 @@ Workflow determines artifact type from:
 ```
 1. DETECT artifact type
    ↓
-2. RESOLVE rules package:
+2. RESOLVE weaver package:
    - Find system in artifacts.json
-   - Get rules name (e.g., "fdd-sdlc")
-   - Look up path (e.g., "rules/sdlc")
+   - Get weaver name (e.g., "spider-sdlc")
+   - Look up path (e.g., "weavers/sdlc")
    ↓
 3. LOAD rules.md from {rules_path}/artifacts/{TYPE}/rules.md
    ↓
@@ -243,10 +239,10 @@ Workflow determines artifact type from:
 ```
 1. DETECT artifact type from target file
    ↓
-2. RESOLVE rules package:
+2. RESOLVE weaver package:
    - Find system in artifacts.json
-   - Get rules name (e.g., "fdd-sdlc")
-   - Look up path (e.g., "rules/sdlc")
+   - Get weaver name (e.g., "spider-sdlc")
+   - Look up path (e.g., "weavers/sdlc")
    ↓
 3. LOAD rules.md from {rules_path}/artifacts/{TYPE}/rules.md
    ↓
@@ -306,18 +302,18 @@ Sections starting with `### Phase N:` under `## Validation`:
 
 When workflow starts, it should:
 
-1. **Check context**: Is this an FDD-managed project?
-   - Look for `.adapter/` directory
-   - Read `.adapter/artifacts.json`
+1. **Check context**: Is this an Spider-managed project?
+   - Look for `.spider-adapter/` directory
+   - Read `.spider-adapter/artifacts.json`
 
-2. **If FDD context detected**:
-   - Parse `rules` section from artifacts.json
+2. **If Spider context detected**:
+   - Parse `weavers` section from artifacts.json
    - Find system for target artifact
-   - Resolve `RULES_BASE` from system's rules reference
+   - Resolve `WEAVER_BASE` from system's weaver reference
    - Load appropriate rules.md
    - Follow interaction protocol
 
-3. **If no FDD context**:
+3. **If no Spider context**:
    - Proceed with standard workflow
    - No rules.md loading
 
@@ -326,14 +322,14 @@ When workflow starts, it should:
 ## Example: Generate PRD
 
 ```
-User: fdd generate PRD
+User: spider generate PRD
 
 Workflow:
 1. Artifact type: PRD (explicit)
-2. Resolve rules:
-   - System "FDD" uses rules "fdd-sdlc"
-   - rules["fdd-sdlc"].path = "rules/sdlc"
-3. Load: rules/sdlc/artifacts/PRD/rules.md
+2. Resolve weaver:
+   - System "Spider" uses weaver "spider-sdlc"
+   - weavers["spider-sdlc"].path = "weavers/sdlc"
+3. Load: weavers/sdlc/artifacts/PRD/rules.md
 4. Parse Dependencies:
    - template.md
    - checklist.md
@@ -342,7 +338,7 @@ Workflow:
 6. Confirm Requirements:
    "I understand the following requirements:
    - PRD follows template.md structure
-   - All IDs follow fdd-{project}-{kind}-{slug} convention
+   - All IDs follow spd-{system}-{kind}-{slug} convention
    ..."
 7. Execute Tasks:
    - Phase 1: Load template, checklist, example
@@ -357,15 +353,15 @@ Workflow:
 ## Example: Validate FEATURE
 
 ```
-User: fdd validate architecture/features/auth.md
+User: spider validate architecture/features/auth.md
 
 Workflow:
 1. Artifact type: FEATURE (from path)
-2. Resolve rules:
+2. Resolve weaver:
    - Find system containing artifact
-   - System "FDD" uses rules "fdd-sdlc"
-   - rules["fdd-sdlc"].path = "rules/sdlc"
-3. Load: rules/sdlc/artifacts/FEATURE/rules.md
+   - System "Spider" uses weaver "spider-sdlc"
+   - weavers["spider-sdlc"].path = "weavers/sdlc"
+3. Load: weavers/sdlc/artifacts/FEATURE/rules.md
 4. Parse Dependencies
 5. Load: template.md, checklist.md, examples/example.md
 6. Execute Validation:
@@ -379,16 +375,16 @@ Workflow:
 
 ## Error Handling
 
-### Rules Package Not Found
+### Weaver Package Not Found
 
-**If rules package path doesn't exist**:
+**If weaver package path doesn't exist**:
 ```
-⚠️ Rules package not found: {rules_path}
-→ Referenced in: artifacts.json rules["{name}"].path
-→ Expected at: {RULES_BASE}
-→ Fix: Create rules package OR correct path in artifacts.json
+⚠️ Weaver package not found: {weaver_path}
+→ Referenced in: artifacts.json weavers["{name}"].path
+→ Expected at: {WEAVER_BASE}
+→ Fix: Create weaver package OR correct path in artifacts.json
 ```
-**Action**: STOP — cannot load rules without package.
+**Action**: STOP — cannot load rules.md without package.
 
 ### Rules.md Parse Error
 
@@ -428,7 +424,7 @@ Workflow:
 **If artifact type has no rules.md**:
 ```
 ⚠️ No rules found for artifact type: {ARTIFACT_TYPE}
-→ Searched: {RULES_BASE}/artifacts/{ARTIFACT_TYPE}/rules.md
+→ Searched: {WEAVER_BASE}/artifacts/{ARTIFACT_TYPE}/rules.md
 → Available types: {list from directory}
 → Fix: Create rules.md for type OR use existing type
 ```
@@ -444,7 +440,7 @@ Workflow:
 
 | # | Check | Required | How to Verify |
 |---|-------|----------|---------------|
-| S.1 | rules.md exists at correct path | YES | File exists at `{RULES_BASE}/artifacts/{KIND}/rules.md` |
+| S.1 | rules.md exists at correct path | YES | File exists at `{WEAVER_BASE}/artifacts/{KIND}/rules.md` |
 | S.2 | Has valid markdown frontmatter | YES | Artifact and Purpose fields present |
 | S.3 | Dependencies section present | YES | `**Dependencies**:` heading exists |
 | S.4 | Requirements section present | YES | `## Requirements` heading exists |

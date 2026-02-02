@@ -1,7 +1,7 @@
 """
 Unit tests for CLI helper functions.
 
-Tests utility functions from fdd.utils.document that perform parsing, filtering, and formatting.
+Tests utility functions from spider.utils.document that perform parsing, filtering, and formatting.
 """
 
 import unittest
@@ -13,11 +13,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "fdd" / "scripts"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "spider" / "scripts"))
 
-from fdd.utils.document import detect_artifact_kind, iter_text_files, read_text_safe, to_relative_posix
+from spider.utils.document import detect_artifact_kind, iter_text_files, read_text_safe, to_relative_posix
 
-from fdd import cli as fdd_cli
+from spider import cli as spider_cli
 
 
 class TestDetectKind(unittest.TestCase):
@@ -150,38 +150,38 @@ class TestCliInternalHelpers(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             p = Path(tmpdir) / "bad.json"
             p.write_text("{bad}", encoding="utf-8")
-            self.assertIsNone(fdd_cli._load_json_file(p))
+            self.assertIsNone(spider_cli._load_json_file(p))
 
     def test_load_json_file_non_dict_returns_none(self):
         with TemporaryDirectory() as tmpdir:
             p = Path(tmpdir) / "list.json"
             p.write_text(json.dumps([1, 2, 3]), encoding="utf-8")
-            self.assertIsNone(fdd_cli._load_json_file(p))
+            self.assertIsNone(spider_cli._load_json_file(p))
 
     def test_safe_relpath_from_dir_fallbacks_to_absolute_on_error(self):
         with TemporaryDirectory() as tmpdir:
             base = Path(tmpdir)
             target = base / "x" / "y"
             with patch("os.path.relpath", side_effect=Exception("boom")):
-                rel = fdd_cli._safe_relpath_from_dir(target, base)
+                rel = spider_cli._safe_relpath_from_dir(target, base)
             self.assertEqual(rel, target.as_posix())
 
     def test_prompt_path_eof_returns_default(self):
         with patch("builtins.input", side_effect=EOFError()):
-            out = fdd_cli._prompt_path("Q?", "default")
+            out = spider_cli._prompt_path("Q?", "default")
         self.assertEqual(out, "default")
 
     def test_safe_relpath_outside_base_returns_absolute(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir) / "root"
             other = Path(tmpdir) / "other" / "x.txt"
-            out = fdd_cli._safe_relpath(other, root)
+            out = spider_cli._safe_relpath(other, root)
             self.assertEqual(out, other.as_posix())
 
     def test_write_json_file_writes_trailing_newline(self):
         with TemporaryDirectory() as tmpdir:
             p = Path(tmpdir) / "out.json"
-            fdd_cli._write_json_file(p, {"a": 1})
+            spider_cli._write_json_file(p, {"a": 1})
             raw = p.read_text(encoding="utf-8")
             self.assertTrue(raw.endswith("\n"))
             self.assertEqual(json.loads(raw), {"a": 1})
@@ -190,65 +190,65 @@ class TestCliInternalHelpers(unittest.TestCase):
 class TestCliCommandCoverage(unittest.TestCase):
     def test_self_check_project_root_not_found(self):
         with TemporaryDirectory() as td:
-            with patch.object(fdd_cli, "find_project_root", return_value=None):
+            with patch.object(spider_cli, "find_project_root", return_value=None):
                 buf = io.StringIO()
                 with contextlib.redirect_stdout(buf):
-                    code = fdd_cli._cmd_self_check(["--root", td])
+                    code = spider_cli._cmd_self_check(["--root", td])
         self.assertEqual(code, 1)
 
     def test_self_check_adapter_dir_not_found(self):
         with TemporaryDirectory() as td:
             root = Path(td)
             (root / ".git").mkdir()
-            with patch.object(fdd_cli, "find_project_root", return_value=root):
-                with patch.object(fdd_cli, "find_adapter_directory", return_value=None):
+            with patch.object(spider_cli, "find_project_root", return_value=root):
+                with patch.object(spider_cli, "find_adapter_directory", return_value=None):
                     buf = io.StringIO()
                     with contextlib.redirect_stdout(buf):
-                        code = fdd_cli._cmd_self_check(["--root", td])
+                        code = spider_cli._cmd_self_check(["--root", td])
         self.assertEqual(code, 1)
 
     def test_self_check_registry_no_rules(self):
         with TemporaryDirectory() as td:
             root = Path(td)
             (root / ".git").mkdir()
-            adapter = root / ".adapter"
+            adapter = root / ".spider-adapter"
             adapter.mkdir()
-            with patch.object(fdd_cli, "find_project_root", return_value=root):
-                with patch.object(fdd_cli, "find_adapter_directory", return_value=adapter):
-                    with patch.object(fdd_cli, "load_artifacts_registry", return_value=({"version": "1.0"}, None)):
+            with patch.object(spider_cli, "find_project_root", return_value=root):
+                with patch.object(spider_cli, "find_adapter_directory", return_value=adapter):
+                    with patch.object(spider_cli, "load_artifacts_registry", return_value=({"version": "1.0"}, None)):
                         buf = io.StringIO()
                         with contextlib.redirect_stdout(buf):
-                            code = fdd_cli._cmd_self_check(["--root", td])
+                            code = spider_cli._cmd_self_check(["--root", td])
         self.assertEqual(code, 1)
 
     def test_self_check_with_rules_structure(self):
         with TemporaryDirectory() as td:
             root = Path(td)
             (root / ".git").mkdir()
-            adapter = root / ".adapter"
+            adapter = root / ".spider-adapter"
             adapter.mkdir()
             # Create rules structure
-            rules_dir = root / "rules" / "test" / "artifacts" / "PRD"
-            rules_dir.mkdir(parents=True)
-            (rules_dir / "template.md").write_text(
+            weavers_dir = root / "weavers" / "test" / "artifacts" / "PRD"
+            weavers_dir.mkdir(parents=True)
+            (weavers_dir / "template.md").write_text(
                 "---\n"
-                "fdd-template:\n  version:\n    major: 1\n    minor: 0\n  kind: PRD\n"
+                "spider-template:\n  version:\n    major: 1\n    minor: 0\n  kind: PRD\n"
                 "---\n\n# PRD\n",
                 encoding="utf-8",
             )
             # No example - should warn but pass (no examples = no failures)
             registry = {
                 "version": "1.0",
-                "rules": {
-                    "test-rules": {"format": "FDD", "path": "rules/test"}
+                "weavers": {
+                    "test-rules": {"format": "Spider", "path": "weavers/test"}
                 },
             }
-            with patch.object(fdd_cli, "find_project_root", return_value=root):
-                with patch.object(fdd_cli, "find_adapter_directory", return_value=adapter):
-                    with patch.object(fdd_cli, "load_artifacts_registry", return_value=(registry, None)):
+            with patch.object(spider_cli, "find_project_root", return_value=root):
+                with patch.object(spider_cli, "find_adapter_directory", return_value=adapter):
+                    with patch.object(spider_cli, "load_artifacts_registry", return_value=(registry, None)):
                         buf = io.StringIO()
                         with contextlib.redirect_stdout(buf):
-                            code = fdd_cli._cmd_self_check(["--root", td])
+                            code = spider_cli._cmd_self_check(["--root", td])
         # PASS when no examples exist (warnings only)
         self.assertEqual(code, 0)
 
@@ -257,15 +257,15 @@ class TestCliCommandCoverage(unittest.TestCase):
             root = Path(td)
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
-                rc = fdd_cli.main(["init", "--project-root", str(root), "--yes", "--dry-run"])
+                rc = spider_cli.main(["init", "--project-root", str(root), "--yes", "--dry-run"])
         self.assertEqual(rc, 0)
 
     def test_main_missing_subcommand_returns_error(self):
-        rc = fdd_cli.main([])
+        rc = spider_cli.main([])
         self.assertEqual(rc, 1)
 
     def test_main_unknown_command_returns_error(self):
-        rc = fdd_cli.main(["does-not-exist"])
+        rc = spider_cli.main(["does-not-exist"])
         self.assertEqual(rc, 1)
 
 
