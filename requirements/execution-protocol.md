@@ -112,40 +112,54 @@ Rules Mode: STRICT (spider-sdlc rules loaded)
 → Full validation protocol enforced
 ```
 
-### Rules Mode: RELAXED (no Spider rules)
+### Rules Mode: BOOTSTRAP (new project)
 
-**Condition**: No adapter OR no `rules` in artifacts.json OR target not in registered system.
+ALWAYS detect BOOTSTRAP mode WHEN adapter found AND `artifacts.json` has empty `systems[].artifacts` array
 
-**Before proceeding, agent MUST explain trade-offs**:
+ALWAYS read `weavers` section from `artifacts.json` WHEN BOOTSTRAP mode detected
 
-```markdown
-⚠️ Rules Mode: RELAXED (no Spider rules detected)
+ALWAYS scan `{weaver.path}/artifacts/` directories WHEN listing available artifact kinds
 
-Impacts: no template enforcement, reduced checklist rigor, reduced evidence/anti-pattern enforcement.
+ALWAYS show welcome message with available weavers WHEN BOOTSTRAP mode:
+```
+🚀 New Project Detected
 
-Choose one:
-1. Provide rules (path)
-2. Continue RELAXED (best effort, no guarantees)
-3. Bootstrap rules (`/spider-adapter`)
+Available weavers:
+• {weaver_name} ({weaver.path})
+  Artifacts: {kinds from weaver.path/artifacts/}
+
+→ `spider generate <KIND>` to create your first artifact
 ```
 
-**User must explicitly choose** before workflow continues.
+ALWAYS proceed with generate workflow without blocking WHEN user requests artifact generation in BOOTSTRAP mode
 
-**If user chooses "Continue without rules"**:
-- Agent proceeds with best effort
-- Output includes disclaimer: `⚠️ Validated without Spider rules (reduced rigor)`
-- No enforcement of evidence or anti-patterns
+NEVER show warnings or "reduced rigor" messages WHEN in BOOTSTRAP mode
+
+---
+
+### Rules Mode: RELAXED (no adapter)
+
+ALWAYS detect RELAXED mode WHEN no adapter found OR no `weavers` in artifacts.json
+
+ALWAYS propose initialization WHEN RELAXED mode:
+```
+Spider adapter not configured
+
+→ `spider init` to initialize for this project
+```
+
+ALWAYS proceed as normal coding assistant WHEN user declines initialization
 
 ### Rules Mode Summary
 
-| Aspect | STRICT | RELAXED |
-|--------|--------|---------|
-| Template enforcement | ✓ Required | ✗ Best effort |
-| Checklist validation | ✓ Mandatory | ✗ Skipped |
-| Evidence requirements | ✓ Enforced | ✗ Not required |
-| Anti-pattern detection | ✓ Active | ✗ Inactive |
-| Semantic validation | ✓ Mandatory | ✗ Optional |
-| Output guarantee | High confidence | No guarantees |
+| Aspect | STRICT | BOOTSTRAP | RELAXED |
+|--------|--------|-----------|---------|
+| Condition | Artifacts registered | Adapter found, no artifacts | No adapter |
+| Behavior | Full enforcement | Welcome + propose SDLC | Suggest init |
+| Template enforcement | ✓ Required | ✓ Required | ✗ None |
+| Checklist validation | ✓ Mandatory | ✓ Mandatory | ✗ Skipped |
+| Blocking | No | No | No |
+| Next step | Continue workflow | `spider generate PRD` | `spider init` |
 
 ---
 
