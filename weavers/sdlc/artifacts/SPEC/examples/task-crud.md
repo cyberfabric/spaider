@@ -53,16 +53,16 @@ Success criteria: Users can create, view, update, and delete tasks within 500ms 
 - `spd-taskflow-actor-lead`
 <!-- spd:id-ref:actor -->
 
-<!-- spd:fdl:flow-steps -->
-1. [x] - `ph-1` - User fills task form (title, description, priority) - `inst-fill-form`
-2. [x] - `ph-1` - API: POST /api/tasks (body: title, description, priority, due_date) - `inst-api-create`
-3. [x] - `ph-1` - Algorithm: validate task input using `spd-taskflow-spec-task-crud-algo-validate` - `inst-run-validate`
-4. [x] - `ph-1` - DB: INSERT tasks(title, description, priority, due_date, status=BACKLOG) - `inst-db-insert`
-5. [ ] - `ph-2` - User optionally assigns task to team member - `inst-assign`
-6. [ ] - `ph-2` - API: POST /api/tasks/{task_id}/assignees (body: assignee_id) - `inst-api-assign`
-7. [ ] - `ph-2` - DB: INSERT task_assignees(task_id, assignee_id) - `inst-db-assign-insert`
-8. [x] - `ph-1` - API: RETURN 201 Created (task_id, status=BACKLOG) - `inst-return-created`
-<!-- spd:fdl:flow-steps -->
+<!-- spd:sdsl:flow-steps -->
+1. [x] - `p1` - User fills task form (title, description, priority) - `inst-fill-form`
+2. [x] - `p1` - API: POST /api/tasks (body: title, description, priority, due_date) - `inst-api-create`
+3. [x] - `p1` - Algorithm: validate task input using `spd-taskflow-spec-task-crud-algo-validate` - `inst-run-validate`
+4. [x] - `p1` - DB: INSERT tasks(title, description, priority, due_date, status=BACKLOG) - `inst-db-insert`
+5. [ ] - `p2` - User optionally assigns task to team member - `inst-assign`
+6. [ ] - `p2` - API: POST /api/tasks/{task_id}/assignees (body: assignee_id) - `inst-api-assign`
+7. [ ] - `p2` - DB: INSERT task_assignees(task_id, assignee_id) - `inst-db-assign-insert`
+8. [x] - `p1` - API: RETURN 201 Created (task_id, status=BACKLOG) - `inst-return-created`
+<!-- spd:sdsl:flow-steps -->
 <!-- spd:id:flow -->
 <!-- spd:###:flow-title repeat="many" -->
 <!-- spd:##:flows -->
@@ -76,14 +76,14 @@ Success criteria: Users can create, view, update, and delete tasks within 500ms 
 <!-- spd:id:algo has="priority,task" to_code="true" -->
 - [ ] `p1` - **ID**: `spd-taskflow-spec-task-crud-algo-validate`
 
-<!-- spd:fdl:algo-steps -->
-1. [x] - `ph-1` - **IF** title is empty **RETURN** error "Title required" - `inst-check-title`
-2. [x] - `ph-1` - **IF** priority not in [LOW, MEDIUM, HIGH] **RETURN** error - `inst-check-priority`
-3. [x] - `ph-1` - **IF** due_date is present AND due_date is in the past **RETURN** error - `inst-check-due-date`
-4. [x] - `ph-1` - DB: SELECT tasks WHERE title=? AND status!=DONE (dedupe check) - `inst-db-dedupe-check`
-5. [ ] - `ph-2` - **IF** duplicate exists **RETURN** error - `inst-return-duplicate`
-6. [x] - `ph-1` - **RETURN** valid - `inst-return-valid`
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
+1. [x] - `p1` - **IF** title is empty **RETURN** error "Title required" - `inst-check-title`
+2. [x] - `p1` - **IF** priority not in [LOW, MEDIUM, HIGH] **RETURN** error - `inst-check-priority`
+3. [x] - `p1` - **IF** due_date is present AND due_date is in the past **RETURN** error - `inst-check-due-date`
+4. [x] - `p1` - DB: SELECT tasks WHERE title=? AND status!=DONE (dedupe check) - `inst-db-dedupe-check`
+5. [ ] - `p2` - **IF** duplicate exists **RETURN** error - `inst-return-duplicate`
+6. [x] - `p1` - **RETURN** valid - `inst-return-valid`
+<!-- spd:sdsl:algo-steps -->
 <!-- spd:id:algo -->
 <!-- spd:###:algo-title repeat="many" -->
 <!-- spd:##:algorithms -->
@@ -97,11 +97,11 @@ Success criteria: Users can create, view, update, and delete tasks within 500ms 
 <!-- spd:id:state has="priority,task" to_code="true" -->
 - [ ] `p1` - **ID**: `spd-taskflow-spec-task-crud-state-status`
 
-<!-- spd:fdl:state-transitions -->
-1. [x] - `ph-1` - **FROM** BACKLOG **TO** IN_PROGRESS **WHEN** user starts work - `inst-start`
-2. [ ] - `ph-2` - **FROM** IN_PROGRESS **TO** DONE **WHEN** user completes - `inst-complete`
-3. [ ] - `ph-2` - **FROM** DONE **TO** BACKLOG **WHEN** user reopens - `inst-reopen`
-<!-- spd:fdl:state-transitions -->
+<!-- spd:sdsl:state-transitions -->
+1. [x] - `p1` - **FROM** BACKLOG **TO** IN_PROGRESS **WHEN** user starts work - `inst-start`
+2. [ ] - `p2` - **FROM** IN_PROGRESS **TO** DONE **WHEN** user completes - `inst-complete`
+3. [ ] - `p2` - **FROM** DONE **TO** BACKLOG **WHEN** user reopens - `inst-reopen`
+<!-- spd:sdsl:state-transitions -->
 <!-- spd:id:state -->
 <!-- spd:###:state-title repeat="many" -->
 <!-- spd:##:states -->

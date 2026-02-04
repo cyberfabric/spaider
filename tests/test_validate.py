@@ -1,6 +1,6 @@
 """Tests for validation related utility functions.
 
-NOTE: Tests for validation module (cascade, common, traceability, fdl) were removed
+NOTE: Tests for validation module (cascade, common, traceability, sdsl) were removed
 because the validation module is not used by CLI commands and was deleted.
 Only tests for CLI and utils functions are kept.
 """

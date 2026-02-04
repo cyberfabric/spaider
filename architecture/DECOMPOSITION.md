@@ -22,7 +22,7 @@ Spider specs are organized around **architectural components** with explicit dep
 - [x] `p1` - **ID**: `spd-spider-spec-methodology-core`
 
 <!-- spd:paragraph:spec-purpose required="true" -->
-- **Purpose**: Provide universal Spider specifications including requirements, FDL language, and base template syntax that all projects share.
+- **Purpose**: Provide universal Spider specifications including requirements, SDSL language, and base template syntax that all projects share.
 <!-- spd:paragraph:spec-purpose -->
 
 <!-- spd:paragraph:spec-depends -->
@@ -32,7 +32,7 @@ Spider specs are organized around **architectural components** with explicit dep
 <!-- spd:list:spec-scope -->
 - **Scope**:
   - Requirements specifications (`requirements/*.md`)
-  - FDL (Spider Description Language) specification
+  - SDSL (Spider Description Language) specification
   - Template marker syntax specification
   - Execution protocol definition
 <!-- spd:list:spec-scope -->
@@ -47,7 +47,7 @@ Spider specs are organized around **architectural components** with explicit dep
 <!-- spd:id-ref:fr has="priority,task" -->
   - [x] `p1` - `spd-spider-fr-artifact-templates`
   - [x] `p2` - `spd-spider-fr-artifact-examples`
-  - [x] `p1` - `spd-spider-fr-fdl`
+  - [x] `p1` - `spd-spider-fr-sdsl`
 <!-- spd:id-ref:fr -->
 
 - **Design Principles Covered**:
@@ -67,7 +67,7 @@ Spider specs are organized around **architectural components** with explicit dep
 - **Domain Model Entities**:
   - Artifact
   - Workflow
-  - FDL
+  - SDSL
 <!-- spd:list:spec-domain-entities -->
 
 - **Design Components**:
@@ -512,7 +512,7 @@ Spider specs are organized around **architectural components** with explicit dep
   - Artifact validation against templates
   - ID extraction and validation
   - Cross-artifact reference validation
-  - Block content type validation (paragraph, list, table, fdl, etc.)
+  - Block content type validation (paragraph, list, table, sdsl, etc.)
 <!-- spd:list:spec-scope -->
 
 <!-- spd:list:spec-out-scope -->

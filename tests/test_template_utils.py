@@ -51,9 +51,9 @@ print('hi')
 ```
 <!-- spd:code:snippet -->
 
-<!-- spd:fdl:flow -->
-1. [ ] - `ph-1` - Do step - `inst-step-1`
-<!-- spd:fdl:flow -->
+<!-- spd:sdsl:flow -->
+1. [ ] - `p1` - Do step - `inst-step-1`
+<!-- spd:sdsl:flow -->
 
 <!-- spd:id-ref:item-ref has="priority,task" -->
 - [x] `p1` - `spd-demo-item-1`
@@ -88,9 +88,9 @@ print('hi')
 ```
 <!-- spd:code:snippet -->
 
-<!-- spd:fdl:flow -->
-1. [x] - `ph-1` - Do step - `inst-step-1`
-<!-- spd:fdl:flow -->
+<!-- spd:sdsl:flow -->
+1. [x] - `p1` - Do step - `inst-step-1`
+<!-- spd:sdsl:flow -->
 
 <!-- spd:id-ref:item-ref -->
 - [x] `p1` - `spd-demo-item-1`
@@ -805,13 +805,13 @@ spider-template:
     minor: 0
   kind: TEST
 ---
-<!-- spd:fdl:flow -->
+<!-- spd:sdsl:flow -->
 1. [ ] - `p1` - Step - `inst-1`
-<!-- spd:fdl:flow -->
+<!-- spd:sdsl:flow -->
 """
     tmpl_path = _write(tmp_path / "tmpl.template.md", text)
     tmpl, _ = load_template(tmpl_path)
-    art_path = _write(tmp_path / "art.md", "<!-- spd:fdl:flow -->\n\n<!-- spd:fdl:flow -->")
+    art_path = _write(tmp_path / "art.md", "<!-- spd:sdsl:flow -->\n\n<!-- spd:sdsl:flow -->")
     report = tmpl.validate(art_path)
     assert any("SDSL block empty" in str(e.get("message", "")) for e in report["errors"])
 
@@ -825,13 +825,13 @@ spider-template:
     minor: 0
   kind: TEST
 ---
-<!-- spd:fdl:flow -->
+<!-- spd:sdsl:flow -->
 1. [ ] - `p1` - Step - `inst-1`
-<!-- spd:fdl:flow -->
+<!-- spd:sdsl:flow -->
 """
     tmpl_path = _write(tmp_path / "tmpl.template.md", text)
     tmpl, _ = load_template(tmpl_path)
-    art_path = _write(tmp_path / "art.md", "<!-- spd:fdl:flow -->\ninvalid sdsl line\n<!-- spd:fdl:flow -->")
+    art_path = _write(tmp_path / "art.md", "<!-- spd:sdsl:flow -->\ninvalid sdsl line\n<!-- spd:sdsl:flow -->")
     report = tmpl.validate(art_path)
     assert any("Invalid SDSL line" in str(e.get("message", "")) for e in report["errors"])
 
@@ -1115,9 +1115,9 @@ Some content
 code
 ```
 <!-- spd:code:snippet -->
-<!-- spd:fdl:flow -->
-1. [x] - `ph-1` - Step - `inst-step-1`
-<!-- spd:fdl:flow -->
+<!-- spd:sdsl:flow -->
+1. [x] - `p1` - Step - `inst-step-1`
+<!-- spd:sdsl:flow -->
 """
     art_path = _write(tmp_path / "ok-artifact.md", ok_artifact)
     report = tmpl.validate(art_path)

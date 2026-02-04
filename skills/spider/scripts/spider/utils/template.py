@@ -39,7 +39,7 @@ VALID_MARKER_TYPES = frozenset({
     "list", "numbered-list", "task-list",
     "table", "paragraph", "code",
     "#", "##", "###", "####", "#####", "######",
-    "link", "image", "fdl",
+    "link", "image", "sdsl",
 })
 
 
@@ -473,7 +473,7 @@ class Template:
             if not first or not first[1].lstrip().startswith("!"):
                 errors.append(Template.error("structure", "Invalid image", path=artifact_path, line=inst.start_line, id=tpl.name))
             return
-        if tpl.type == "fdl":
+        if tpl.type == "sdsl":
             if not content or not first:
                 errors.append(Template.error("structure", "SDSL block empty", path=artifact_path, line=inst.start_line, id=tpl.name))
                 return
@@ -836,7 +836,7 @@ class Artifact:
                         continue
                     checked = "[x" in line_stripped.lower()
                     self.task_statuses.append((checked, blk))
-            if blk.template_block.type == "fdl":
+            if blk.template_block.type == "sdsl":
                 for rel_idx, line in enumerate(blk.content, start=0):
                     if not line.strip():
                         continue

@@ -54,7 +54,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 - `spd-spider-actor-ai-assistant`
 <!-- spd:id-ref:actor -->
 
-<!-- spd:fdl:flow-steps -->
+<!-- spd:sdsl:flow-steps -->
 1. [x] - `p1` - CLI receives template path from weaver package - `inst-receive-path`
 2. [x] - `p1` - File: READ template content from `{weaver}/artifacts/{KIND}/template.md` - `inst-read-file`
 3. [x] - `p1` - Parse YAML frontmatter (version, kind, policy) - `inst-parse-frontmatter`
@@ -62,7 +62,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 5. [x] - `p1` - Algorithm: parse marker blocks using `spd-spider-spec-template-system-algo-parse-markers` - `inst-parse-markers`
 6. [x] - `p1` - State: transition template to LOADED using `spd-spider-spec-template-system-state-lifecycle` - `inst-set-loaded`
 7. [x] - `p1` - **RETURN** Template object with blocks, version, policy - `inst-return-template`
-<!-- spd:fdl:flow-steps -->
+<!-- spd:sdsl:flow-steps -->
 <!-- spd:id:flow -->
 <!-- spd:###:flow-title repeat="many" -->
 
@@ -78,7 +78,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 - `spd-spider-actor-ai-assistant`
 <!-- spd:id-ref:actor -->
 
-<!-- spd:fdl:flow-steps -->
+<!-- spd:sdsl:flow-steps -->
 1. [x] - `p1` - CLI receives artifact path and resolves template from registry - `inst-resolve-template`
 2. [x] - `p1` - File: READ artifact content from path - `inst-read-artifact`
 3. [x] - `p1` - Algorithm: parse artifact blocks using `spd-spider-spec-template-system-algo-parse-markers` - `inst-parse-artifact`
@@ -89,7 +89,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 7. [x] - `p1` - **IF** kind="SPEC": validate filename matches main spec ID slug - `inst-validate-filename`
 8. [x] - `p1` - **IF** errors exist **RETURN** ValidationResult(status=FAIL, errors) - `inst-return-fail`
 9. [x] - `p1` - **RETURN** ValidationResult(status=PASS, ids, refs) - `inst-return-pass`
-<!-- spd:fdl:flow-steps -->
+<!-- spd:sdsl:flow-steps -->
 <!-- spd:id:flow -->
 <!-- spd:###:flow-title repeat="many" -->
 
@@ -105,7 +105,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 - `spd-spider-actor-ai-assistant`
 <!-- spd:id-ref:actor -->
 
-<!-- spd:fdl:flow-steps -->
+<!-- spd:sdsl:flow-steps -->
 1. [x] - `p1` - CLI loads all artifacts from registry - `inst-load-all`
 2. [x] - `p1` - **FOR EACH** artifact in registry: - `inst-loop-artifacts`
    1. [x] - `p1` - Flow: validate artifact using `spd-spider-spec-template-system-flow-validate` - `inst-validate-each`
@@ -114,7 +114,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 3. [x] - `p1` - **FOR EACH** reference in all refs: - `inst-loop-refs`
    1. [x] - `p1` - **IF** reference not in defined IDs AND not external **RETURN** error "Orphaned reference" - `inst-check-orphan`
 4. [x] - `p1` - **RETURN** CrossValidationResult(artifacts, orphaned_refs, coverage) - `inst-return-cross`
-<!-- spd:fdl:flow-steps -->
+<!-- spd:sdsl:flow-steps -->
 <!-- spd:id:flow -->
 <!-- spd:###:flow-title repeat="many" -->
 <!-- spd:##:flows -->
@@ -128,7 +128,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 <!-- spd:id:algo has="task" to_code="true" -->
 - [x] **ID**: `spd-spider-spec-template-system-algo-parse-markers`
 
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 1. [x] - `p1` - Split content into lines - `inst-split-lines`
 2. [x] - `p1` - Initialize empty block stack and results list - `inst-init-stack`
 3. [x] - `p1` - **FOR EACH** line with index: - `inst-loop-lines`
@@ -138,7 +138,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
       3. [x] - `p1` - **IF** closing marker: pop from stack, create TemplateBlock - `inst-pop-close`
 4. [x] - `p1` - **IF** stack not empty **RETURN** error "Unclosed markers" - `inst-check-unclosed`
 5. [x] - `p1` - **RETURN** list of TemplateBlock objects - `inst-return-blocks`
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 <!-- spd:id:algo -->
 <!-- spd:###:algo-title repeat="many" -->
 
@@ -148,7 +148,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 <!-- spd:id:algo has="task" to_code="true" -->
 - [x] **ID**: `spd-spider-spec-template-system-algo-match-blocks`
 
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 1. [x] - `p1` - Initialize matched pairs list and unmatched template blocks - `inst-init-match`
 2. [x] - `p1` - **FOR EACH** template block: - `inst-loop-template`
    1. [x] - `p1` - Find corresponding artifact block by type and name - `inst-find-artifact`
@@ -158,7 +158,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
    1. [x] - `p1` - **IF** template.policy.unknown_sections="error": add to errors - `inst-unknown-error`
    2. [x] - `p1` - **IF** template.policy.unknown_sections="warn": add to warnings - `inst-unknown-warn`
 4. [x] - `p1` - **RETURN** MatchResult(pairs, errors, warnings) - `inst-return-match`
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 <!-- spd:id:algo -->
 <!-- spd:###:algo-title repeat="many" -->
 
@@ -168,7 +168,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 <!-- spd:id:algo has="task" to_code="true" -->
 - [x] **ID**: `spd-spider-spec-template-system-algo-extract-ids`
 
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 1. [x] - `p1` - Initialize definitions list and references list - `inst-init-lists`
 2. [x] - `p1` - **FOR EACH** block with type="id": - `inst-loop-id-blocks`
    1. [x] - `p1` - Extract ID value using `_ID_DEF_RE` pattern - `inst-extract-def`
@@ -179,7 +179,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
    2. [x] - `p1` - Add each reference to references list with source location - `inst-add-ref`
 4. [x] - `p1` - Check for duplicate definitions - `inst-check-duplicates`
 5. [x] - `p1` - **RETURN** IdResult(definitions, references, errors) - `inst-return-ids`
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 <!-- spd:id:algo -->
 <!-- spd:###:algo-title repeat="many" -->
 
@@ -189,12 +189,12 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 <!-- spd:id:algo has="task" to_code="true" -->
 - [x] **ID**: `spd-spider-spec-template-system-algo-validate-content`
 
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 1. [x] - `p1` - Dispatch based on block type from `VALID_MARKER_TYPES` - `inst-dispatch`
 2. [x] - `p1` - **IF** type="paragraph": validate non-empty text content - `inst-validate-paragraph`
 3. [x] - `p1` - **IF** type="list": validate bullet or numbered list format - `inst-validate-list`
 4. [x] - `p1` - **IF** type="table": validate markdown table structure - `inst-validate-table`
-5. [x] - `p1` - **IF** type="fdl": validate FDL instruction format with priorities - `inst-validate-fdl`
+5. [x] - `p1` - **IF** type="sdsl": validate SDSL instruction format with priorities - `inst-validate-sdsl`
 6. [x] - `p1` - **IF** type starts with "#": validate heading level matches - `inst-validate-heading`
 7. [x] - `p1` - **IF** type="code": validate fenced code block present - `inst-validate-code`
 8. [x] - `p1` - **IF** type="free": skip validation (any content allowed) - `inst-validate-free`
@@ -203,7 +203,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 10. [x] - `p1` - **IF** type="id-ref": validate ID reference format, priority if required - `inst-validate-id-ref`
     1. [x] - `p1` - **IF** line has checkbox (`[ ]`/`[x]`) AND not list item **RETURN** error "Task checkbox must be in a list item" - `inst-validate-id-ref-task-list`
 11. [x] - `p1` - **RETURN** list of content errors - `inst-return-content-errors`
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 <!-- spd:id:algo -->
 <!-- spd:###:algo-title repeat="many" -->
 <!-- spd:##:algorithms -->
@@ -217,13 +217,13 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 <!-- spd:id:state has="task" to_code="true" -->
 - [x] **ID**: `spd-spider-spec-template-system-state-lifecycle`
 
-<!-- spd:fdl:state-transitions -->
+<!-- spd:sdsl:state-transitions -->
 1. [x] - `p1` - **FROM** UNINITIALIZED **TO** LOADING **WHEN** from_path() called - `inst-start-load`
 2. [x] - `p1` - **FROM** LOADING **TO** LOADED **WHEN** parsing succeeds - `inst-load-success`
 3. [x] - `p1` - **FROM** LOADING **TO** ERROR **WHEN** parsing fails - `inst-load-error`
 4. [x] - `p1` - **FROM** LOADED **TO** VALIDATING **WHEN** validate() called - `inst-start-validate`
 5. [x] - `p1` - **FROM** VALIDATING **TO** LOADED **WHEN** validation completes - `inst-validate-complete`
-<!-- spd:fdl:state-transitions -->
+<!-- spd:sdsl:state-transitions -->
 <!-- spd:id:state -->
 <!-- spd:###:state-title repeat="many" -->
 <!-- spd:##:states -->
@@ -238,7 +238,7 @@ Success criteria: All artifacts validate in <100ms; marker parsing handles all v
 - [x] `p1` - **ID**: `spd-spider-spec-template-system-req-parsing`
 
 <!-- spd:paragraph:req-body -->
-Templates with Spider markers are parsed into structured TemplateBlock objects with type, name, attributes, and line ranges. Supports all marker types in VALID_MARKER_TYPES including id, id-ref, list, paragraph, table, fdl, headings, and free.
+Templates with Spider markers are parsed into structured TemplateBlock objects with type, name, attributes, and line ranges. Supports all marker types in VALID_MARKER_TYPES including id, id-ref, list, paragraph, table, sdsl, headings, and free.
 <!-- spd:paragraph:req-body -->
 
 **Implementation details**:
@@ -432,9 +432,9 @@ The Template System is implemented in `skills/spider/scripts/spider/utils/templa
 - Content: `free`, `paragraph`, `list`, `numbered-list`, `task-list`, `table`, `code`
 - Identity: `id`, `id-ref`
 - Structure: `#`, `##`, `###`, `####`, `#####`, `######`
-- Special: `link`, `image`, `fdl`
+- Special: `link`, `image`, `sdsl`
 
-**FDL (Spec Description Language)** format:
+**SDSL (Spider DSL)** format:
 ```
 N. [ ] - `pN` - Description - `inst-slug`
 ```

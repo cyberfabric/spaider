@@ -10,7 +10,7 @@ This comparison focuses on how each framework/toolkit structures work for AI-ass
 ## One-paragraph summaries
 
 ### Spider (Spec-Driven Design)
-A design-first methodology with a layered artifact hierarchy (adapter → PRD → overall design → specs manifest → spec design → code), strict artifact structure requirements (sections, IDs, cross-links), and deterministic validation gates with scoring. It emphasizes plain-English behavioral specs (Spider DSL (SDSL)) and traceability from design to code.
+A design-first methodology with a layered artifact hierarchy (adapter → PRD → DESIGN (+ ADR) → DECOMPOSITION → SPEC → code), strict artifact structure requirements (sections, IDs, cross-links), and deterministic validation gates with scoring. It emphasizes plain-English behavioral specs (Spider DSL (SDSL)) and traceability from design to code.
 
 ### OpenSpec
 A change-first, spec-driven workflow centered on explicit change folders and “delta specs” that patch a source-of-truth spec set. It is optimized for brownfield evolution and multi-spec updates by separating current truth (`{project-root}/openspec/specs/`) from proposals (`{project-root}/openspec/changes/`).
@@ -50,7 +50,7 @@ Legend:
 | **🔀 Delta/patch spec format** | ❌ Out of scope | ✅ Native (ADDED/MODIFIED/REMOVED/RENAMED requirements) | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope |
 | **📐 Formal requirement format constraints** | ✅ Native (Spider DSL (SDSL) for behaviors; no code in designs) | ✅ Native (requirements + scenarios; SHALL/MUST) | ⚠️ Supported (templates; constitution; process) | ⚠️ Supported (English docs; defined test flows) | ⚠️ Supported | ⚠️ Supported |
 | **🔒 Artifact schema strictness (required sections/IDs)** | ✅ Native (requirements define exact structure per artifact) | ✅ Native (change folder + delta format are prescribed) | ⚠️ Supported (templates; constitution) | ⚠️ Supported (recommended doc layout; repo conventions) | ✅ Native (standards + create/validate/edit modes) | ⚠️ Supported |
-| **🧾 Workflow spec strictness (prereqs/steps/criteria/checklists)** | ✅ Native (workflow file structure is prescribed; checklists + criteria) | ⚠️ Supported (strong checklists; less of a global workflow file schema) | ⚠️ Supported (phase pipeline + prerequisites; less of a formal workflow schema) | ⚠️ Supported (AGENTS.md + DoD/gates; less of a workflow file schema) | ✅ Native (multi-step workflows + progressive disclosure) | ❌ Out of scope |
+| **🧾 Workflow spec strictness (prereqs/steps/criteria/checklists)** | ✅ Native (workflow file structure is prescribed; checklists + criteria) | ⚠️ Supported (schema-driven workflow + docs; not checklist-centric) | ⚠️ Supported (phase pipeline + prerequisites; less of a formal workflow schema) | ⚠️ Supported (AGENTS.md + DoD/gates; less of a workflow file schema) | ✅ Native (multi-step workflows + progressive disclosure) | ❌ Out of scope |
 | **🧩 Progressive disclosure workflow execution (step isolation)** | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ✅ Native (AI sees only the current step) | ❌ Out of scope |
 | **⏸️ Continuable workflows (pause/resume with persisted step state)** | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ✅ Native (continuable workflows) | ⚠️ Supported (disk state enables resuming) |
 | **🔁 Fresh-context iteration loop (context reset per cycle)** | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ✅ Native (fresh context is a core tenet) |
@@ -61,15 +61,15 @@ Legend:
 | **🏷️ Deterministic code traceability validator (design/spec → code markers)** | ✅ Native (scans for `@spider-*` tags) | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope |
 | **🔬 Traceability granularity** | Instruction-level (`ph-*` + `inst-*`) + code markers | Change-level (proposal/tasks/deltas per change) | Task-level (spec → plan → tasks; tasks include file paths) | Verification-level (docs ↔ tests/analyzers; repo conventions) | Task/story-level (PRD → stories → implementation) | Verification-level (tests/typecheck/build gates + disk state) |
 | **📊 Scoring / thresholds (beyond pass/fail)** | ✅ Native (100-point scoring + thresholds per workflow) | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope |
-| **🚧 Strict phase gates** | ✅ Native (layer-by-layer validation chain) | ✅ Native (default workflow); experimental OPSX can be fluid (no strict gates) | ✅ Native (phase checkpoints: spec → plan → tasks → implement) | ✅ Native (tests/analyzers gate completion) | ✅ Native (phase pipeline + workflow prerequisites) | ✅ Native (verification-driven loop stop conditions) |
-| **🤖 Agent instructions single source** | ✅ Native (`AGENTS.md` hierarchy) | ✅ Native (`{project-root}/openspec/AGENTS.md` + root hand-off) | ⚠️ Supported (slash commands + generated repo files) | ✅ Native (`AGENTS.md` governance + local AGENTS.md) | ✅ Native (specialized agents are core) | ⚠️ Supported |
+| **🚧 Strict phase gates** | ✅ Native (layer-by-layer validation chain) | ⚠️ Supported (legacy workflow is phase-based; OPSX is actions-not-phases) | ✅ Native (phase checkpoints: spec → plan → tasks → implement) | ✅ Native (tests/analyzers gate completion) | ✅ Native (phase pipeline + workflow prerequisites) | ✅ Native (verification-driven loop stop conditions) |
+| **🤖 Agent instructions single source** | ✅ Native (`AGENTS.md` hierarchy) | ⚠️ Supported (generated tool-specific instruction files via `openspec init` / `openspec update`) | ⚠️ Supported (slash commands + generated repo files) | ✅ Native (`AGENTS.md` governance + local AGENTS.md) | ✅ Native (specialized agents are core) | ⚠️ Supported |
 | **⚙️ Repeatable automation packages ("skills")** | ✅ Native (Spider skill tool + scripts) | ⚠️ Supported (CLI + agent instructions) | ⚠️ Supported (scripts/templates) | ✅ Native (skills packages with scripts/references/assets) | ✅ Native (workflow library/modules) | ⚠️ Supported |
 | **🧪 Executable gates (tests/analyzers) as decision makers** | ⚠️ Supported (methodology expects tests; adapter-driven) | ⚠️ Supported | ⚠️ Supported (constitution can mandate TDD; agents run real tools) | ✅ Native (tests + static analysis are decision makers) | ⚠️ Supported | ✅ Native |
 | **🌐 Integration/UI/API testing emphasis** | ⚠️ Supported (tooling can validate code vs spec; test strategy is adapter-driven) | ⚠️ Supported | ⚠️ Supported | ✅ Native (explicitly emphasized as "hard gate") | ⚠️ Supported | ⚠️ Supported |
 | **🎭 Mocks/fakes policy** | ❌ Out of scope (adapter-defined) | ❌ Out of scope | ❌ Out of scope | ✅ Native (restricted; prefer real containers for internal systems) | ❌ Out of scope | ❌ Out of scope |
 | **👮 Governance of instruction changes** | ⚠️ Supported (via repo process; not the central concept) | ⚠️ Supported | ⚠️ Supported | ✅ Native (AGENTS.md changes require human approval) | ❌ Out of scope | ❌ Out of scope |
 | **🗂️ Multi-repo / workspace planning** | ❌ Out of scope (core) | 🚀 Emerging (workspaces "coming soon") | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope | ❌ Out of scope |
-| **🔧 Tech stack dependency** | None (methodology; tool is Python stdlib) | Node.js (CLI) | Python (specify CLI; commonly installed via `uv`); agent integrations vary | None (process; repo-specific) | Node.js (npx installer/modules) | Node.js/TypeScript (agent libs/orchestrators) |
+| **🔧 Tech stack dependency** | Python (CLI tooling; stdlib-focused) | Node.js (CLI) | Python (specify CLI; commonly installed via `uv`); agent integrations vary | None (process; repo-specific) | Node.js (npx installer/modules) | Node.js/TypeScript (agent libs/orchestrators) |
 
 ### Quantitative scoring analysis
 
@@ -79,7 +79,7 @@ Legend:
 - ❌ **Out of scope = 0 points** (absence is not penalized)
 - 🚀 **Emerging = 0.5 points** (planned/in development)
 
-This is an industry-standard linear weighting system for spec comparison matrices. "Out of scope" receives 0 (not negative) because frameworks intentionally specialize—absence of a spec is not a deficiency if it's outside the framework's design goals.
+This is a simple linear weighting system for the matrix. "Out of scope" receives 0 (not negative) because frameworks intentionally specialize—absence of a spec is not a deficiency if it's outside the framework's design goals.
 
 **Scoring results:**
 
@@ -88,7 +88,7 @@ This is an industry-standard linear weighting system for spec comparison matrice
 | **Spider** | 17 × 3 = 51 | 4 × 1 = 4 | 7 × 0 = 0 | 0 × 0.5 = 0 | **55** |
 | **BMAD** | 12 × 3 = 36 | 6 × 1 = 6 | 10 × 0 = 0 | 0 × 0.5 = 0 | **42** |
 | **MCAF** | 8 × 3 = 24 | 10 × 1 = 10 | 10 × 0 = 0 | 0 × 0.5 = 0 | **34** |
-| **OpenSpec** | 8 × 3 = 24 | 8 × 1 = 8 | 11 × 0 = 0 | 1 × 0.5 = 0.5 | **32.5** |
+| **OpenSpec** | 6 × 3 = 18 | 10 × 1 = 10 | 11 × 0 = 0 | 1 × 0.5 = 0.5 | **28.5** |
 | **Spec Kit** | 3 × 3 = 9 | 14 × 1 = 14 | 11 × 0 = 0 | 0 × 0.5 = 0 | **23** |
 | **Ralph** | 3 × 3 = 9 | 12 × 1 = 12 | 13 × 0 = 0 | 0 × 0.5 = 0 | **21** |
 
@@ -109,9 +109,9 @@ This is an industry-standard linear weighting system for spec comparison matrice
 - Supported: Greenfield fit, PRD artifact, Overall architecture artifact, Spec catalog / roadmap artifact, Change management artifact, Spec-as-source-of-truth (regenerate mindset), Formal requirement format constraints, Artifact schema strictness (required sections/IDs), Workflow spec strictness (prereqs/steps/criteria/checklists), Cross-artifact integrity across a layered doc stack (IDs/refs/coverage)
 - Strengths: Strongest in **verification gates** and **testing discipline**
 
-**OpenSpec (32.5 points):**
-- Native: Brownfield fit, Change management artifact, Delta/patch spec format, Formal requirement format constraints, Artifact schema strictness (required sections/IDs), Deterministic doc/schema validator (format/placeholders/required fields), Strict phase gates, Agent instructions single source
-- Supported: Greenfield fit, Overall architecture artifact, Spec-as-source-of-truth (regenerate mindset), Workflow spec strictness (prereqs/steps/criteria/checklists), Repeatable automation packages ("skills"), Executable gates (tests/analyzers) as decision makers, Integration/UI/API testing emphasis, Governance of instruction changes
+**OpenSpec (28.5 points):**
+- Native: Brownfield fit, Change management artifact, Delta/patch spec format, Formal requirement format constraints, Artifact schema strictness (required sections/IDs), Deterministic doc/schema validator (format/placeholders/required fields)
+- Supported: Greenfield fit, Overall architecture artifact, Spec-as-source-of-truth (regenerate mindset), Workflow spec strictness (prereqs/steps/criteria/checklists), Repeatable automation packages ("skills"), Executable gates (tests/analyzers) as decision makers, Integration/UI/API testing emphasis, Governance of instruction changes, Strict phase gates, Agent instructions single source
 - Emerging: Multi-repo / workspace planning
 - Strengths: Strongest in **change-centric workflows** and **delta tracking**
 
@@ -131,7 +131,7 @@ This is an industry-standard linear weighting system for spec comparison matrice
 
 2. **BMAD stands out for workflow execution capabilities** (42 points), primarily due to progressive disclosure, continuable workflows, and tri-modal create/validate/edit patterns.
 
-3. **OpenSpec and MCAF cluster in the middle** (~32–34 points), but with different specializations:
+3. **OpenSpec and MCAF cluster in the middle** (~28–34 points), but with different specializations:
    - OpenSpec: Change management and delta tracking
    - MCAF: Verification gates and testing discipline
 
@@ -186,7 +186,7 @@ This is an industry-standard linear weighting system for spec comparison matrice
 
 ### 3) Validation gates and failure modes
 - **Spider**: Explicit validation chain per layer; dependent artifacts require validated parents.
-- **OpenSpec**: Validate change folder (strict) and do not code before proposal is approved; archive after deployment.
+- **OpenSpec**: Validate change folder (strict) and keep work proposal-first; archive after deployment.
 - **Spec Kit**: Workflow emphasizes not moving to next phase until validated, but enforcement is primarily via process discipline + templates.
 - **MCAF**: Spec docs and ADR are updated when needed; failing tests (including integration/API/UI) and analyzers block completion.
 - **BMAD**: Workflow prerequisites and phase sequencing act as gates; Quick Flow emphasizes auto-validation of readiness; failures typically route back to earlier planning/workflow steps.
@@ -266,13 +266,16 @@ This is an industry-standard linear weighting system for spec comparison matrice
 ## Primary sources consulted
 
 ### Spider
-- `README.md`, `WORKFLOW.md`, `QUICKSTART.md`, `guides/ADAPTER.md`
+- `README.md`, `skills/spider/README.md`, `weavers/sdlc/guides/QUICKSTART.md`, `guides/ADAPTER.md`
 - Spider workflow execution requirements and protocols in `requirements/` and `workflows/`
 
 ### OpenSpec
 - https://github.com/Fission-AI/OpenSpec
 - https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/README.md
-- https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/openspec/AGENTS.md
+- https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/docs/opsx.md
+- https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/docs/commands.md
+- https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/docs/workflows.md
+- https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/docs/cli.md
 - https://openspec.dev/
 
 ### Spec Kit
@@ -290,8 +293,6 @@ This is an industry-standard linear weighting system for spec comparison matrice
 ### BMAD
 - https://github.com/bmad-code-org/BMAD-METHOD
 - https://raw.githubusercontent.com/bmad-code-org/BMAD-METHOD/main/README.md
-- https://docs.bmad-method.org/explanation/architecture/four-phases/
-- https://docs.bmad-method.org/tutorials/getting-started/getting-started-bmadv6/
 - https://docs.bmad-method.org/llms-full.txt
 
 ### Ralph

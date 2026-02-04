@@ -551,10 +551,10 @@ Add Spider to existing projects without disruption. Auto-detect existing archite
 ### FR-017 Spider DSL (SDSL)
 
 <!-- spd:id:fr has="priority,task" covered_by="DESIGN,DECOMPOSITION,SPEC" -->
-- [x] `p1` - **ID**: `spd-spider-fr-fdl`
+- [x] `p1` - **ID**: `spd-spider-fr-sdsl`
 
 <!-- spd:free:fr-summary -->
-Plain English algorithm description language for actor flows (Spider DSL, abbreviated SDSL). Structured numbered lists with bold keywords (**IF**, **ELSE**, **WHILE**, **FOR EACH**). Instruction markers with checkboxes (- [ ] Inst-label: description). Phase-based organization (ph-1, ph-2, etc.) for implementation tracking. Readable by non-programmers for validation and review. Translates directly to code with traceability tags. Keywords: **AND**, **OR**, **NOT**, **MUST**, **REQUIRED**, **OPTIONAL**. Actor-centric (steps start with **Actor** or **System**).
+Plain English algorithm description language for actor flows (Spider DSL, abbreviated SDSL). Structured numbered lists with bold keywords (**IF**, **ELSE**, **WHILE**, **FOR EACH**). Instruction markers with checkboxes (- [ ] Inst-label: description). Phase-based organization (p1, p2, etc.) for implementation tracking. Readable by non-programmers for validation and review. Translates directly to code with traceability tags. Keywords: **AND**, **OR**, **NOT**, **MUST**, **REQUIRED**, **OPTIONAL**. Actor-centric (steps start with **Actor** or **System**).
 <!-- spd:free:fr-summary -->
 
 **Actors**:
@@ -1135,9 +1135,9 @@ The system MUST support hierarchical organization of systems in the artifacts re
 1. UX Designer reviews the spec design actor flows to understand user journeys (uses capability `spd-spider-fr-design-first`)
 2. UX Designer identifies UI screens needed for each flow step
 3. UX Designer creates wireframes mapping each Spider DSL (SDSL) instruction to UI element
-4. For each flow phase (ph-1, ph-2, etc.), UX Designer designs corresponding screen state
+4. For each flow phase (p1, p2, etc.), UX Designer designs corresponding screen state
 5. UX Designer validates that UI covers all actor interactions from flows (uses capability `spd-spider-fr-traceability`)
-6. UX Designer creates UI mockups with annotations linking to flow IDs (e.g., "Implements `spd-<project>-spec-<spec>-flow-<name>:ph-1`")
+6. UX Designer creates UI mockups with annotations linking to flow IDs (e.g., "Implements `spd-<project>-spec-<spec>-flow-<name>:p1`")
 7. Architect reviews UI mockups against the spec design to ensure completeness
 8. UX Designer updates UI based on feedback if flows were unclear
 9. Architect may update the spec design actor flows if UI reveals missing flow steps (triggers `spd-spider-usecase-update-spec-design`)
@@ -1383,7 +1383,7 @@ The system MUST support hierarchical organization of systems in the artifacts re
 ### UC-022 Write Actor Flow in Spider DSL (SDSL)
 
 <!-- spd:id:usecase -->
-**ID**: `spd-spider-usecase-write-fdl-flow`
+**ID**: `spd-spider-usecase-write-sdsl-flow`
 
 **Actors**:
 <!-- spd:id-ref:actor -->
@@ -1401,12 +1401,12 @@ The system MUST support hierarchical organization of systems in the artifacts re
 <!-- spd:numbered-list:flow-steps -->
 1. Architect opens the spec design and navigates to the actor flows
 2. Architect creates new flow: "Login Flow" with ID `spd-spider-seq-intent-to-workflow` (uses capability `spd-spider-fr-design-first`)
-3. Architect writes flow in Spider DSL (SDSL) using plain English with bold keywords (uses capability `spd-spider-fr-fdl`)
+3. Architect writes flow in Spider DSL (SDSL) using plain English with bold keywords (uses capability `spd-spider-fr-sdsl`)
 4. Business Analyst reviews the Spider DSL (SDSL) flow and confirms it matches product requirements
 5. Business Analyst identifies missing case: "What if user forgot password?"
 6. Architect adds step with **OPTIONAL** path to password reset
 7. UX Designer reads flow and creates UI mockups matching each step and instruction
-8. Architect marks instructions with phases for implementation: ph-1 (validation), ph-2 (authentication), ph-3 (session)
+8. Architect marks instructions with phases for implementation: p1 (validation), p2 (authentication), p3 (session)
 9. Developer reads the Spider DSL (SDSL) flow and understands exact implementation requirements without ambiguity
 <!-- spd:numbered-list:flow-steps -->
 

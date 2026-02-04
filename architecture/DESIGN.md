@@ -190,7 +190,7 @@ AI agent integration is achieved through machine-readable specifications (AGENTS
 ##### FR-017 Spider DSL (SDSL)
 
 <!-- spd:id-ref:fr has="priority,task" -->
-- [x] `p1` - `spd-spider-fr-fdl`
+- [x] `p1` - `spd-spider-fr-sdsl`
 <!-- spd:id-ref:fr -->
 
 **Solution**: Use Spider DSL (SDSL) instruction markers in spec design with `ph-N`/`inst-*` tokens.

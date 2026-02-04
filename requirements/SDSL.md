@@ -69,18 +69,18 @@ purpose: Define syntax and grammar for behavior description language
 **Every SDSL step line MUST include**:
 
 - Implementation checkbox: `[ ]` (not implemented) or `[x]` (implemented)
-- Phase token: `ph-{N}` (N is an integer)
+- Phase token: `pN` (N is an integer, e.g., `p1`, `p2`)
 - Instruction ID token: `inst-{short-id}` (kebab-case, stable across renumbering)
 
 **Required format**:
 
-- Numbered step: 1. [ ] - `ph-1` - {instruction} - `inst-some-job`
-- Nested numbered step:    1. [ ] - `ph-1` - {instruction} - `inst-some-job`
-- Bullet step (e.g. under PARALLEL): - [ ] - `ph-1` - {instruction} - `inst-some-job`
+- Numbered step: 1. [ ] - `p1` - {instruction} - `inst-some-job`
+- Nested numbered step:    1. [ ] - `p1` - {instruction} - `inst-some-job`
+- Bullet step (e.g. under PARALLEL): - [ ] - `p1` - {instruction} - `inst-some-job`
 
 **Rules**:
 
-- `ph-{N}` MUST be present on every step line (default is `ph-1`)
+- `pN` MUST be present on every step line (default is `p1`)
 - `inst-{short-id}` MUST be present on every step line
 - `inst-{short-id}` MUST be unique within its scope (a single flow, algorithm, state machine, or testing scenario)
 - Authors MAY change phase numbers only on existing phase tokens (do not invent new syntax)
@@ -94,9 +94,9 @@ purpose: Define syntax and grammar for behavior description language
 Input: [parameters]  
 Output: [result]
 
-1. [ ] - `ph-1` - [Step description] - `inst-step-one`
-2. [ ] - `ph-1` - [Step description] - `inst-step-two`
-3. [ ] - `ph-1` - **RETURN** [result] - `inst-return-result`
+1. [ ] - `p1` - [Step description] - `inst-step-one`
+2. [ ] - `p1` - [Step description] - `inst-step-two`
+3. [ ] - `p1` - **RETURN** [result] - `inst-return-result`
 
 **That's it!** No complex syntax needed.
 
@@ -106,69 +106,69 @@ Output: [result]
 
 ### IF/ELSE IF/ELSE
 
-1. [ ] - `ph-1` - [Step] - `inst-step`
-2. [ ] - `ph-1` - **IF** [condition]: - `inst-if`
-   1. [ ] - `ph-1` - [Nested step] - `inst-if-nested`
-3. [ ] - `ph-1` - **ELSE IF** [condition]: - `inst-else-if`
-   1. [ ] - `ph-1` - [Nested step] - `inst-else-if-nested`
-4. [ ] - `ph-1` - **ELSE**: - `inst-else`
-   1. [ ] - `ph-1` - [Nested step] - `inst-else-nested`
+1. [ ] - `p1` - [Step] - `inst-step`
+2. [ ] - `p1` - **IF** [condition]: - `inst-if`
+   1. [ ] - `p1` - [Nested step] - `inst-if-nested`
+3. [ ] - `p1` - **ELSE IF** [condition]: - `inst-else-if`
+   1. [ ] - `p1` - [Nested step] - `inst-else-if-nested`
+4. [ ] - `p1` - **ELSE**: - `inst-else`
+   1. [ ] - `p1` - [Nested step] - `inst-else-nested`
 
 ### FOR EACH
 
-1. [ ] - `ph-1` - [Step] - `inst-step`
-2. [ ] - `ph-1` - **FOR EACH** item in collection: - `inst-for-each`
-   1. [ ] - `ph-1` - [Process item] - `inst-process-item`
-3. [ ] - `ph-1` - [Next step] - `inst-next-step`
+1. [ ] - `p1` - [Step] - `inst-step`
+2. [ ] - `p1` - **FOR EACH** item in collection: - `inst-for-each`
+   1. [ ] - `p1` - [Process item] - `inst-process-item`
+3. [ ] - `p1` - [Next step] - `inst-next-step`
 
 ### WHILE
 
-1. [ ] - `ph-1` - [Step] - `inst-step`
-2. [ ] - `ph-1` - **WHILE** [condition]: - `inst-while`
-   1. [ ] - `ph-1` - [Process] - `inst-while-body`
-3. [ ] - `ph-1` - [Next step] - `inst-next-step`
+1. [ ] - `p1` - [Step] - `inst-step`
+2. [ ] - `p1` - **WHILE** [condition]: - `inst-while`
+   1. [ ] - `p1` - [Process] - `inst-while-body`
+3. [ ] - `p1` - [Next step] - `inst-next-step`
 
 ### TRY/CATCH
 
-1. [ ] - `ph-1` - **TRY**: - `inst-try`
-   1. [ ] - `ph-1` - [Operation that may fail] - `inst-try-op`
-2. [ ] - `ph-1` - **CATCH** [ErrorType]: - `inst-catch`
-   1. [ ] - `ph-1` - [Handle error] - `inst-handle-error`
-3. [ ] - `ph-1` - [Continue] - `inst-continue`
+1. [ ] - `p1` - **TRY**: - `inst-try`
+   1. [ ] - `p1` - [Operation that may fail] - `inst-try-op`
+2. [ ] - `p1` - **CATCH** [ErrorType]: - `inst-catch`
+   1. [ ] - `p1` - [Handle error] - `inst-handle-error`
+3. [ ] - `p1` - [Continue] - `inst-continue`
 
 ### PARALLEL
 
-1. [ ] - `ph-1` - [Prepare] - `inst-prepare`
-2. [ ] - `ph-1` - **PARALLEL**: - `inst-parallel`
-   - [ ] - `ph-1` - [Task 1] - `inst-parallel-task-1`
-   - [ ] - `ph-1` - [Task 2] - `inst-parallel-task-2`
-   - [ ] - `ph-1` - [Task 3] - `inst-parallel-task-3`
-3. [ ] - `ph-1` - Wait for completion - `inst-wait`
-4. [ ] - `ph-1` - [Combine results] - `inst-combine-results`
+1. [ ] - `p1` - [Prepare] - `inst-prepare`
+2. [ ] - `p1` - **PARALLEL**: - `inst-parallel`
+   - [ ] - `p1` - [Task 1] - `inst-parallel-task-1`
+   - [ ] - `p1` - [Task 2] - `inst-parallel-task-2`
+   - [ ] - `p1` - [Task 3] - `inst-parallel-task-3`
+3. [ ] - `p1` - Wait for completion - `inst-wait`
+4. [ ] - `p1` - [Combine results] - `inst-combine-results`
 
 ### MATCH (Pattern Matching)
 
-1. [ ] - `ph-1` - [Get value] - `inst-get-value`
-2. [ ] - `ph-1` - **MATCH** [value]: - `inst-match`
-   - [ ] - `ph-1` - **CASE** [pattern]: [Action] - `inst-case-1`
-   - [ ] - `ph-1` - **CASE** [pattern]: [Action] - `inst-case-2`
-   - [ ] - `ph-1` - **DEFAULT**: [Action] - `inst-default`
-3. [ ] - `ph-1` - [Continue] - `inst-continue`
+1. [ ] - `p1` - [Get value] - `inst-get-value`
+2. [ ] - `p1` - **MATCH** [value]: - `inst-match`
+   - [ ] - `p1` - **CASE** [pattern]: [Action] - `inst-case-1`
+   - [ ] - `p1` - **CASE** [pattern]: [Action] - `inst-case-2`
+   - [ ] - `p1` - **DEFAULT**: [Action] - `inst-default`
+3. [ ] - `p1` - [Continue] - `inst-continue`
 
 ### GO TO / SKIP TO
 
-1. [ ] - `ph-1` - [Step] - `inst-step`
-2. [ ] - `ph-1` - **IF** [condition]: - `inst-if`
-   1. [ ] - `ph-1` - **GO TO** step N - `inst-go-to`
-3. [ ] - `ph-1` - [Step] - `inst-next-step`
-4. [ ] - `ph-1` - **SKIP TO** step N - `inst-skip-to`
+1. [ ] - `p1` - [Step] - `inst-step`
+2. [ ] - `p1` - **IF** [condition]: - `inst-if`
+   1. [ ] - `p1` - **GO TO** step N - `inst-go-to`
+3. [ ] - `p1` - [Step] - `inst-next-step`
+4. [ ] - `p1` - **SKIP TO** step N - `inst-skip-to`
 
 ### RETURN (Early Exit)
 
-1. [ ] - `ph-1` - [Step] - `inst-step`
-2. [ ] - `ph-1` - **IF** [condition]: - `inst-if`
-   1. [ ] - `ph-1` - **RETURN** [value] (exit early) - `inst-return`
-3. [ ] - `ph-1` - [Continue only if not returned] - `inst-continue`
+1. [ ] - `p1` - [Step] - `inst-step`
+2. [ ] - `p1` - **IF** [condition]: - `inst-if`
+   1. [ ] - `p1` - **RETURN** [value] (exit early) - `inst-return`
+3. [ ] - `p1` - [Continue only if not returned] - `inst-continue`
 
 ---
 
@@ -179,24 +179,24 @@ Output: [result]
 Input: entity_id, tenants, security_context  
 Output: List of enabled entity IDs
 
-1. [x] - `ph-1` - Initialize empty list: enabled_entities - `inst-init-enabled-entities`
-2. [x] - `ph-1` - Load entity from registry - `inst-load-entity`
-3. [x] - `ph-1` - **IF** entity not found: - `inst-if-not-found`
-   1. [x] - `ph-1` - **RETURN** 404 error - `inst-return-404`
-4. [ ] - `ph-2` - Update entity.enabled_for = tenants - `inst-update-enabled-for`
-5. [ ] - `ph-1` - Add entity_id to enabled_entities - `inst-add-enabled-id`
-6. [x] - `ph-1` - **FOR EACH** ref_id in references: - `inst-for-each-ref`
-   1. [x] - `ph-1` - Load ref_entity - `inst-load-ref-entity`
-   2. [ ] - `ph-2` - **IF** ref_entity not enabled: - `inst-if-ref-not-enabled`
-      1. [ ] - `ph-2` - Enable ref_entity (recursive) - `inst-enable-ref-entity`
-      2. [ ] - `ph-2` - Add to enabled_entities - `inst-add-ref-to-enabled`
-7. [x] - `ph-1` - **TRY**: - `inst-try`
-   1. [x] - `ph-1` - Commit transaction - `inst-commit`
-   2. [x] - `ph-1` - Log audit trail - `inst-log-audit`
-8. [ ] - `ph-1` - **CATCH** any errors: - `inst-catch`
-   1. [ ] - `ph-1` - Rollback transaction - `inst-rollback`
-   2. [ ] - `ph-1` - **RETURN** 500 error - `inst-return-500`
-9. [ ] - `ph-1` - **RETURN** enabled_entities - `inst-return-enabled-entities`
+1. [x] - `p1` - Initialize empty list: enabled_entities - `inst-init-enabled-entities`
+2. [x] - `p1` - Load entity from registry - `inst-load-entity`
+3. [x] - `p1` - **IF** entity not found: - `inst-if-not-found`
+   1. [x] - `p1` - **RETURN** 404 error - `inst-return-404`
+4. [ ] - `p2` - Update entity.enabled_for = tenants - `inst-update-enabled-for`
+5. [ ] - `p1` - Add entity_id to enabled_entities - `inst-add-enabled-id`
+6. [x] - `p1` - **FOR EACH** ref_id in references: - `inst-for-each-ref`
+   1. [x] - `p1` - Load ref_entity - `inst-load-ref-entity`
+   2. [ ] - `p2` - **IF** ref_entity not enabled: - `inst-if-ref-not-enabled`
+      1. [ ] - `p2` - Enable ref_entity (recursive) - `inst-enable-ref-entity`
+      2. [ ] - `p2` - Add to enabled_entities - `inst-add-ref-to-enabled`
+7. [x] - `p1` - **TRY**: - `inst-try`
+   1. [x] - `p1` - Commit transaction - `inst-commit`
+   2. [x] - `p1` - Log audit trail - `inst-log-audit`
+8. [ ] - `p1` - **CATCH** any errors: - `inst-catch`
+   1. [ ] - `p1` - Rollback transaction - `inst-rollback`
+   2. [ ] - `p1` - **RETURN** 500 error - `inst-return-500`
+9. [ ] - `p1` - **RETURN** enabled_entities - `inst-return-enabled-entities`
 
 ---
 
@@ -207,15 +207,15 @@ Output: List of enabled entity IDs
 Actor: Admin  
 Goal: Create new dashboard
 
-1. [ ] - `ph-1` - User opens Dashboard page - `inst-open-dashboard-page`
-2. [ ] - `ph-1` - User clicks "Create New" - `inst-click-create-new`
-3. [ ] - `ph-1` - UI shows dashboard editor - `inst-show-editor`
-4. [ ] - `ph-1` - User enters name and description - `inst-enter-name-and-description`
-5. [ ] - `ph-1` - User clicks "Save" - `inst-click-save`
-6. [ ] - `ph-1` - **API**: `POST /api/analytics/v1/gts` - `inst-api-post-gts`
-   - [ ] - `ph-1` - Body: `{type: "layout.dashboard", name: "..."}` - `inst-body-layout-dashboard`
-7. [ ] - `ph-1` - UI redirects to dashboard editor - `inst-redirect-to-editor`
-8. [ ] - `ph-1` - User adds widgets - `inst-add-widgets`
+1. [ ] - `p1` - User opens Dashboard page - `inst-open-dashboard-page`
+2. [ ] - `p1` - User clicks "Create New" - `inst-click-create-new`
+3. [ ] - `p1` - UI shows dashboard editor - `inst-show-editor`
+4. [ ] - `p1` - User enters name and description - `inst-enter-name-and-description`
+5. [ ] - `p1` - User clicks "Save" - `inst-click-save`
+6. [ ] - `p1` - **API**: `POST /api/analytics/v1/gts` - `inst-api-post-gts`
+   - [ ] - `p1` - Body: `{type: "layout.dashboard", name: "..."}` - `inst-body-layout-dashboard`
+7. [ ] - `p1` - UI redirects to dashboard editor - `inst-redirect-to-editor`
+8. [ ] - `p1` - User adds widgets - `inst-add-widgets`
 
 ---
 
@@ -227,7 +227,7 @@ Goal: Create new dashboard
 - Bold keywords: **IF**, **FOR EACH**, **WHILE**, **TRY/CATCH**, **RETURN**, **MATCH**
 - Plain English descriptions
 - Indentation for nested steps
-- Each step line includes `[ ]` or `[x]`, `ph-{N}`, and an instruction ID token `inst-{short-id}`
+- Each step line includes `[ ]` or `[x]`, `pN`, and an instruction ID token `inst-{short-id}`
 - For codebase traceability, every implemented instruction marker maps to code via paired Spider block markers wrapping non-empty code.
    - Format: `@spider-begin:{spd-id}:p{N}:inst-{id}` ... code ... `@spider-end:{spd-id}:p{N}:inst-{id}`
    - Example: `# @spider-begin:spd-system-spec-x-algo-validate:p1:inst-check-input`
@@ -258,18 +258,18 @@ Goal: Create new dashboard
 **States**: [ALL_STATES, COMMA_SEPARATED]
 
 **Transitions**:
-1. **FROM** [state] **TO** [state] **WHEN** [trigger]
-2. **FROM** [state] **TO** [state] **WHEN** [trigger]
+1. [ ] - `p1` - **FROM** [state] **TO** [state] **WHEN** [trigger] - `inst-transition-1`
+2. [ ] - `p1` - **FROM** [state] **TO** [state] **WHEN** [trigger] - `inst-transition-2`
 
 ### With Actions
 
-**Transition: [STATE_A] → [STATE_B]**  
-**When**: [trigger]  
+**Transition: [STATE_A] → [STATE_B]**
+**When**: [trigger]
 **Actions**:
-1. [Action step]
-2. [Action step]
-3. **IF** [condition]:
-   1. [Conditional action]
+1. [ ] - `p1` - [Action step] - `inst-action-1`
+2. [ ] - `p1` - [Action step] - `inst-action-2`
+3. [ ] - `p1` - **IF** [condition]: - `inst-action-if`
+   1. [ ] - `p1` - [Conditional action] - `inst-action-if-body`
 
 ### Example
 
@@ -278,11 +278,11 @@ Goal: Create new dashboard
 **States**: DRAFT, PENDING_PAYMENT, PAID, SHIPPED, DELIVERED, CANCELLED
 
 **Transitions**:
-1. **FROM** DRAFT **TO** PENDING_PAYMENT **WHEN** user submits order
-2. **FROM** PENDING_PAYMENT **TO** PAID **WHEN** payment confirmed
-3. **FROM** PAID **TO** SHIPPED **WHEN** order dispatched
-4. **FROM** SHIPPED **TO** DELIVERED **WHEN** delivery confirmed
-5. **FROM** DRAFT **TO** CANCELLED **WHEN** user cancels
+1. [ ] - `p1` - **FROM** DRAFT **TO** PENDING_PAYMENT **WHEN** user submits order - `inst-submit`
+2. [ ] - `p1` - **FROM** PENDING_PAYMENT **TO** PAID **WHEN** payment confirmed - `inst-pay`
+3. [ ] - `p1` - **FROM** PAID **TO** SHIPPED **WHEN** order dispatched - `inst-ship`
+4. [ ] - `p1` - **FROM** SHIPPED **TO** DELIVERED **WHEN** delivery confirmed - `inst-deliver`
+5. [ ] - `p1` - **FROM** DRAFT **TO** CANCELLED **WHEN** user cancels - `inst-cancel`
 
 ---
 
@@ -352,8 +352,8 @@ example_code();
 ```
 ⚠️ Incomplete SDSL step line: {line content}
 → Location: {file}:{line}
-→ Missing: {checkbox | ph-{N} | inst-{id}}
-→ Fix: Add missing token(s) in format: N. [ ] - `ph-1` - description - `inst-id`
+→ Missing: {checkbox | pN | inst-{id}}
+→ Fix: Add missing token(s) in format: N. [ ] - `p1` - description - `inst-id`
 ```
 **Action**: FAIL validation — all tokens are mandatory.
 
@@ -403,7 +403,7 @@ example_code();
 | S.1 | Uses numbered markdown lists (1, 2, 3...) | YES | Regex: `^\d+\.` for step lines |
 | S.2 | Proper nesting with indentation | YES | Nested steps have consistent indent |
 | S.3 | Each step line includes `[ ]` or `[x]` | YES | Checkbox present after step number |
-| S.4 | Each step line includes phase token `ph-{N}` | YES | Regex: `ph-\d+` in backticks |
+| S.4 | Each step line includes phase token `pN` | YES | Regex: `p\d+` in backticks |
 | S.5 | Each step line includes instruction ID `inst-{id}` | YES | Regex: `inst-[a-z0-9-]+` in backticks |
 | S.6 | No code blocks or function syntax | YES | No `fn`, `function`, `async`, `def` |
 | S.7 | No type annotations | YES | No `: string`, `<T>`, `-> Type` |

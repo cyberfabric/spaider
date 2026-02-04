@@ -43,7 +43,7 @@ skills/spider/scripts/spider/    # Main CLI package
 
 - **Format**: `@spider-{kind}:{id}:{phase}`
 - **Example**: `@spider-fr:spd-prd-1:impl`
-- **Phases**: `ph-1` (placeholder), `impl` (implementation)
+- **Phases**: `p1`, `p2`, etc. (implementation phases)
 
 ---
 

@@ -62,7 +62,7 @@ spider-template:
 - `spd-{system}-actor-{slug}`
 <!-- spd:id-ref:actor -->
 
-<!-- spd:fdl:flow-steps -->
+<!-- spd:sdsl:flow-steps -->
 1. [ ] - `p1` - Actor fills form (field1, field2) - `inst-fill-form`
 2. [ ] - `p1` - API: POST /api/{resource} (body: field1, field2) - `inst-api-call`
 3. [ ] - `p2` - Algorithm: validate input using <!-- spd:id-ref:algo has="task" required="false" -->[ ] - `spd-{system}-spec-{spec}-algo-{slug}`<!-- spd:id-ref:algo --> - `inst-run-algo`
@@ -74,7 +74,7 @@ spider-template:
 9. [ ] - `p2` - **IF** {condition}: - `inst-if`
    1. [ ] - `p2` - {nested step} - `inst-if-nested`
 10. [ ] - `p1` - API: RETURN 201 Created (id, status) - `inst-return`
-<!-- spd:fdl:flow-steps -->
+<!-- spd:sdsl:flow-steps -->
 <!-- spd:id:flow -->
 <!-- spd:###:flow-title repeat="many" -->
 <!-- spd:##:flows -->
@@ -88,7 +88,7 @@ spider-template:
 <!-- spd:id:algo has="task" to_code="true" -->
 - [ ] **ID**: `spd-{system}-spec-{spec}-algo-{slug}`
 
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 1. [ ] - `p1` - **IF** {field} is empty **RETURN** error "{validation message}" - `inst-validate`
 2. [ ] - `p1` - retrieve {entity} from repository by {criteria} - `inst-fetch`
 3. [ ] - `p1` - calculate {result} based on {business rule description} - `inst-calc`
@@ -97,7 +97,7 @@ spider-template:
    1. [ ] - `p1` - apply {operation} to {item} - `inst-loop-body`
 6. [ ] - `p1` - normalize {data} according to {domain rules} - `inst-normalize`
 7. [ ] - `p1` - **RETURN** {result description} - `inst-return`
-<!-- spd:fdl:algo-steps -->
+<!-- spd:sdsl:algo-steps -->
 <!-- spd:id:algo -->
 <!-- spd:###:algo-title repeat="many" -->
 <!-- spd:##:algorithms -->
@@ -111,10 +111,10 @@ spider-template:
 <!-- spd:id:state has="task" to_code="true" -->
 - [ ] **ID**: `spd-{system}-spec-{spec}-state-{slug}`
 
-<!-- spd:fdl:state-transitions -->
+<!-- spd:sdsl:state-transitions -->
 1. [ ] - `p1` - **FROM** {STATE} **TO** {STATE} **WHEN** {trigger} - `inst-transition-1`
 2. [ ] - `p1` - **FROM** {STATE} **TO** {STATE} **WHEN** {trigger} - `inst-transition-2`
-<!-- spd:fdl:state-transitions -->
+<!-- spd:sdsl:state-transitions -->
 <!-- spd:id:state -->
 <!-- spd:###:state-title repeat="many" -->
 <!-- spd:##:states -->

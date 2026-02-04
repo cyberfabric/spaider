@@ -54,7 +54,7 @@ content
 <!-- spd:TYPE:NAME -->
 ```
 
-**Common marker types**: `free`, `id`, `id-ref`, `list`, `table`, `paragraph`, `fdl`, `#`-`######`
+**Common marker types**: `free`, `id`, `id-ref`, `list`, `table`, `paragraph`, `sdsl`, `#`-`######`
 
 **ID format**: `` `spd-{hierarchy-prefix}-{kind}-{slug}` `` (see [ID Naming Convention](#id-naming-convention))
 
@@ -141,7 +141,7 @@ content goes here
 | `#` - `######` | Heading (level 1-6) | First line must be heading of specified level |
 | `link` | Markdown link | Must contain `[text](url)` |
 | `image` | Markdown image | Must start with `!` |
-| `fdl` | SDSL instruction list | Lines matching SDSL format |
+| `sdsl` | SDSL instruction list | Lines matching SDSL format |
 
 ### Marker Attributes
 
@@ -251,13 +251,13 @@ A **slug** is a machine-readable identifier derived from a human name. Slugs are
 
 ## Spider DSL (SDSL) Format
 
-Spider DSL (SDSL) is used in `fdl` blocks to define step-by-step instructions with traceability.
+Spider DSL (SDSL) is used in `sdsl` blocks to define step-by-step instructions with traceability.
 
 ### SDSL Line Format
 
 ```
-N. [ ] - `ph-N` - Description - `inst-slug`
-- [ ] - `ph-N` - Description - `inst-slug`
+N. [ ] - `pN` - Description - `inst-slug`
+- [ ] - `pN` - Description - `inst-slug`
 ```
 
 **Pattern**:
@@ -269,15 +269,15 @@ N. [ ] - `ph-N` - Description - `inst-slug`
 Components:
 - `N.` or `-` — list marker (numbered or bullet)
 - `[ ]` or `[x]` — completion checkbox
-- `` `ph-N` `` — phase number
+- `` `pN` `` — phase number (e.g., `p1`, `p2`)
 - `Description` — what this step does
 - `` `inst-slug` `` — instruction ID for code traceability
 
 **Example**:
 ```markdown
-1. [ ] - `ph-1` - Load configuration from environment - `inst-load-config`
-2. [ ] - `ph-1` - Validate configuration schema - `inst-validate-config`
-3. [ ] - `ph-2` - Initialize database connection - `inst-init-db`
+1. [ ] - `p1` - Load configuration from environment - `inst-load-config`
+2. [ ] - `p1` - Validate configuration schema - `inst-validate-config`
+3. [ ] - `p2` - Initialize database connection - `inst-init-db`
 ```
 
 ---
@@ -308,9 +308,9 @@ Brief description of the spec.
 - [ ] **ID**: `spd-system-req-xxx`
 <!-- spd:id:requirements -->
 
-<!-- spd:fdl:flow required="true" -->
-1. [ ] - `ph-1` - Step description - `inst-step-name`
-<!-- spd:fdl:flow -->
+<!-- spd:sdsl:flow required="true" -->
+1. [ ] - `p1` - Step description - `inst-step-name`
+<!-- spd:sdsl:flow -->
 ```
 
 ---
@@ -339,7 +339,7 @@ Brief description of the spec.
 | `#`-`######` | First line is heading of correct level |
 | `link` | Contains `[text](url)` |
 | `image` | Starts with `!` |
-| `fdl` | Each line matches SDSL pattern |
+| `sdsl` | Each line matches SDSL pattern |
 
 ### Cross-Validation
 
