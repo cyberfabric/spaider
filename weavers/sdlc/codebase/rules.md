@@ -67,6 +67,7 @@ Agent confirms understanding of requirements:
 - [ ] Traceability Mode determined per spec (FULL vs DOCS-ONLY)
 - [ ] If Mode ON: markers follow spec syntax (`@spaider-*`, `@spaider-begin`/`@spaider-end`)
 - [ ] If Mode ON: all `to_code="true"` IDs have markers
+- [ ] If Mode ON: every implemented SDSL instruction (`[x] ... `inst-*``) has a paired `@spaider-begin/.../@spaider-end` block marker in code
 - [ ] If Mode ON: no orphaned/stale markers
 - [ ] If Mode ON: design checkboxes synced with code
 - [ ] If Mode OFF: no Spaider markers in code
@@ -102,6 +103,10 @@ DESIGN: id:principle/constraint/component/seq/dbtable [x] when ALL refs [x]
 1. **After implementing SDSL instruction**:
    - Add `@spaider-begin:{spd-id}:p{N}:inst-{slug}` / `@spaider-end:...` markers
    - Mark corresponding SDSL step `[x]` in SPEC
+
+**Consistency rule (MANDATORY)**:
+- [ ] Never mark an SDSL instruction `[x]` unless the corresponding code block markers exist and wrap non-empty implementation code
+- [ ] Never add a code block marker pair unless the corresponding SDSL instruction exists in the design source (add it first if missing)
 
 2. **After completing flow/algo/state/req**:
    - All SDSL steps marked `[x]` → mark `id:flow`/`id:algo`/etc. as `[x]` in SPEC

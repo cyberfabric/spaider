@@ -8,3 +8,5 @@ def pytest_configure() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     spaider_scripts_dir = repo_root / "skills" / "spaider" / "scripts"
     sys.path.insert(0, str(spaider_scripts_dir))
+    overwork_alert_src_dir = repo_root / "examples" / "overwork_alert" / "src"
+    sys.path.insert(0, str(overwork_alert_src_dir))

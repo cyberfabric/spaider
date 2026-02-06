@@ -28,6 +28,11 @@ _ID_REF_RE = re.compile(
 )
 _BACKTICK_ID_RE = re.compile(r"`(spd-[a-z0-9][a-z0-9-]+)`")
 
+_SDSL_LINE_RE = re.compile(
+    r"^\s*(?:\d+\.\s+|-\s+)\[\s*(?P<check>[xX ])\s*\]\s*-\s*`(?P<phase>(?:p\d+|ph-\d+))`\s*-\s*.+\s*-\s*`inst-(?P<inst>[a-z0-9-]+)`\s*$"
+)
+_SDSL_PHASE_NUM_RE = re.compile(r"^(?:p|ph-)(?P<num>\d+)$")
+
 
 def _normalize_spd_id_from_line(line: str) -> Optional[str]:
     stripped = line.strip()
@@ -116,6 +121,75 @@ def scan_spd_ids_without_markers(path: Path) -> List[Dict[str, object]]:
         # Generic inline backticked references.
         for mm in _BACKTICK_ID_RE.finditer(raw):
             hits.append({"id": mm.group(1), "line": idx0 + 1, "type": "reference", "checked": False})
+
+    return hits
+
+
+def scan_sdsl_instructions_without_markers(path: Path) -> List[Dict[str, object]]:
+    """Scan a file for SDSL instruction lines without relying on `<!-- spd:... -->` markers.
+
+    Only applies when the file contains no Spaider markers.
+
+    Parent ID binding rule:
+    - The instruction is bound to the most recent ID *definition* encountered above it
+      ("first defined id above before SDSL"), if any.
+
+    Returns hits with keys:
+      - type: "sdsl"
+      - checked: bool
+      - phase: int
+      - inst: str (without "inst-" prefix)
+      - parent_id: Optional[str]
+      - line: int (1-based)
+    """
+    lines = read_text_safe(path)
+    if lines is None:
+        return []
+    if any("<!--" in ln and "spd:" in ln for ln in lines):
+        return []
+
+    hits: List[Dict[str, object]] = []
+    in_fence = False
+    last_defined_id: Optional[str] = None
+
+    for idx0, raw in enumerate(lines):
+        if _CODE_FENCE_RE.match(raw):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+
+        stripped = raw.strip()
+        if not stripped:
+            continue
+
+        mdef = _ID_DEF_RE.match(stripped)
+        if mdef:
+            id_value = mdef.group("id") or mdef.group("id2") or mdef.group("id3")
+            if id_value:
+                last_defined_id = id_value
+            continue
+
+        m = _SDSL_LINE_RE.match(raw)
+        if not m:
+            continue
+
+        check = str(m.group("check") or " ").strip().lower()
+        checked = check == "x"
+        phase_raw = str(m.group("phase") or "").strip()
+        mph = _SDSL_PHASE_NUM_RE.match(phase_raw)
+        if not mph:
+            continue
+        phase = int(mph.group("num"))
+
+        hits.append({
+            "type": "sdsl",
+            "checked": checked,
+            "phase": phase,
+            "inst": str(m.group("inst")),
+            "parent_id": last_defined_id,
+            "line": idx0 + 1,
+        })
 
     return hits
 

@@ -1286,6 +1286,7 @@ def _cmd_validate(argv: List[str]) -> int:
 
     # Code traceability validation (unless skipped)
     code_files_scanned: List[Dict[str, object]] = []
+    parsed_code_files: List[CodeFile] = []
     code_ids_found: Set[str] = set()
     to_code_ids: Set[str] = set()
     artifact_ids: Set[str] = set()
@@ -1296,7 +1297,11 @@ def _cmd_validate(argv: List[str]) -> int:
     for artifact_path, _template_path, _artifact_type, traceability in artifacts_to_validate:
         traceability_by_path[str(artifact_path)] = traceability
 
-    from .utils.document import file_has_spaider_markers, scan_spd_ids_without_markers
+    from .utils.document import (
+        file_has_spaider_markers,
+        scan_sdsl_instructions_without_markers,
+        scan_spd_ids_without_markers,
+    )
 
     # Determine which markerless FULL-traceability IDs we might accept references from code for.
     for artifact_path, _template_path, artifact_kind, traceability in artifacts_to_validate:
@@ -1351,6 +1356,8 @@ def _cmd_validate(argv: List[str]) -> int:
                     if strict_code_validation and errs:
                         all_errors.extend(errs)
                     continue
+
+                parsed_code_files.append(cf)
 
                 if strict_code_validation:
                     # Validate structure
@@ -1410,6 +1417,102 @@ def _cmd_validate(argv: List[str]) -> int:
                     "message": "ID marked to_code=\"true\" has no code marker",
                     "id": missing_id,
                 })
+
+            # SDSL instruction-level coverage:
+            # For each checked ([x]) SDSL instruction under a to_code="true" ID in FULL traceability,
+            # require a code block marker pair: @spaider-begin:{id}:p{phase}:inst-{inst} ... @spaider-end...
+            code_block_keys: Set[Tuple[str, int, str]] = set()
+            for cf in parsed_code_files:
+                for bm in cf.block_markers:
+                    code_block_keys.add((bm.id, int(bm.phase), str(bm.inst)))
+
+            def find_parent_id_def(
+                defs: List[object],
+                line_no: int,
+            ) -> Optional[object]:
+                candidates = []
+                for d in defs:
+                    blk = getattr(d, "block", None)
+                    if not blk:
+                        continue
+                    if blk.start_line <= line_no <= blk.end_line:
+                        candidates.append(d)
+                if not candidates:
+                    return None
+                # Choose the tightest enclosing block.
+                candidates.sort(key=lambda x: (x.block.end_line - x.block.start_line))
+                return candidates[0]
+
+            for art in all_artifacts_for_cross:
+                art_path_str = str(art.path)
+                art_traceability = traceability_by_path.get(art_path_str, "FULL")
+                if art_traceability != "FULL":
+                    continue
+                if not file_has_spaider_markers(art.path):
+                    continue
+
+                art._extract_ids_and_refs()
+                for inst in getattr(art, "sdsl_instructions", []) or []:
+                    if not getattr(inst, "checked", False):
+                        continue
+                    phase = getattr(inst, "phase", None)
+                    if phase is None:
+                        continue
+
+                    parent = find_parent_id_def(art.id_definitions, int(getattr(inst, "line", 1) or 1))
+                    if parent is None:
+                        continue
+                    if not getattr(parent, "to_code", False):
+                        continue
+
+                    key = (str(parent.id), int(phase), str(getattr(inst, "inst", "")))
+                    if key in code_block_keys:
+                        continue
+
+                    all_errors.append({
+                        "type": "coverage",
+                        "message": "Implemented SDSL instruction has no code block marker",
+                        "artifact": art_path_str,
+                        "line": int(getattr(inst, "line", 1) or 1),
+                        "id": str(parent.id),
+                        "phase": int(phase),
+                        "inst": f"inst-{getattr(inst, 'inst', '')}",
+                    })
+
+            # Markerless artifacts: best-effort scan for SDSL instructions by regex.
+            # Parent binding rule: nearest ID definition above the instruction.
+            for art in all_artifacts_for_cross:
+                art_path_str = str(art.path)
+                art_traceability = traceability_by_path.get(art_path_str, "FULL")
+                if art_traceability != "FULL":
+                    continue
+                if file_has_spaider_markers(art.path):
+                    continue
+
+                for h in scan_sdsl_instructions_without_markers(art.path):
+                    if not bool(h.get("checked", False)):
+                        continue
+                    parent_id = str(h.get("parent_id") or "").strip()
+                    if not parent_id:
+                        continue
+                    phase = h.get("phase")
+                    inst = str(h.get("inst") or "").strip()
+                    if phase is None or not inst:
+                        continue
+
+                    key = (parent_id, int(phase), inst)
+                    if key in code_block_keys:
+                        continue
+
+                    all_errors.append({
+                        "type": "coverage",
+                        "message": "Implemented SDSL instruction has no code block marker",
+                        "artifact": art_path_str,
+                        "line": int(h.get("line", 1) or 1),
+                        "id": parent_id,
+                        "phase": int(phase),
+                        "inst": f"inst-{inst}",
+                    })
 
     # Markerless covered-by (simplified):
     # If an artifact has no markers, each `**ID**: ...` definition must be referenced

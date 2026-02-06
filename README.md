@@ -12,11 +12,20 @@
   <img src="spaider-cover.png" alt="Spaider Banner" width="100%" />
 </p>
 
-**Spaider** is a platform for weaving agentic systems: its threads (like prompts, templates, DSL, rules) run through the whole project, turning intent into consistent artifacts. **Spaider** focuses on four principles — **feedback**, **transformation**, **determinism**, and **quality** — so you can derive documents from documents, code from documents, or documents from code while keeping everything aligned. Each transformation is a controlled step in a pipeline: feedback tightens the web, deterministic validation removes LLM variability, and traceability keeps every derived piece connected and reviewable.
+**Spaider** helps you build agentic systems that don’t drift.
 
-As an **extensible platform**, **Spaider** can be "trained" by registering thread packages called **Weavers**. Each **Weaver** bundles templates, rules, checklists and examples for a specific domain or use case. 
+It turns intent into a deterministic, reviewable pipeline of artifacts — prompts, templates, rules, checklists, specs, and code — so teams can ship agent-driven changes with confidence.
 
-**Spaider** comes with a built-in **SDLC Weaver** that implements a full Software Development Life Cycle (SDLC) pipeline from Product Requirements Document (PRD) to code, with traceability and validation at every step.
+**What you get**
+- **Less drift** — keep prompts, docs, and code aligned as the project evolves
+- **More determinism** — validation gates reduce “LLM randomness” in outputs
+- **End-to-end traceability** — link PRD → design → tasks → code for easier reviews
+- **Reusable building blocks** — standardize workflows via curated domain packs
+
+**How it works**
+Spaider is extensible: you register thread packages called **Weavers**. A Weaver bundles templates, rules, checklists, and examples for a specific domain or use case.
+
+Spaider ships with a built-in **SDLC Weaver** that runs a full PRD → code pipeline, with traceability and validation at every step.
 
 ---
 
@@ -27,6 +36,10 @@ As an **extensible platform**, **Spaider** can be "trained" by registering threa
   - [Prerequisites](#prerequisites)
   - [Project Setup (Spaider + Agents)](#project-setup-spaider--agents)
   - [Using Spaider](#using-spaider)
+    - [Real Conversation (Prompt Excerpt)](#real-conversation-prompt-excerpt)
+      - [1) Enable Spaider mode](#1-enable-spaider-mode)
+      - [2) Ask what Spaider can do](#2-ask-what-spaider-can-do)
+      - [3) Ask what Spaider can generate](#3-ask-what-spaider-can-generate)
     - [Example Prompts](#example-prompts)
     - [Agent Skill](#agent-skill)
     - [Workflow Commands](#workflow-commands)
@@ -75,6 +88,42 @@ python3 spaider/skills/spaider/scripts/spaider.py agents --agent windsurf
 
 ## Using Spaider
 
+To use Spaider, run your IDE with an AI agent (or run an agent in a terminal), and then start your requests with `spaider`.
+
+That prefix switches the agent into Spaider mode: it loads the adapter + required rules, routes the request to the right workflow (analyze vs generate), and gates any file writes behind explicit confirmation.
+
+### Real Conversation (Prompt Excerpt)
+
+Below are a few real prompts from the story (with outcomes summarized). The full, screenshot-based conversation is in `guides/STORY.md`.
+
+#### 1) Enable Spaider mode
+
+Prompt: `spaider on`
+
+![Enabling Spaider mode](images/intro-0000.png)
+
+Outcome: The agent discovers the project adapter, loads required context deterministically, and prints a clear status block.
+
+#### 2) Ask what Spaider can do
+
+Prompt: `spaider how can you help me?`
+
+![How Spaider can help](images/intro-0100.png)
+
+Outcome: The agent explains the two workflows (read-only analyze vs write generate), gives example prompts, and asks for the minimum information needed to proceed.
+
+#### 3) Ask what Spaider can generate
+
+Prompt: `spaider what can I generate with you?`
+
+![What Spaider can generate](images/intro-0200.png)
+
+Outcome: The agent explains what “generate” can create/update (adapter context, architecture artifacts, or code), what it will not do blindly, and asks you to pick the target so it can start the right write workflow.
+
+End result of the full story: A working example application (“Overwork Alert”) with CLI + daemon wiring, deterministic validations, unit tests, and a successful manual macOS smoke test.
+
+[Continue reading the story](guides/STORY.md#part-2-analyze-vs-generate)
+
 ### Example Prompts
 
 **Enable / Disable**
@@ -88,7 +137,6 @@ python3 spaider/skills/spaider/scripts/spaider.py agents --agent windsurf
 
 | Prompt | What the agent does |
 |--------|---------------------|
-| `spaider init` | Scans project structure, creates `.spaider-adapter/` with `artifacts.json`, `AGENTS.md`, and domain specs |
 | `spaider configure adapter for Python monorepo with FastAPI` | Generates adapter with tech-stack specs, testing conventions, and codebase mappings |
 | `spaider add src/api/ to tracked codebase` | Updates `artifacts.json` to include directory in traceability scanning |
 | `spaider register SPEC at docs/specs/payments.md` | Adds artifact entry to `artifacts.json` with kind, path, and system mapping |

@@ -118,7 +118,7 @@ ALWAYS notify the user WHEN completing a checklist task (a Markdown task line st
 ALWAYS use this notification format WHEN emitting execution logs:
 
 ```
-🕷️ [CONTEXT]: MESSAGE
+📟 [CONTEXT]: MESSAGE
 ```
 
 ALWAYS set **CONTEXT** to the file or section being executed WHEN emitting execution logs (e.g., `workflows/generate.md`, `DESIGN rules`, `execution-protocol`).
@@ -134,7 +134,7 @@ ALWAYS ensure execution logging supports these goals WHEN Spaider is enabled:
 ALWAYS consider these examples as valid execution logs WHEN Spaider is enabled:
 
 ```
-🕷️ [execution-protocol]: Entering "Load Rules" — target is CODE, loading codebase/rules.md
-🕷️ [DESIGN rules]: Completing "Validate structure" — all required sections present
-🕷️ [workflows/generate.md]: Entering "Determine Target" — user requested code implementation
+📟 [execution-protocol]: Entering "Load Rules" — target is CODE, loading codebase/rules.md
+📟 [DESIGN rules]: Completing "Validate structure" — all required sections present
+📟 [workflows/generate.md]: Entering "Determine Target" — user requested code implementation
 ```

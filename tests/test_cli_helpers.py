@@ -15,7 +15,17 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "spaider" / "scripts"))
 
-from spaider.utils.document import iter_text_files, read_text_safe, to_relative_posix
+from spaider.utils.document import (
+    file_has_spaider_markers,
+    get_content_scoped_without_markers,
+    iter_text_files,
+    read_text_safe,
+    scan_sdsl_instructions_without_markers,
+    scan_spd_ids_without_markers,
+    to_relative_posix,
+)
+
+from spaider.utils import document as doc
 
 from spaider import cli as spaider_cli
 
@@ -239,6 +249,192 @@ class TestCliCommandCoverage(unittest.TestCase):
     def test_main_unknown_command_returns_error(self):
         rc = spaider_cli.main(["does-not-exist"])
         self.assertEqual(rc, 1)
+
+
+class TestNormalizeSpdIdFromLine(unittest.TestCase):
+    def test_normalize_empty_returns_none(self):
+        self.assertIsNone(doc._normalize_spd_id_from_line(""))
+
+    def test_normalize_id_label_line(self):
+        self.assertEqual(doc._normalize_spd_id_from_line("**ID**: `spd-test-1`"), "spd-test-1")
+
+    def test_normalize_backticked_exact(self):
+        self.assertEqual(doc._normalize_spd_id_from_line("`spd-test-2`"), "spd-test-2")
+
+    def test_normalize_fullmatch_and_fallback_findall(self):
+        self.assertEqual(doc._normalize_spd_id_from_line("spd-test-3"), "spd-test-3")
+        self.assertEqual(doc._normalize_spd_id_from_line("prefix spd-test-4 suffix"), "spd-test-4")
+
+
+class TestMarkerlessScanners(unittest.TestCase):
+    def test_file_has_spaider_markers_false_on_read_error(self):
+        with TemporaryDirectory() as td:
+            p = Path(td) / "missing.md"
+            self.assertFalse(file_has_spaider_markers(p))
+
+    def test_scan_spd_ids_without_markers_skips_when_markers_present(self):
+        with TemporaryDirectory() as td:
+            p = Path(td) / "a.md"
+            p.write_text("<!-- spd:id:item -->\n- [ ] **ID**: `spd-test-1`\n<!-- spd:id:item -->\n", encoding="utf-8")
+            self.assertEqual(scan_spd_ids_without_markers(p), [])
+
+    def test_scan_spd_ids_without_markers_def_ref_inline_and_fences(self):
+        with TemporaryDirectory() as td:
+            p = Path(td) / "a.md"
+            p.write_text(
+                "- [x] `p1` - **ID**: `spd-test-1`\n"
+                "- `spd-test-1`\n"
+                "* `spd-test-2`\n"
+                "Inline `spd-test-3` here\n"
+                "```\n"
+                "- [x] `p1` - **ID**: `spd-in-fence`\n"
+                "- `spd-in-fence`\n"
+                "```\n",
+                encoding="utf-8",
+            )
+            hits = scan_spd_ids_without_markers(p)
+            types_by_id = {(h.get("type"), h.get("id")) for h in hits}
+            self.assertIn(("definition", "spd-test-1"), types_by_id)
+            self.assertIn(("reference", "spd-test-1"), types_by_id)
+            self.assertIn(("reference", "spd-test-2"), types_by_id)
+            self.assertIn(("reference", "spd-test-3"), types_by_id)
+            self.assertNotIn(("definition", "spd-in-fence"), types_by_id)
+            self.assertNotIn(("reference", "spd-in-fence"), types_by_id)
+
+    def test_scan_sdsl_instructions_without_markers_basic_and_parent_binding(self):
+        with TemporaryDirectory() as td:
+            p = Path(td) / "a.md"
+            p.write_text(
+                "- [x] `p1` - **ID**: `spd-test-1`\n"
+                "\n"
+                "1. [x] - `p1` - Step - `inst-a`\n",
+                encoding="utf-8",
+            )
+            hits = scan_sdsl_instructions_without_markers(p)
+            self.assertEqual(len(hits), 1)
+            self.assertEqual(hits[0].get("parent_id"), "spd-test-1")
+            self.assertEqual(hits[0].get("phase"), 1)
+            self.assertEqual(hits[0].get("inst"), "a")
+
+    def test_scan_sdsl_instructions_without_markers_skips_marked_files_and_fences_and_bad_phase(self):
+        with TemporaryDirectory() as td:
+            p_marked = Path(td) / "marked.md"
+            p_marked.write_text("<!-- spd:sdsl:x -->\n1. [x] - `p1` - Step - `inst-a`\n<!-- spd:sdsl:x -->\n", encoding="utf-8")
+            self.assertEqual(scan_sdsl_instructions_without_markers(p_marked), [])
+
+            p = Path(td) / "a.md"
+            p.write_text(
+                "- [x] **ID**: `spd-test-1`\n"
+                "```\n"
+                "1. [x] - `p1` - Step - `inst-in-fence`\n"
+                "```\n"
+                "1. [x] - `pX` - Step - `inst-bad-phase`\n"
+                "1. [x] - `ph-2` - Step - `inst-ok`\n",
+                encoding="utf-8",
+            )
+            hits = scan_sdsl_instructions_without_markers(p)
+            self.assertEqual(len(hits), 1)
+            self.assertEqual(hits[0].get("phase"), 2)
+            self.assertEqual(hits[0].get("inst"), "ok")
+
+
+class TestMarkerlessContentScopes(unittest.TestCase):
+    def test_get_content_scoped_without_markers_none_on_read_error(self):
+        with TemporaryDirectory() as td:
+            p = Path(td) / "missing.md"
+            self.assertIsNone(get_content_scoped_without_markers(p, id_value="spd-x"))
+
+    def test_get_content_scoped_without_markers_hash_fence_segments_and_edge_cases(self):
+        with TemporaryDirectory() as td:
+            p = Path(td) / "a.md"
+            p.write_text(
+                "##\n##\n"
+                "##\nnot an id\nline\n##\n"
+                "##\nspd-aa\nline-a\nspd-bb\nline-b\n##\n",
+                encoding="utf-8",
+            )
+            out = get_content_scoped_without_markers(p, id_value="spd-aa")
+            self.assertIsNotNone(out)
+            text, _start, _end = out or ("", 0, 0)
+            self.assertIn("line-a", text)
+
+            p2 = Path(td) / "b.md"
+            p2.write_text("##\nspd-aa\nspd-bb\n##\n", encoding="utf-8")
+            self.assertIsNone(get_content_scoped_without_markers(p2, id_value="spd-aa"))
+
+    def test_get_content_scoped_without_markers_heading_scope_and_empty_scope(self):
+        with TemporaryDirectory() as td:
+            p = Path(td) / "a.md"
+            p.write_text(
+                "### spd-aa\n"
+                "content-a\n"
+                "### other\n"
+                "x\n",
+                encoding="utf-8",
+            )
+            out = get_content_scoped_without_markers(p, id_value="spd-aa")
+            self.assertIsNotNone(out)
+            self.assertIn("content-a", (out or ("", 0, 0))[0])
+
+            p2 = Path(td) / "b.md"
+            p2.write_text("### spd-aa\n\n### next\n", encoding="utf-8")
+            self.assertIsNone(get_content_scoped_without_markers(p2, id_value="spd-aa"))
+
+            p3 = Path(td) / "c.md"
+            p3.write_text("### spd-aa\n", encoding="utf-8")
+            self.assertIsNone(get_content_scoped_without_markers(p3, id_value="spd-aa"))
+
+    def test_get_content_scoped_without_markers_id_definition_heading_nearest_and_fences(self):
+        with TemporaryDirectory() as td:
+            p = Path(td) / "a.md"
+            p.write_text(
+                "#### Title\n"
+                "**ID**: `spd-aa`\n"
+                "```\n"
+                "#### Not a heading (in fence)\n"
+                "```\n"
+                "line-a\n"
+                "**ID**: `spd-bb`\n"
+                "line-b\n",
+                encoding="utf-8",
+            )
+            out = get_content_scoped_without_markers(p, id_value="spd-aa")
+            self.assertIsNotNone(out)
+            self.assertIn("line-a", (out or ("", 0, 0))[0])
+
+            p2 = Path(td) / "b.md"
+            p2.write_text("#### Title\n**ID**: `spd-aa`\n", encoding="utf-8")
+            self.assertIsNone(get_content_scoped_without_markers(p2, id_value="spd-aa"))
+
+            self.assertIsNone(get_content_scoped_without_markers(p, id_value="spd-x"))
+
+
+class TestIterTextFilesMoreCoverage(unittest.TestCase):
+    def test_iter_text_files_includes_filter_nonmatch(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "a").mkdir()
+            (root / "a" / "x.md").write_text("x\n", encoding="utf-8")
+            hits = iter_text_files(root, includes=["**/*.py"])
+            self.assertEqual(hits, [])
+
+    def test_iter_text_files_stat_oserror_is_ignored(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "a").mkdir()
+            p = root / "a" / "x.md"
+            p.write_text("x\n", encoding="utf-8")
+
+            orig_stat = Path.stat
+
+            def fake_stat(self):
+                if self.name == "x.md":
+                    raise OSError("boom")
+                return orig_stat(self)
+
+            with patch.object(Path, "stat", new=fake_stat):
+                hits = iter_text_files(root, includes=["**/*.md"], max_bytes=10)
+            self.assertEqual(hits, [])
 
 
 if __name__ == "__main__":

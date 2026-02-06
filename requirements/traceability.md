@@ -166,7 +166,7 @@ Note: specific scoping rules (per-system vs per-artifact vs per-codebase-entry) 
 1. **Every `@spaider-begin` MUST have matching `@spaider-end`**
 2. **Same ID required**: Begin and end must have identical ID string
 3. **No empty blocks**: Code MUST exist between begin/end
-4. **No nesting**: Block markers cannot be nested
+4. **Nesting allowed**: Block markers MAY be nested, but MUST be properly nested (well-formed) and MUST NOT overlap/cross
 
 ### ID Rules
 
@@ -252,25 +252,6 @@ def login_flow(): ...
 def validate_credentials(user, password):
     return authenticate(user, password)
 # @spaider-end:spd-app-spec-auth-flow-login:p1:inst-validate
-```
-
-### ❌ Nested Blocks
-
-```python
-# WRONG - nested block markers
-# @spaider-begin:...:inst-outer
-# @spaider-begin:...:inst-inner  # NESTING NOT ALLOWED
-# ...
-# @spaider-end:...:inst-inner
-# @spaider-end:...:inst-outer
-
-# CORRECT - sequential blocks
-# @spaider-begin:...:inst-outer
-# ...
-# @spaider-end:...:inst-outer
-# @spaider-begin:...:inst-inner
-# ...
-# @spaider-end:...:inst-inner
 ```
 
 ---

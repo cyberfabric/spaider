@@ -4,6 +4,7 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 .venv/
+__pycache__/
 
 # Build output
 dist/

@@ -1348,6 +1348,54 @@ class TestCLIAdapterInfo(unittest.TestCase):
             finally:
                 os.chdir(cwd)
 
+    def test_validate_code_markerless_sdsl_implemented_requires_block_marker(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _setup_spaider_project_with_markerless_sdsl_missing_block(root)
+
+            cwd = os.getcwd()
+            try:
+                os.chdir(str(root))
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    exit_code = main(["validate-code", "--verbose"])
+                self.assertEqual(exit_code, 2)
+                out = json.loads(stdout.getvalue())
+                self.assertEqual(out.get("status"), "FAIL")
+                errors = out.get("errors", [])
+                self.assertTrue(any(
+                    (e.get("type") == "coverage")
+                    and ("Implemented SDSL instruction has no code block marker" in str(e.get("message", "")))
+                    and (e.get("id") == "spd-test-1")
+                    and (e.get("inst") == "inst-load-config")
+                    for e in errors
+                ))
+            finally:
+                os.chdir(cwd)
+
+    def test_validate_code_sdsl_implemented_requires_block_marker(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _setup_spaider_project_with_sdsl_to_code_missing_block(root)
+
+            cwd = os.getcwd()
+            try:
+                os.chdir(str(root))
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    exit_code = main(["validate-code", "--verbose"])
+                self.assertEqual(exit_code, 2)
+                out = json.loads(stdout.getvalue())
+                self.assertEqual(out.get("status"), "FAIL")
+                errors = out.get("errors", [])
+                self.assertTrue(any(
+                    (e.get("type") == "coverage")
+                    and ("Implemented SDSL instruction has no code block marker" in str(e.get("message", "")))
+                    for e in errors
+                ))
+            finally:
+                os.chdir(cwd)
+
     def test_adapter_info_relative_path_outside_project_root(self):
         """Cover adapter-info relative_to() ValueError branch when adapter is outside project root."""
         with TemporaryDirectory() as tmpdir:
@@ -3945,6 +3993,107 @@ spaider-template:
     )
 
     # Bootstrap registry with codebase entry
+    _bootstrap_registry_new_format(
+        root,
+        weavers={"spaider": {"format": "Spaider", "path": "weavers/sdlc"}},
+        systems=[{
+            "name": "Test",
+            "weaver": "spaider",
+            "artifacts": [{"path": "architecture/PRD.md", "kind": "PRD", "traceability": "FULL"}],
+            "codebase": [{"path": "src", "extensions": [".py"]}],
+        }],
+    )
+
+
+def _setup_spaider_project_with_markerless_sdsl_missing_block(root: Path) -> None:
+    # Create template (minimal, any template to allow registry/template loading)
+    templates_dir = root / "weavers" / "sdlc" / "artifacts" / "PRD"
+    templates_dir.mkdir(parents=True)
+    tmpl_content = """---
+spaider-template:
+  version:
+    major: 1
+    minor: 0
+  kind: PRD
+---
+<!-- spd:id:item -->
+- [ ] **ID**: `spd-test-1`
+<!-- spd:id:item -->
+"""
+    (templates_dir / "template.md").write_text(tmpl_content, encoding="utf-8")
+
+    # Create markerless artifact: no <!-- spd: --> markers.
+    # Parent binding rule: the last ID definition above SDSL is the parent.
+    art_dir = root / "architecture"
+    art_dir.mkdir(parents=True)
+    art_content = """- [x] `p1` - **ID**: `spd-test-1`
+
+1. [x] - `p1` - Daemon loads effective configuration (defaults + validation) - `inst-load-config`
+"""
+    (art_dir / "PRD.md").write_text(art_content, encoding="utf-8")
+
+    code_dir = root / "src"
+    code_dir.mkdir(parents=True)
+    # No block markers.
+    (code_dir / "module.py").write_text(
+        "# @spaider-flow:spd-test-1:p1\ndef test():\n    return 1\n",
+        encoding="utf-8",
+    )
+
+    _bootstrap_registry_new_format(
+        root,
+        weavers={"spaider": {"format": "Spaider", "path": "weavers/sdlc"}},
+        systems=[{
+            "name": "Test",
+            "weaver": "spaider",
+            "artifacts": [{"path": "architecture/PRD.md", "kind": "PRD", "traceability": "FULL"}],
+            "codebase": [{"path": "src", "extensions": [".py"]}],
+        }],
+    )
+
+
+def _setup_spaider_project_with_sdsl_to_code_missing_block(root: Path) -> None:
+    # Create template
+    templates_dir = root / "weavers" / "sdlc" / "artifacts" / "PRD"
+    templates_dir.mkdir(parents=True)
+    tmpl_content = """---
+spaider-template:
+  version:
+    major: 1
+    minor: 0
+  kind: PRD
+---
+<!-- spd:id:flow has=\"task\" to_code=\"true\" -->
+- [ ] **ID**: `spd-test-1`
+
+<!-- spd:sdsl:flow-steps -->
+1. [ ] - `p1` - Step - `inst-a`
+<!-- spd:sdsl:flow-steps -->
+<!-- spd:id:flow -->
+"""
+    (templates_dir / "template.md").write_text(tmpl_content, encoding="utf-8")
+
+    # Create artifact (instruction implemented but no code block markers)
+    art_dir = root / "architecture"
+    art_dir.mkdir(parents=True)
+    art_content = """<!-- spd:id:flow has=\"task\" to_code=\"true\" -->
+- [x] **ID**: `spd-test-1`
+
+<!-- spd:sdsl:flow-steps -->
+1. [x] - `p1` - Step - `inst-a`
+<!-- spd:sdsl:flow-steps -->
+<!-- spd:id:flow -->
+"""
+    (art_dir / "PRD.md").write_text(art_content, encoding="utf-8")
+
+    code_dir = root / "src"
+    code_dir.mkdir(parents=True)
+    # Only a scope marker exists; no begin/end markers.
+    (code_dir / "module.py").write_text(
+        "# @spaider-flow:spd-test-1:p1\ndef test():\n    return 1\n",
+        encoding="utf-8",
+    )
+
     _bootstrap_registry_new_format(
         root,
         weavers={"spaider": {"format": "Spaider", "path": "weavers/sdlc"}},

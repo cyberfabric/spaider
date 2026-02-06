@@ -32,6 +32,8 @@ _HEADING_RE = re.compile(r"^\s*(#{1,6})\s+(.+?)\s*$")
 _ORDERED_NUMERIC_RE = re.compile(r"^\s*\d+[\.)]\s+")
 _CODE_FENCE_RE = re.compile(r"^\s*```")
 _SDSL_LINE_RE = re.compile(r"^\s*(?:\d+\.\s+|-\s+)\[\s*[xX ]\s*\]\s*-\s*`p[a-z0-9-]+`\s*-\s*.+\s*-\s*`inst-[a-z0-9-]+`\s*$")
+_SDSL_PHASE_RE = re.compile(r"`p(?P<phase>\d+)`")
+_SDSL_INST_RE = re.compile(r"`inst-(?P<inst>[a-z0-9-]+)`")
 
 # Valid marker types (must match validate_block_content handlers)
 VALID_MARKER_TYPES = frozenset({
@@ -527,6 +529,15 @@ class ArtifactBlock:
         return "\n".join(self.content).strip()
 
 
+@dataclass(frozen=True)
+class SdslInstruction:
+    checked: bool
+    phase: Optional[int]
+    inst: str
+    line: int
+    block: ArtifactBlock
+
+
 class Artifact:
     """Artifact parsed against a Template; holds block spans and extracted IDs/refs."""
     def __init__(self, template: Template, path: Path, blocks: List[ArtifactBlock], errors: List[Dict[str, object]]):
@@ -537,6 +548,7 @@ class Artifact:
         self.id_definitions: List[IdDefinition] = []
         self.id_references: List[IdReference] = []
         self.task_statuses: List[Tuple[bool, ArtifactBlock]] = []  # (checked?, block)
+        self.sdsl_instructions: List[SdslInstruction] = []
 
     def load(self) -> None:
         """Parse artifact markers into blocks; accumulate structural errors."""
@@ -852,6 +864,18 @@ class Artifact:
                     if _SDSL_LINE_RE.match(line):
                         checked = "[x" in line.lower()
                         self.task_statuses.append((checked, blk))
+
+                        m_phase = _SDSL_PHASE_RE.search(line)
+                        phase: Optional[int] = int(m_phase.group("phase")) if m_phase else None
+                        m_inst = _SDSL_INST_RE.search(line)
+                        if m_inst:
+                            self.sdsl_instructions.append(SdslInstruction(
+                                checked=checked,
+                                phase=phase,
+                                inst=m_inst.group("inst"),
+                                line=blk.start_line + rel_idx,
+                                block=blk,
+                            ))
 
     def _validate_id_task_statuses(self, errors: List[Dict[str, object]]):
         """Enforce task completion consistency between tasks and ID definitions.

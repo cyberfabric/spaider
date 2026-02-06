@@ -155,12 +155,12 @@ class TestRegexPatternBuilding(unittest.TestCase):
         regex = build_spaider_begin_regex(config)
         
         # Should match Python comment
-        self.assertIsNotNone(regex.match("# spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("  # spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("# spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
+        self.assertIsNotNone(regex.match("  # spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
         
         # Should extract tag
-        match = regex.match("# spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step")
-        self.assertEqual(match.group(1), "spd-test-spec-x-flow-y:ph-1:inst-step")
+        match = regex.match("# spaider-begin spd-test-spec-x-flow-y:p1:inst-step")
+        self.assertEqual(match.group(1), "spd-test-spec-x-flow-y:p1:inst-step")
 
     def test_spaider_begin_regex_matches_javascript_style(self):
         """Verify spaider-begin regex matches JavaScript // comments."""
@@ -174,8 +174,8 @@ class TestRegexPatternBuilding(unittest.TestCase):
         regex = build_spaider_begin_regex(config)
         
         # Should match JS comment
-        self.assertIsNotNone(regex.match("// spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("  // spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("// spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
+        self.assertIsNotNone(regex.match("  // spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
 
     def test_spaider_begin_regex_matches_sql_style(self):
         """Verify spaider-begin regex matches SQL -- comments."""
@@ -189,7 +189,7 @@ class TestRegexPatternBuilding(unittest.TestCase):
         regex = build_spaider_begin_regex(config)
         
         # Should match SQL comment
-        self.assertIsNotNone(regex.match("-- spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("-- spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
 
     def test_spaider_begin_regex_matches_html_comment(self):
         """Verify spaider-begin regex matches HTML <!-- comments."""
@@ -203,7 +203,7 @@ class TestRegexPatternBuilding(unittest.TestCase):
         regex = build_spaider_begin_regex(config)
         
         # Should match HTML comment
-        self.assertIsNotNone(regex.match("<!-- spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("<!-- spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
 
     def test_spaider_begin_regex_matches_multiple_styles(self):
         """Verify spaider-begin regex matches multiple comment styles."""
@@ -217,11 +217,11 @@ class TestRegexPatternBuilding(unittest.TestCase):
         regex = build_spaider_begin_regex(config)
         
         # Should match all styles
-        self.assertIsNotNone(regex.match("# spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("// spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("-- spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("/* spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(regex.match("* spaider-begin spd-test-spec-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(regex.match("# spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
+        self.assertIsNotNone(regex.match("// spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
+        self.assertIsNotNone(regex.match("-- spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
+        self.assertIsNotNone(regex.match("/* spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
+        self.assertIsNotNone(regex.match("* spaider-begin spd-test-spec-x-flow-y:p1:inst-step"))
 
     def test_spaider_end_regex_matches_same_styles_as_begin(self):
         """Verify spaider-end regex matches same styles as spaider-begin."""
@@ -235,8 +235,8 @@ class TestRegexPatternBuilding(unittest.TestCase):
         end_regex = build_spaider_end_regex(config)
         
         # Should match both styles
-        self.assertIsNotNone(end_regex.match("# spaider-end spd-test-spec-x-flow-y:ph-1:inst-step"))
-        self.assertIsNotNone(end_regex.match("// spaider-end spd-test-spec-x-flow-y:ph-1:inst-step"))
+        self.assertIsNotNone(end_regex.match("# spaider-end spd-test-spec-x-flow-y:p1:inst-step"))
+        self.assertIsNotNone(end_regex.match("// spaider-end spd-test-spec-x-flow-y:p1:inst-step"))
 
     def test_no_spaider_begin_regex_matches_exclusion_marker(self):
         """Verify !no-spaider-begin regex matches exclusion markers."""
