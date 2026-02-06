@@ -1,5 +1,4 @@
-# **Spaider** <img src="mascot.png" alt="Spaider" width="32" height="32" />
-
+# <img src="spaider.png" alt="Spaider" width="256" /> 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-2.0-green.svg)]()
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
@@ -10,7 +9,7 @@
 **Audience**: Prompt engineers, AI developers, software architects, engineering teams
 
 <p align="center">
-  <img src="spaider.png" alt="Spaider Banner" width="100%" />
+  <img src="spaider-cover.png" alt="Spaider Banner" width="100%" />
 </p>
 
 **Spaider** is a platform for weaving agentic systems: its threads (like prompts, templates, DSL, rules) run through the whole project, turning intent into consistent artifacts. **Spaider** focuses on four principles — **feedback**, **transformation**, **determinism**, and **quality** — so you can derive documents from documents, code from documents, or documents from code while keeping everything aligned. Each transformation is a controlled step in a pipeline: feedback tightens the web, deterministic validation removes LLM variability, and traceability keeps every derived piece connected and reviewable.
@@ -23,7 +22,7 @@ As an **extensible platform**, **Spaider** can be "trained" by registering threa
 
 ## Table of Contents
 
-- [**Spaider** ](#spaider-)
+- [](#)
   - [Table of Contents](#table-of-contents)
   - [Prerequisites](#prerequisites)
   - [Project Setup (Spaider + Agents)](#project-setup-spaider--agents)
