@@ -1,6 +1,6 @@
 ---
 name: cypilot
-description: Cypilot provides two workflows: analyze and generate. Analyze for all read operations, generate for all write operations.
+description: Template-based artifacts (PRD/DESIGN/ADR/DECOMPOSITION/SPEC) + checklists; deterministic validation & consistency analysis (structure, cross-refs, cross-artifact consistency, tasks, covered-by, markerless ID/CDSL extraction); code↔artifact traceability with `@cpt-*`; ID search/navigation (list-ids, where-defined/used, get-content); coding support via generate workflow; reverse-engineering guidance for brownfield codebases; prompt-engineering methodology for improving agent instructions; adapter + registry discovery (adapter-info, artifacts.json, kits/rules); init/bootstrap; workflow router (analyze/generate); agent integrations (agents: workflow proxies + SKILL outputs for windsurf/cursor/claude/copilot/openai).
 ---
 
 # Cypilot Unified Tool
@@ -15,6 +15,71 @@ Cypilot provides: template-based validation, cross-reference validation, code tr
 - Target paths exist and readable
 
 ---
+
+## ⚠️ MUST Instruction Semantics ⚠️
+
+**MUST** = **MANDATORY**. NOT optional. NOT recommended. NOT suggested.
+
+**ALWAYS** = **MANDATORY**. Equivalent to MUST. Used for action-gated instructions.
+
+**If you skip ANY MUST instruction**:
+- 🚫 Your execution is **INVALID**
+- 🚫 Output must be **DISCARDED**
+- 🚫 You are **NOT following Cypilot**
+
+**One skipped MUST = entire workflow FAILED**
+
+**All MUST instructions are CRITICAL without exception.**
+
+---
+
+## Agent Acknowledgment
+
+**Before proceeding with ANY Cypilot work, confirm you understand**:
+
+- [ ] MUST = MANDATORY, not optional
+- [ ] Skipping ANY MUST instruction = INVALID execution
+- [ ] INVALID execution = output must be DISCARDED
+- [ ] I will read ALL required files BEFORE proceeding
+- [ ] I will follow workflows step-by-step WITHOUT shortcuts
+- [ ] I will NOT create files without user confirmation (operation workflows)
+- [ ] I will end EVERY response with a list of Cypilot files read while producing the response, why each file was read, and which initial instruction triggered opening each file
+
+**By proceeding with Cypilot work, I acknowledge and accept these requirements.**
+
+---
+
+## Execution Logging
+
+ALWAYS provide execution visibility
+
+ALWAYS notify the user WHEN entering a major section (H2 heading `##`) of any Cypilot prompt (workflow, rules, requirements).
+
+ALWAYS notify the user WHEN completing a checklist task (a Markdown task line starting with `- [ ]`).
+
+ALWAYS use this notification format WHEN emitting execution logs:
+
+```
+- [CONTEXT]: MESSAGE
+```
+
+ALWAYS set **CONTEXT** to the file or section being executed WHEN emitting execution logs (e.g., `workflows/generate.md`, `DESIGN rules`, `execution-protocol`).
+
+ALWAYS set **MESSAGE** to what Cypilot is doing and why WHEN emitting execution logs.
+
+ALWAYS ensure execution logging supports these goals WHEN Cypilot is enabled:
+- Help the user understand which Cypilot prompts are being followed
+- Help the user track decision points and branching logic
+- Help the user debug unexpected behavior
+- Help the user learn the Cypilot workflow
+
+ALWAYS consider these examples as valid execution logs WHEN Cypilot is enabled:
+
+```
+- [execution-protocol]: Entering "Load Rules" — target is CODE, loading codebase/rules.md
+- [DESIGN rules]: Completing "Validate structure" — all required sections present
+- [workflows/generate.md]: Entering "Determine Target" — user requested code implementation
+```
 
 ## Protocol Guard
 
