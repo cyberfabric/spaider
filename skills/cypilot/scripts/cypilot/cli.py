@@ -1658,6 +1658,8 @@ def _cmd_validate(argv: List[str]) -> int:
                 continue
             if file_has_cypilot_markers(art.path):
                 continue
+            if getattr(art.template, "constraints", None) is not None:
+                continue
 
             kind = art.template.kind
             other_kinds = sorted(k for k in present_kinds if k != kind)

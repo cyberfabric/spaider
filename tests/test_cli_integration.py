@@ -149,6 +149,57 @@ class TestCLIValidateCommand(unittest.TestCase):
             self.assertIn("status", out)
 
 
+    def test_validate_markerless_constraints_do_not_trigger_legacy_other_kinds_error(self):
+        """Regression: when constraints exist, skip legacy 'ID not referenced from other artifact kinds'."""
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+
+            # Minimal SDLC kit with constraints
+            (root / "kits" / "sdlc").mkdir(parents=True)
+            src_constraints = Path(__file__).parent.parent / "kits" / "sdlc" / "constraints.json"
+            (root / "kits" / "sdlc" / "constraints.json").write_text(src_constraints.read_text(encoding="utf-8"), encoding="utf-8")
+
+            # Create markerless DESIGN artifact defining a principle (DESIGN/principle prohibits PRD/ADR refs)
+            (root / "architecture").mkdir(parents=True)
+            (root / "architecture" / "DESIGN.md").write_text(
+                """#### 2.1: Design Principles\n\n- [ ] `p1` - **ID**: `cpt-test-principle-loose-coupling`\n""",
+                encoding="utf-8",
+            )
+
+            # Create PRD artifact to ensure there are other kinds present (to provoke legacy error if not skipped)
+            (root / "architecture" / "PRD.md").write_text(
+                """- [ ] `p1` - **ID**: `cpt-test-fr-foo`\n""",
+                encoding="utf-8",
+            )
+
+            _bootstrap_registry_new_format(
+                root,
+                kits={"cypilot": {"format": "Cypilot", "path": "kits/sdlc"}},
+                systems=[{
+                    "name": "Test",
+                    "kits": "cypilot",
+                    "artifacts": [
+                        {"path": "architecture/DESIGN.md", "kind": "DESIGN"},
+                        {"path": "architecture/PRD.md", "kind": "PRD"},
+                    ],
+                }],
+            )
+
+            cwd = os.getcwd()
+            try:
+                os.chdir(str(root))
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    exit_code = main(["validate", "--verbose"])
+                self.assertIn(exit_code, [0, 2])
+                out = json.loads(stdout.getvalue())
+                errors = out.get("errors", []) or []
+                # Legacy check should not run when constraints exist
+                self.assertFalse(any(e.get("message") == "ID not referenced from other artifact kinds" for e in errors))
+            finally:
+                os.chdir(cwd)
+
+
 class TestCLIInitCommand(unittest.TestCase):
     def test_init_creates_config_and_adapter_and_allows_agents(self):
         with TemporaryDirectory() as tmpdir:
