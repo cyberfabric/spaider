@@ -283,6 +283,54 @@ class TestArtifactsMeta(unittest.TestCase):
             errs = meta.expand_autodetect(adapter_dir=root, project_root=root, is_kind_registered=lambda kit_id, kind: True)
             self.assertTrue(any("Unmatched markdown" in str(e) for e in errs))
 
+    def test_autodetect_dynamic_child_systems_from_system_root_dollar_system(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            # Create two module systems under modules/<name>/architecture/PRD.md
+            for mod in ["LLM Gateway", "api-server"]:
+                (root / "modules" / mod / "architecture").mkdir(parents=True)
+                (root / "modules" / mod / "architecture" / "PRD.md").write_text("x", encoding="utf-8")
+
+            data = {
+                "version": "1.1",
+                "project_root": "..",
+                "kits": {"k": {"format": "Cypilot", "path": "kits/sdlc"}},
+                "systems": [
+                    {
+                        "name": "Fabric",
+                        "slug": "fabric",
+                        "kit": "k",
+                        "autodetect": [
+                            {
+                                "system_root": "{project_root}/modules/$system",
+                                "artifacts_root": "{system_root}/architecture",
+                                "artifacts": {"PRD": {"pattern": "PRD.md", "traceability": "FULL"}},
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            meta = ArtifactsMeta.from_dict(data)
+            errs = meta.expand_autodetect(adapter_dir=root, project_root=root, is_kind_registered=lambda kit_id, kind: True)
+            self.assertEqual(errs, [])
+
+            # Child systems should have been created and prefixes should include parent
+            prefixes = meta.get_all_system_prefixes()
+            self.assertIn("fabric-llm-gateway", prefixes)
+            self.assertIn("fabric-api-server", prefixes)
+
+            # Discovered PRDs should be attributed to the child systems
+            prd1 = meta.get_artifact_by_path("modules/LLM Gateway/architecture/PRD.md")
+            self.assertIsNotNone(prd1)
+            _a1, sys1 = prd1
+            self.assertEqual(sys1.get_hierarchy_prefix(), "fabric-llm-gateway")
+
+            prd2 = meta.get_artifact_by_path("modules/api-server/architecture/PRD.md")
+            self.assertIsNotNone(prd2)
+            _a2, sys2 = prd2
+            self.assertEqual(sys2.get_hierarchy_prefix(), "fabric-api-server")
+
     def test_index_system_with_nested_children(self):
         """Cover lines 182: recursing into children during indexing."""
         data = {
@@ -522,7 +570,13 @@ class TestSystemNodeHierarchy(unittest.TestCase):
 
     def test_validate_slug_missing(self):
         """Cover validate_slug method with missing slug."""
+        # Grouping nodes may omit slug (no direct artifacts/codebase)
+        grouping = SystemNode(name="Test", slug="", kit="test")
+        self.assertIsNone(grouping.validate_slug())
+
+        # But systems that directly own artifacts/codebase must have a slug
         node = SystemNode(name="Test", slug="", kit="test")
+        node.artifacts.append(Artifact(path="a.md", kind="PRD", traceability="FULL"))
         result = node.validate_slug()
         self.assertIsNotNone(result)
         self.assertIn("Missing slug", result)

@@ -10,7 +10,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterator, List, Optional, Tuple
+from typing import Callable, Dict, Iterator, List, Optional, Set, Tuple
 
 from ..constants import ARTIFACTS_REGISTRY_FILENAME
 
@@ -200,17 +200,21 @@ class SystemNode:
         Example: For a component 'auth' under subsystem 'core' under system 'saas-platform',
         returns 'saas-platform-core-auth'.
         """
-        parts = []
+        parts: List[str] = []
         node: Optional[SystemNode] = self
         while node is not None:
-            parts.append(node.slug)
+            if node.slug:
+                parts.append(node.slug)
             node = node.parent
         return "-".join(reversed(parts))
 
     def validate_slug(self) -> Optional[str]:
         """Validate the slug format. Returns error message if invalid, None if valid."""
         if not self.slug:
-            return f"Missing slug for system '{self.name}'"
+            # Allow grouping nodes (no slug) only if they don't directly own artifacts/codebase.
+            if (self.artifacts or []) or (self.codebase or []):
+                return f"Missing slug for system '{self.name}'"
+            return None
         if not SLUG_PATTERN.match(self.slug):
             return (
                 f"Invalid slug '{self.slug}' for system '{self.name}'. "
@@ -224,8 +228,9 @@ class SystemNode:
         kit = str(data.get("kit", data.get("kits", "")))
         # For backward compatibility, generate slug from name if not provided
         name = str(data.get("name", ""))
-        slug = str(data.get("slug", ""))
-        if not slug and name:
+        raw_slug = (data or {}).get("slug", None)
+        slug = str(raw_slug) if isinstance(raw_slug, str) else ""
+        if not slug and ("slug" not in (data or {})) and name:
             # Auto-generate slug from name: lowercase, replace spaces with hyphens
             slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
         node = cls(
@@ -452,17 +457,80 @@ class ArtifactsMeta:
                 out.append(h.resolve())
             return out
 
-        def _apply_rule(node: SystemNode, rule: AutodetectRule, *, parent_root_str: str) -> Tuple[List[Artifact], List[CodebaseEntry], str, List[AutodetectRule]]:
+        def _get_or_create_child_system(parent: SystemNode, *, slug: str, name: str, kit: str) -> SystemNode:
+            for ch in parent.children:
+                if str(ch.slug) == str(slug):
+                    return ch
+            child = SystemNode(name=str(name), slug=str(slug), kit=str(kit), artifacts=[], codebase=[], children=[], autodetect=[], parent=parent)
+            parent.children.append(child)
+            return child
+
+        def _discover_child_system_roots(
+            parent: SystemNode,
+            rule: AutodetectRule,
+            *,
+            parent_root_str: str,
+        ) -> List[Tuple[SystemNode, str, Path]]:
+            """Discover child systems for rules whose system_root contains $system.
+
+            Returns list of (child_node, child_system_root_str, child_system_root_abs).
+            """
+
+            system_root_template = str(rule.system_root or "{project_root}")
+            if "$system" not in system_root_template:
+                return []
+
+            # Expand other placeholders, keep $system for globbing.
+            templ = _substitute(system_root_template, system=parent.slug, system_root="", parent_root=parent_root_str)
+            # Build directory glob: replace $system with '*'
+            g = templ.replace("$system", "*")
+
+            # Resolve as project-root relative (preferred). If it looks adapter-root relative, _resolve_path handles it.
+            root_glob = str((_resolve_path(g)).as_posix())
+            hits = [Path(x) for x in glob.glob(root_glob, recursive=False)]
+            out: List[Tuple[SystemNode, str, Path]] = []
+            for h in hits:
+                try:
+                    h = h.resolve()
+                except Exception:
+                    continue
+                if not h.exists() or not h.is_dir():
+                    continue
+                rel = _rel_to_project_root(h)
+                if rel is None:
+                    continue
+                if self.is_ignored(rel):
+                    continue
+                raw_name = h.name
+                slug = generate_slug(str(raw_name))
+                if not slug:
+                    continue
+                kit_id = rule.kit or parent.kit
+                child = _get_or_create_child_system(parent, slug=slug, name=str(raw_name), kit=str(kit_id))
+                out.append((child, rel, h))
+
+            return out
+
+        def _apply_rule(
+            node: SystemNode,
+            rule: AutodetectRule,
+            *,
+            parent_root_str: str,
+            system_root_override: Optional[Tuple[str, Path]] = None,
+        ) -> Tuple[List[Artifact], List[CodebaseEntry], str, List[AutodetectRule]]:
             kit_id = rule.kit or node.kit
 
             # Resolve system_root
-            system_root_template = rule.system_root or "{project_root}"
-            system_root_str = _substitute(system_root_template, system=node.slug, system_root="", parent_root=parent_root_str)
-            system_root_abs = _resolve_path(system_root_str)
-            system_root_rel = _rel_to_project_root(system_root_abs)
-            if system_root_rel is None:
-                # If outside project_root, treat as out-of-scope
-                system_root_rel = ""
+            if system_root_override is not None:
+                system_root_str, system_root_abs = system_root_override
+            else:
+                system_root_template = rule.system_root or "{project_root}"
+                system_root_str = _substitute(system_root_template, system=node.slug, system_root="", parent_root=parent_root_str)
+                system_root_abs = _resolve_path(system_root_str)
+                system_root_rel = _rel_to_project_root(system_root_abs)
+                if system_root_rel is None:
+                    # If outside project_root, treat as out-of-scope
+                    system_root_rel = ""
 
             # Resolve artifacts_root
             artifacts_root_template = rule.artifacts_root or "{system_root}"
@@ -538,7 +606,48 @@ class ArtifactsMeta:
 
             next_inherited: List[Tuple[AutodetectRule, str]] = []
 
+            processed_children: Set[str] = set()
+
             for rule, parent_root_str in effective:
+                # Special: system_root containing $system means "discover child systems".
+                if rule.system_root and "$system" in str(rule.system_root):
+                    discovered = _discover_child_system_roots(node, rule, parent_root_str=parent_root_str)
+                    for child_node, child_root_str, child_root_abs in discovered:
+                        disc_artifacts, disc_codebase, system_root_str, child_rules = _apply_rule(
+                            child_node,
+                            rule,
+                            parent_root_str=parent_root_str,
+                            system_root_override=(child_root_str, child_root_abs),
+                        )
+
+                        existing_child_artifacts_by_path: Dict[str, Artifact] = {self._normalize_path(a.path): a for a in child_node.artifacts}
+                        existing_child_codebase_by_path: Dict[str, CodebaseEntry] = {self._normalize_path(c.path): c for c in child_node.codebase}
+
+                        for da in disc_artifacts:
+                            np = self._normalize_path(da.path)
+                            if np in existing_child_artifacts_by_path:
+                                if str(existing_child_artifacts_by_path[np].kind) != str(da.kind):
+                                    errors.append(
+                                        f"Autodetect conflict on path with different kind: path={da.path} explicit={existing_child_artifacts_by_path[np].kind} detected={da.kind}"
+                                    )
+                                continue
+                            existing_child_artifacts_by_path[np] = da
+                            child_node.artifacts.append(da)
+
+                        for dc in disc_codebase:
+                            np = self._normalize_path(dc.path)
+                            if np in existing_child_codebase_by_path:
+                                continue
+                            existing_child_codebase_by_path[np] = dc
+                            child_node.codebase.append(dc)
+
+                        # Expand grandchildren immediately with correct parent_root.
+                        inherited_for_grandchildren = [(cr, system_root_str) for cr in (child_rules or [])]
+                        _expand_node(child_node, inherited_for_grandchildren)
+                        processed_children.add(self._normalize_path(child_node.slug))
+
+                    continue
+
                 disc_artifacts, disc_codebase, system_root_str, child_rules = _apply_rule(node, rule, parent_root_str=parent_root_str)
                 for da in disc_artifacts:
                     np = self._normalize_path(da.path)
@@ -562,6 +671,8 @@ class ArtifactsMeta:
                     next_inherited.append((cr, system_root_str))
 
             for child in node.children:
+                if self._normalize_path(child.slug) in processed_children:
+                    continue
                 child_inherited = _expand_node(child, next_inherited)
                 # Child's own next_inherited is not propagated to siblings
                 _ = child_inherited

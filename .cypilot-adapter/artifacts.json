@@ -50,15 +50,15 @@
       ]
     },
     {
-      "name": "Example: Overwork Alert",
-      "slug": "overwork-alert",
+      "name": "Examples",
+      "slug": "",
       "kit": "cypilot-sdlc",
-      "artifacts_dir": "examples/overwork_alert/architecture",
+      "artifacts_dir": "examples",
       "autodetect": [
         {
           "kit": "cypilot-sdlc",
-          "system_root": "{project_root}",
-          "artifacts_root": "examples/overwork_alert/architecture",
+          "system_root": "{project_root}/examples/$system",
+          "artifacts_root": "{system_root}/architecture",
           "artifacts": {
             "PRD": {"pattern": "PRD.md", "traceability": "FULL"},
             "DESIGN": {"pattern": "DESIGN.md", "traceability": "FULL"},
@@ -69,12 +69,12 @@
           "codebase": [
             {
               "name": "Overwork Alert",
-              "path": "examples/overwork_alert/src",
+              "path": "{system_root}/src",
               "extensions": [".py"]
             },
             {
               "name": "Tests",
-              "path": "tests",
+              "path": "{project_root}/tests",
               "extensions": [".py"]
             }
           ]
