@@ -26,11 +26,27 @@ def _find_project_root():
             return result.stdout.strip()
     except FileNotFoundError:
         pass
-    # Fallback: three levels up from this script (.cypilot/skills/scripts/)
+    # Fallback: walk up from this script until a repo marker is found
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        if os.path.isdir(os.path.join(current, ".git")):
+            return current
+        cfg = os.path.join(
+            current, ".cypilot", ".cypilot-config.json",
+        )
+        if os.path.isfile(cfg):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            break
+        current = parent
+    # Last resort: four levels up (original heuristic)
     return os.path.dirname(
         os.path.dirname(
             os.path.dirname(
-                os.path.dirname(os.path.abspath(__file__))
+                os.path.dirname(
+                    os.path.abspath(__file__),
+                )
             )
         )
     )
