@@ -971,6 +971,7 @@ def main():
         if arg.upper() == "ALL":
             prs = _list_open_prs()
             excludes = _load_exclude_list()
+            failures = []
             for pr in prs:
                 num = str(pr["number"])
                 if num in excludes:
@@ -985,6 +986,9 @@ def main():
                         f"  Failed to generate status for PR #{num} (exit={e.code})",
                         file=sys.stderr,
                     )
+                    failures.append(num)
+            if failures:
+                sys.exit(1)
         else:
             status(arg)
 
