@@ -168,8 +168,36 @@ _REVIEW_THREADS_QUERY = (
 )
 
 
+_PR_NUMBER_RE = re.compile(r"^\d+$")
+
+
+def _validate_pr_number(pr_number: str) -> str:
+    """Validate pr_number is a plain integer.
+
+    Also checks the resulting path is inside PRS_DIR.
+    """
+    if not _PR_NUMBER_RE.match(pr_number):
+        print(
+            f"Invalid PR number: {pr_number!r} "
+            f"(must be digits only)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    pr_dir = os.path.normpath(
+        os.path.join(PRS_DIR, pr_number),
+    )
+    prs_real = os.path.realpath(PRS_DIR)
+    if not pr_dir.startswith(prs_real + os.sep):
+        print(
+            f"PR path escapes PRS_DIR: {pr_dir}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return pr_dir
+
+
 def fetch(pr_number: str):
-    pr_dir = os.path.join(PRS_DIR, pr_number)
+    pr_dir = _validate_pr_number(pr_number)
     os.makedirs(pr_dir, exist_ok=True)
 
     # 1. PR metadata (expanded fields)
@@ -779,7 +807,7 @@ _SEV_ORDER = {
 
 
 def reorder(pr_number: str):
-    pr_dir = os.path.join(PRS_DIR, pr_number)
+    pr_dir = _validate_pr_number(pr_number)
     report_path = os.path.join(pr_dir, "status.md")
     if not os.path.exists(report_path):
         print(

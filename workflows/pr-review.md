@@ -44,11 +44,11 @@ Previous results are stale the moment a new review request arrives.
 
 ## Paths
 
-- **Script**: `python3 .cypilot/skills/scripts/pr.py`
+- **Script**: `python3 {cypilot_path}/skills/scripts/pr.py`
 - **Config**: `{cypilot_adapter_path}/pr-review.json`
-- **Templates**: `.cypilot/templates/pr/`
+- **Templates**: `{cypilot_path}/templates/pr/`
 - **Checklists**: `docs/checklists/` (PRD.md, DESIGN.md, ADR.md, etc.)
-- **Prompts**: `.cypilot/prompts/pr/`
+- **Prompts**: `{cypilot_path}/prompts/pr/`
 - **PR data**: `.prs/{ID}/`
 - **Exclude list**: `.prs/config.yaml` → `exclude_prs`
 
@@ -64,7 +64,7 @@ Previous results are stale the moment a new review request arrives.
 
 0. **List open PRs (when needed)**
    // turbo
-   Run: `python3 .cypilot/skills/scripts/pr.py list`
+   Run: `python3 {cypilot_path}/skills/scripts/pr.py list`
    ALWAYS run this step WHEN target is `ALL` or no PR number was specified.
    Present the list to the user so they can select a PR or confirm ALL.
    This respects the `.prs/config.yaml` exclude list.
@@ -72,7 +72,7 @@ Previous results are stale the moment a new review request arrives.
 
 1. **Fetch PR data (MANDATORY — always re-fetch)**
    // turbo
-   Run: `python3 .cypilot/skills/scripts/pr.py fetch <ARG>`
+   Run: `python3 {cypilot_path}/skills/scripts/pr.py fetch <ARG>`
    This downloads the **latest** PR metadata, diff, and comments from
    GitHub into `.prs/{ID}/`. Fetch never uses cached data — it always
    overwrites any previously fetched files.
@@ -120,7 +120,7 @@ Previous results are stale the moment a new review request arrives.
       review covering the areas specified in the prompt and checklist.
 
    d. **Write review output**
-      Read the template at `.cypilot/templates/pr/code-review.md` and
+      Read the template at `{cypilot_path}/templates/pr/code-review.md` and
       use it to structure the review. Save the review to
       `.prs/{ID}/review.md`.
       The review must follow the template format, including the mandatory
